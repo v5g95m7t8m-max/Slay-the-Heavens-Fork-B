@@ -1,0 +1,72 @@
+{
+  "method": "One REST jobs snapshot per current Fork A run, no polling or new dispatch. Normalized observation transcribed from returned metadata; raw Fork B annotation retained separately.",
+  "base": "af77fb2461c548f0faf104761d107397f75dca08",
+  "runs": {
+    "44129681599": {
+      "total_count": 1,
+      "jobs": [
+        {
+          "id": 134202994072,
+          "name": "impact",
+          "labels": [
+            "ubuntu-slim"
+          ],
+          "run_attempt": 1,
+          "status": "queued",
+          "runner_name": null,
+          "steps": 0,
+          "started_at": "2026-11-17T16:47:05Z"
+        }
+      ]
+    },
+    "44113901367": {
+      "attempt": 2,
+      "total_count": 38,
+      "retained_successes": 35,
+      "retained_skips": 1,
+      "retained_standard_linux_successes": {
+        "engineering-posix-shards": 15,
+        "presentation": 1,
+        "execution_window": "prior attempt 2026-11-17 15:25–16:13 UTC",
+        "steps_per_posix_shard": 17,
+        "presentation_steps": 12
+      },
+      "jobs": [
+        {
+          "id": 134195607579,
+          "name": "engineering-posix",
+          "labels": [
+            "ubuntu-slim"
+          ],
+          "run_attempt": 2,
+          "status": "completed",
+          "conclusion": "cancelled",
+          "runner_name": "",
+          "steps": 0,
+          "started_at": "2026-11-17T16:36:07Z",
+          "completed_at": "2026-11-17T16:51:10Z"
+        },
+        {
+          "id": 134205792121,
+          "name": "check",
+          "labels": [
+            "ubuntu-slim"
+          ],
+          "run_attempt": 2,
+          "status": "queued",
+          "runner_name": null,
+          "steps": 0,
+          "started_at": "2026-11-17T16:51:14Z"
+        }
+      ]
+    }
+  },
+  "finding": "Repeated Slim acquisition failure/zero-step waits block planner or aggregate. Existing standard ubuntu-24.04 shards demonstrably ran successfully in the retained execution.",
+  "limit": "Retained successful jobs are not new attempt2 executions and do not establish current live capacity. Changing labels cannot guarantee immediate standard runner allocation.",
+  "change_scope": [
+    "impact",
+    "check",
+    "engineering-posix"
+  ],
+  "remote_writes": false
+}

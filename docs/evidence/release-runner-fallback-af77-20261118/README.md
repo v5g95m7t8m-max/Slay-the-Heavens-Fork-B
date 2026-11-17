@@ -1,0 +1,13 @@
+# Release hosted runner fallback — af77
+
+Base: `af77fb2461c548f0faf104761d107397f75dca08`. Local branch: `fix/release-hosted-runner-fallback-1118`.
+
+The only execution change is `quality.yml` runner labels on `impact`, `check`, and `engineering-posix`: `ubuntu-slim` → the existing `ubuntu-24.04`. All Windows18/POSIX15 shards, commands, timeouts, permissions, dependencies, Full receipt/publication rules and Required names retain their exact af77 bytes. No remote writes, dispatch, rerun, ruleset edits or queue mechanism were performed.
+
+Scheduling evidence was read once per current Fork A run. `once-only-scheduling-observation.json` is a normalized transcription, not a raw API response. Fork B's prior raw acquisition-failure annotation is preserved separately. Slim planner/aggregate jobs repeatedly had zero steps and no assigned runner; B explicitly reported “The job was not acquired by Runner of type hosted even after multiple attempts”. A710 retained standard Ubuntu shard/presentation successes from the earlier execution. These retained successes are not fresh attempt2 execution and do not prove present pool capacity or guarantee immediate standard runner acquisition.
+
+The new 27KB finite source archive retains six full exact af77 predecessor files (including SHA256 and actual Git blob identity), and admits only the complete current file hashes. Two existing historical fixture read points use that inverse before the original unchanged old hashes; missing/unknown/partial/drifted current bytes remain visible. Every pre-existing archive remains byte-identical. No production source or original oracle changed.
+
+Validation logs retain the actual corrected RED (three Slim jobs rejected by the new zero-Slim assertion), the initial combination failures that identified two direct historical fixture reads, the intermediate message-prefix failure, and final passing gates/calibration/warm probes. The first provisional RED log had an erroneous standard-runner count assertion and is not used as the acceptance evidence. The final warm probe authenticates all six complete current files and six exact predecessors and exercises 57 warm missing/null/drift/archive failures through the public current validators. Calibration reports forecasts under original guards; it is not a hosted completion claim.
+
+TASK-81 records necessary Release engineering assistance; performance and unverified device acceptance remain open. Final exact commit/cold-pack delivery receipt is stored outside the commit to avoid a self-reference. Root review is required before any formal remote progression.

@@ -1,0 +1,144 @@
+✔ only the lightweight planner and two summaries use the existing standard hosted Linux fallback (2.507419ms)
+✔ draft Quality is deferred, Ready and integration retain the real gates (1.735746ms)
+✔ [historical PR620 workflow] complete Draft/Fast projection restores exact develop workflow bytes with LF and CRLF (16.179067ms)
+✔ Draft/Fast projection refuses every partial migration, duplicate and changed policy block (139.447666ms)
+✔ Draft/Fast projection preserves unrelated drift and never partially restores execution slack (14.003899ms)
+✔ [historical 98fef source contract] reviewed summary runner inverse retains the original complete workflow contract (918.331324ms)
+✔ [historical 98fef source contract] direct platform projection and layered replay share the same exact runner migration (373.043165ms)
+✔ [historical ratchet integration workflow] ratchet gates project only their exact complete placements and preserve current execution (4.596168ms)
+✔ workflow-only historical views cannot project production sources or test inventories (1.752391ms)
+✔ Release freeze fixture continuation rejects unknown paths and all byte drift (12.595716ms)
+✔ hosted runner fallback registers only the complete af77 source and rejects partial or unrelated drift (6.278655ms)
+✔ physical lines and inclusive function spans include comments, blank lines and nested bodies (4.731893ms)
+✔ CRLF and LF have identical canonical metrics and source hashes (1.011244ms)
+✔ every function and chunk needs exactly one matching Luacheck coordinate (1.630938ms)
+✔ Unicode codepoint columns map to UTF8 AST bytes, including emoji and combining marks (1.103754ms)
+✔ all files and extracted helpers are discovered recursively; empty scans fail (9.036383ms)
+✔ full graph reports reviewed deferred cycles, self cycles and disjoint SCCs deterministically (2.872761ms)
+✔ baseline diff keeps full metrics, exact warning multiplicity and changed/deleted/new modules visible (1.819723ms)
+✔ baseline contract/tool/scope mismatch and malformed snapshots cannot be treated as improvement (1.795306ms)
+✔ JSON object key ordering does not create false warning changes or contract mismatches (0.544921ms)
+✔ all new numeric metrics remain report-only, including high complexity and new helper hotspots (9.810219ms)
+✔ the frozen baseline covers every recorded module/function and is not an exemption configuration (11.007775ms)
+✔ dependency and cycle changes are visible even when total module and warning counts stay equal (0.805975ms)
+✔ quality reports are collected by the existing gate and uploaded on failed runs without changing older CI guards (7.172933ms)
+✔ historical package replay inverts only the exact quality entry and gate wiring without changing its old hash (351.737394ms)
+{"state":"success","errors":[]}
+{"state":"failure","errors":["Checkout receipt/artifact is missing, expired or differs from the effective rules (1/18) identity","Actual checkout receipt differs from Full source: runId","Actual checkout receipt differs from Full source: head","Actual checkout receipt differs from Full source: base","Actual checkout receipt differs from Full source: tested","Actual checkout receipt differs from Full source: prNumber","Actual checkout receipt differs from Full source: event","Actual checkout parent order differs from Full source","Checkout receipt collection failed: Cannot prove first rules shard execution attempt"]}
+{"state":"pending","errors":[]}
+{"state":"success","errors":[]}
+✔ pre-install CI status publishers load without npm packages (120.62592ms)
+✔ Full gate accepts the exact running aggregate only after every actual shard succeeds (1.591269ms)
+✔ Full publisher cannot certify old 27/28/30/33/35/36/37-job shapes or a forged/missing current actual shard (12.93013ms)
+✔ Full publisher shares proven inherited receipt identity without rewriting raw attempts (3.556351ms)
+✔ Full publisher never borrows an ambiguous, failed, different or stale execution receipt (12.255574ms)
+✔ real Full entrypoint collects and publishes inherited receipt with only the current aggregate running (16.407582ms)
+✔ Full gate rejects Fast, missing, failed, cancelled and skipped dependencies (1.783829ms)
+✔ Full gate rejects stale run, attempt, head, target and merge parent identity (1.396975ms)
+✔ Full success requires the actual immutable receipt, not merely green job metadata (1.636547ms)
+✔ publisher posts failure for invalid evidence and never hides a transport failure (0.688948ms)
+✔ publisher binds success to reviewed head and current run URL and verifies response (0.599914ms)
+✔ superseded planner and aggregate never overwrite a newer run or attempt status (0.381786ms)
+✔ real publisher entrypoint preserves master and fork flows without status writes or API queries (0.841368ms)
+✔ real publisher entrypoint collects API identities before current pending and success publication (1.169893ms)
+✔ Full publication reuses existing jobs and grants status writes only to planner and final aggregate (1.908026ms)
+✔ reviewed workflow inverse rejects partial wiring and preserves original arbitrary source drift (11.851285ms)
+✔ execution slack restores only the complete approved workflow edit for historical guards (8.107851ms)
+✔ all thirty-three actual shard identities are mandatory for current Full admission (19.98828ms)
+✔ direct changed Lua runs before JS and remaining Lua without duplicate execution (2.127998ms)
+✔ an advisory failure propagates immediately and prevents later tests (0.767587ms)
+✔ quick feedback prioritizes a changed fixture and schedules whole related fixtures within an estimate (0.421365ms)
+✔ unknown or unusable timings use a finite conservative scheduling estimate (0.338771ms)
+✔ full fallback does not become a partial success plan (0.228945ms)
+✔ event route mapping remains complete when transitive feedback exceeds the advisory estimate (17.234729ms)
+✔ CI mapped subset remains useful beside unknown inputs while the normal selector still requires full regression (0.734577ms)
+✔ mixed advisory changes build the graph once and ignore every unmapped input (0.745003ms)
+✔ a multi-file advisory with no statically mapped inputs remains unavailable (0.396007ms)
+✔ a hundred-file advisory still reads each graph source once (4.095153ms)
+ℹ 100-file advisory planning: 2.14 ms
+✔ historical-presentation-runner changes select every conditional fixture and exclude unrelated wrappers (1.567763ms)
+✔ historical-monster-ui-runner changes select every conditional fixture and exclude unrelated wrappers (1.24031ms)
+✔ historical-card-input changes select every conditional fixture and exclude unrelated wrappers (0.628498ms)
+✔ --fast empty fallback reports the full gate without graph IO or a duplicate suite (97.479266ms)
+✔ --fast unmapped fallback reports the full gate without graph IO or a duplicate suite (77.78552ms)
+✔ --ci-fast empty fallback reports the full gate without graph IO or a duplicate suite (72.032131ms)
+✔ --ci-fast unmapped fallback reports the full gate without graph IO or a duplicate suite (73.075331ms)
+✔ related plan avoids graph IO for wholly unmodelled inputs: [] (81.609192ms)
+✔ related plan avoids graph IO for wholly unmodelled inputs: ["docs/HANDOFF.md"] (72.828693ms)
+✔ related plan avoids graph IO for wholly unmodelled inputs: ["docs\\HANDOFF.md","data/cards.json","tests/fixtures/unknown.json"] (82.587688ms)
+✔ mixed inputs retain mapped feedback and complete-gate fallback with real graph IO (8959.62001ms)
+✔ special event route JSON still loads its graph and retains feedback beside unknown input (9394.306385ms)
+✔ local and CI advisory plans select the same real Lua feedback (7355.168343ms)
+✔ quick preflight is manual, read-only, exact-revision and cancels superseded branch work (0.903653ms)
+▶ Fork preflight before formal tests
+  ✔ admission binds head, base, configuration workflow and completed outcome (0.313492ms)
+  ✔ unknown preflight fails instead of silently passing or starting local Full (54.883193ms)
+  ✔ formal preflight reuses existing jobs and precedes costly PR work (0.775544ms)
+  ✔ preflight retains integration JS and every slow Lua without duplicated execution (0.348575ms)
+  ✔ newer failed or active dispatch invalidates older success across forks (0.273442ms)
+  ✔ draft license gate stays in the existing inventory before media and retries on ready (0.269677ms)
+  ✔ admission implementation always requires Full even with a tiny proven mapping (3.617633ms)
+  ✔ native successful reruns are valid preflight without making a new commit (0.095023ms)
+✔ Fork preflight before formal tests (61.100109ms)
+✔ inline preflight preserves required Fast and POSIX fail-closed impact consumers (5.937651ms)
+✔ inline admission runs only for organization non-master PRs and downstream rejects gate failure (16.830261ms)
+✔ current complete Quick preserves the exact Release contract step beside complete preflight and receipts (1.835838ms)
+✔ outer Release union retains complete named predecessors and rejects every changed source boundary (190.816434ms)
+✔ old union uses the supplied fresh dependency reader including its new archive (4.468757ms)
+✔ B9 capacity CI join binds both exact predecessors and refuses drift foreign paths wrong before and malformed inputs (12.730271ms)
+✔ actual merged Release authenticates every unchanged Lua and architecture predecessor without advancing the product epoch (40.674146ms)
+✔ release selection map production preserves every complete prior target and freshly authenticates the committed source tree (15.915783ms)
+✔ release selection map CI validates complete live bindings while unknown or changed bytes stay visible (980.137238ms)
+✖ capacity and latest Release CI views compose without accepting stale or foreign current owners (5446.915869ms)
+✔ release selection map raw JS and Lua inventories reject missing duplicate foreign and changed additions (69.142136ms)
+✔ release selection map raw workflow checks each real execution deadline and trusted local route (3.974171ms)
+✔ release selection map production requires fresh complete owners and leaves foreign bytes visible (1330.930826ms)
+✔ release selection map isolated production copy includes exact helper and packet without CI trust leaf (947.201795ms)
+✔ Release freeze CI continuation authenticates fresh owners before historical projection (4931.250925ms)
+✔ prepared capacity and preflight views bind only complete named parent sources and fresh caller bytes (76.950707ms)
+✔ capacity and integrated readers retain caller rejection of a changed nonrequested union owner (12.154111ms)
+ℹ tests 92
+ℹ suites 1
+ℹ pass 91
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27847.510436
+
+✖ failing tests:
+
+test at tests/release-selection-map-source.test.mjs:90:1
+✖ capacity and latest Release CI views compose without accepting stale or foreign current owners (5446.915869ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /fresh complete integration source/. Input:
+  
+  'AssertionError [ERR_ASSERTION]: fresh complete hosted runner fallback tests/release-selection-map-source.test.mjs\n' +
+    '+ actual - expected\n' +
+    '\n' +
+    "+ '3a6c65375ee029b4fb9c152f18e99be261f00aab0cd10b7669d0da83add49a83'\n" +
+    "- '14247250dced7dcb9bff737a1e34efc6e25ec3603466bb8f829319fbb9653bdb'\n"
+  
+      at TestContext.<anonymous> (file:///workspace/work/release-runner-fallback/tests/release-selection-map-source.test.mjs:113:11)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: fresh complete hosted runner fallback tests/release-selection-map-source.test.mjs
+    + actual - expected
+    
+    + '3a6c65375ee029b4fb9c152f18e99be261f00aab0cd10b7669d0da83add49a83'
+    - '14247250dced7dcb9bff737a1e34efc6e25ec3603466bb8f829319fbb9653bdb'
+    
+        at assertHostedRunnerFallbackCurrent (file:///workspace/work/release-runner-fallback/tests/helpers/hosted-runner-fallback-source.mjs:31:10)
+        at assertCapacityPreflightCurrent (file:///workspace/work/release-runner-fallback/tests/helpers/release-capacity-preflight-source.mjs:19:2)
+        at assertIntegratedCurrent (file:///workspace/work/release-runner-fallback/tests/helpers/integrated-ci-source.mjs:44:26)
+        at file:///workspace/work/release-runner-fallback/tests/release-selection-map-source.test.mjs:113:22
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///workspace/work/release-runner-fallback/tests/release-selection-map-source.test.mjs:113:11)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: /fresh complete integration source/,
+    operator: 'throws',
+    diff: 'simple'
+  }

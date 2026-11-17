@@ -1,3 +1,4 @@
+import {beforeHostedRunnerFallback} from './helpers/hosted-runner-fallback-source.mjs';
 import {capacityPreflightSource,assertCapacityPreflightCurrent} from './helpers/release-capacity-preflight-source.mjs';
 import {fastFreezeB9Source,assertFastFreezeB9UnionCurrent} from './helpers/release-fast-freeze-b9-union.mjs';
 import test from 'node:test';
@@ -213,7 +214,7 @@ test('prepared capacity and preflight views bind only complete named parent sour
  const {releasePreflightUnionSource}=await import('./helpers/release-preflight-union-source.mjs');
  assertCapacityPreflightCurrent();
  for(const [path,row]of Object.entries(packet.files)){
-  const current=norm(rawReadFileSync(path,'utf8'));assert.equal(hash(current),row.currentSha256);
+  const current=norm(beforeHostedRunnerFallback(path,rawReadFileSync(path,'utf8')));assert.equal(hash(current),row.currentSha256);
   assert.strictEqual(releasePreflightUnionSource(path,current,'advisory'),current,'a missing advisory path cannot gain a parent view');
   for(const view of ['preflight','capacity'])for(const eol of ['\n','\r\n']){
    const source=current.replaceAll('\n',eol),binding=row.views[view];

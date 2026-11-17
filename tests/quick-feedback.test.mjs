@@ -1,3 +1,4 @@
+import {beforeHostedRunnerFallback} from './helpers/hosted-runner-fallback-source.mjs';
 import {capacityPreflightSource} from './helpers/release-capacity-preflight-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -443,7 +444,7 @@ test('outer Release union retains complete named predecessors and rejects every 
  const packet=JSON.parse(gunzipSync(readFileSync('tests/helpers/release-preflight-union-source.json.gz')));
  assertReleasePreflightUnionCurrent();assertFastFreezeB9UnionCurrent();
  for(const [target,files]of Object.entries(packet.views))for(const [path,row]of Object.entries(files)){
-  const raw=readFileSync(path,'utf8').replaceAll('\r\n','\n');assert.equal(hash(capacityPreflightSource(path,raw,'preflight')),row.current.sha256);
+  const raw=beforeHostedRunnerFallback(path,readFileSync(path,'utf8')).replaceAll('\r\n','\n');assert.equal(hash(capacityPreflightSource(path,raw,'preflight')),row.current.sha256);
   for(const eol of ['\n','\r\n']){
    const source=raw.replaceAll('\n',eol);
    assert.equal(releasePreflightUnionSource(path,source,target).replaceAll('\r\n','\n'),row.before.source);

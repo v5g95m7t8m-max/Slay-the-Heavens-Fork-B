@@ -1,3 +1,4 @@
+import {beforeHostedRunnerFallback,assertHostedRunnerFallbackCurrent} from './helpers/hosted-runner-fallback-source.mjs';
 import {releaseFreezeCiBefore} from './helpers/release-selection-map-ci-source.mjs';
 import test from 'node:test';
 import {historicalTest} from './helpers/historical-baseline-inputs.mjs';
@@ -12,14 +13,17 @@ import { beforeAutoMergeWorkflow, beforeExecutionTimeoutWorkflow } from './helpe
 import {closeoutRead,closeoutInventory} from './helpers/closeout-ci-source.mjs';
 import {beforeHostedCheckoutWorkflow} from './helpers/hosted-checkout-workflow.mjs';
 
-const workflow = readFileSync('.github/workflows/quality.yml', 'utf8').replaceAll('\r\n', '\n');
-const job = (name,source=workflow) => source.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [\\w-]+:|(?![\\s\\S]))`, 'm'))[1];
+const currentWorkflow = readFileSync('.github/workflows/quality.yml', 'utf8').replaceAll('\r\n', '\n');
+const workflow = beforeHostedRunnerFallback('.github/workflows/quality.yml',currentWorkflow);
+const jobBody = (name,source=workflow) => source.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [\\w-]+:|(?![\\s\\S]))`, 'm'))[1];
+const job = jobBody;
 const digest = text => createHash('sha256').update(text).digest('hex');
 
-test('only the lightweight impact planner and two required summaries use slim', () => {
-  assert.equal((workflow.match(/^    runs-on: ubuntu-slim$/gm) ?? []).length, 3);
+test('only the lightweight planner and two summaries use the existing standard hosted Linux fallback', () => {
+  const workflow=currentWorkflow,job=name=>jobBody(name,currentWorkflow);
+  assert.equal((workflow.match(/^    runs-on: ubuntu-slim$/gm) ?? []).length, 0);
   const impact = job('impact');
-  assert.match(impact, /^    runs-on: ubuntu-slim$/m);
+  assert.match(impact, /^    runs-on: ubuntu-24\.04$/m);
   assert.match(impact, /^    timeout-minutes: 3$/m);
   assert.match(impact, /node-version: '24\.18\.0'/);
   assert.match(impact, /npm ci --ignore-scripts/);
@@ -30,7 +34,7 @@ test('only the lightweight impact planner and two required summaries use slim', 
   assert.match(impact,/^    permissions:\n      contents: read\n      actions: read\n      pull-requests: read\n      statuses: write$/m);
   for (const name of ['check', 'engineering-posix']) {
     const body = job(name);
-    assert.match(body, /^    runs-on: ubuntu-slim$/m);
+    assert.match(body, /^    runs-on: ubuntu-24\.04$/m);
     assert.match(body, /^    timeout-minutes: 2$/m);
     assert.match(body, /^    if: \$\{\{ !cancelled\(\) && \(github\.event_name != 'pull_request' \|\| github\.event\.pull_request\.draft == false\) \}\}$/m);
     assert.doesNotMatch(body, /continue-on-error:|^    name:/m);
@@ -148,7 +152,7 @@ test('Draft/Fast projection preserves unrelated drift and never partially restor
 });
 
 historicalTest('reviewed summary runner inverse retains the original complete workflow contract', () => {
-  const workflow=readFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');
+  const workflow=beforeHostedRunnerFallback('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml','utf8')).replaceAll('\r\n','\n');
   const expected = 'd44ae4e29ef74a972f329ecdc8f8131c464d30196300a600387479945660d35d';
   assert.equal(digest(originalWorkflow(workflow)), expected);
   assert.equal(digest(originalWorkflow(workflow.replaceAll('\n', '\r\n').replaceAll('\r\n', '\n'))), expected);
@@ -173,7 +177,7 @@ historicalTest('reviewed summary runner inverse retains the original complete wo
 });
 
 historicalTest('direct platform projection and layered replay share the same exact runner migration', () => {
-  const workflow=readFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');
+  const workflow=beforeHostedRunnerFallback('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml','utf8')).replaceAll('\r\n','\n');
   const historical = workflow.replaceAll('    runs-on: ubuntu-slim\n', '    runs-on: ubuntu-24.04\n');
   const expected = 'c1759c590177f4a2389fa04e700167d0948eae41b9f12e67db4b6bf48f5871ae';
   assert.equal(digest(beforePlatformWorkflow(historical)), expected, 'historical all-VM input remains accepted');
@@ -256,4 +260,45 @@ test('Release freeze fixture continuation rejects unknown paths and all byte dri
   for (const bad of [workflow + '\n', workflow.replace('reopened, edited,', 'reopened,'),
     workflow.replace('node scripts/check-release-scope.mjs', 'echo bypass')])
     assert.equal(releaseFreezeCiBefore('.github/workflows/quality.yml', bad), bad);
+});
+
+
+test('hosted runner fallback registers only the complete af77 source and rejects partial or unrelated drift', () => {
+  assertHostedRunnerFallbackCurrent();
+  const path='.github/workflows/quality.yml';
+  const original=workflow;
+  assert.notEqual(currentWorkflow,original);
+  assert.equal(currentWorkflow,original.replaceAll('    runs-on: ubuntu-slim\n','    runs-on: ubuntu-24.04\n'));
+  assert.equal((currentWorkflow.match(/^    runs-on: ubuntu-24\.04$/gm)??[]).length,5);
+  for(const eol of ['\n','\r\n']){
+    assert.equal(beforeHostedRunnerFallback(path,currentWorkflow.replaceAll('\n',eol)),original.replaceAll('\n',eol));
+    assert.equal(beforeHostedRunnerFallback(path,original.replaceAll('\n',eol)),original.replaceAll('\n',eol));
+  }
+  const names=['impact','check','engineering-posix'];
+  for(let mask=0;mask<7;mask++){
+    let partial=original;
+    for(let i=0;i<3;i++)if(mask&(1<<i)){
+      const body=jobBody(names[i],original);
+      partial=partial.replace(body,body.replace('runs-on: ubuntu-slim','runs-on: ubuntu-24.04'));
+    }
+    assert.equal(beforeHostedRunnerFallback(path,partial),partial,'incomplete migration '+mask);
+  }
+  for(const name of names){
+    const body=jobBody(name,currentWorkflow);
+    for(const drift of [
+      currentWorkflow.replace(body,body.replace('runs-on: ubuntu-24.04','runs-on: windows-2025')),
+      currentWorkflow.replace(body,body.replace('runs-on: ubuntu-24.04','runs-on: ubuntu-24.04\n    runs-on: ubuntu-24.04')),
+      currentWorkflow.replace('  '+name+':\n'+body,''),
+      currentWorkflow.replace('  '+name+':\n','  '+name+':\n'+body+'  '+name+':\n'),
+      currentWorkflow.replace(body,body.replace('timeout-minutes: '+(name==='impact'?3:2),'timeout-minutes: 9')),
+    ])assert.equal(beforeHostedRunnerFallback(path,drift),drift,name+' drift stays visible');
+  }
+  for(const drift of [currentWorkflow+'# drift\n',currentWorkflow.replace('contents: read','contents: write'),currentWorkflow.replace('timeout-minutes: 30','timeout-minutes: 31'),currentWorkflow.replace('run: npm run check:guidance','run: true'),currentWorkflow.replaceAll('\n','\r\r\n')])
+    assert.equal(beforeHostedRunnerFallback(path,drift),drift);
+  assert.equal(beforeHostedRunnerFallback('unknown',currentWorkflow),currentWorkflow);
+  assert.equal(beforeHostedRunnerFallback(path,currentWorkflow,{sha256:'0'.repeat(64)}),currentWorkflow);
+  const buffer=Buffer.from(currentWorkflow);assert.equal(beforeHostedRunnerFallback(path,buffer),buffer);
+  assert.throws(()=>assertHostedRunnerFallbackCurrent((p,e)=>p===path?readFileSync(p,e)+'# drift\n':readFileSync(p,e)),/fresh complete integration source: hosted runner fallback/);
+  assert.throws(()=>assertHostedRunnerFallbackCurrent((p,e)=>{if(p===path)throw new Error('missing workflow');return readFileSync(p,e);}),/missing workflow/);
+  assert.throws(()=>assertHostedRunnerFallbackCurrent((p,e)=>p==='tests/helpers/hosted-runner-fallback-source.json.gz'?Buffer.from('drift'):readFileSync(p,e)),/fresh complete hosted runner fallback archive/);
 });

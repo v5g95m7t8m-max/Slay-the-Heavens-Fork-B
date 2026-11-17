@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - Furinya
 created_date: '2026-10-28 15:30'
-updated_date: '2026-11-17 11:21'
+updated_date: '2026-11-17 17:14'
 labels:
   - 待验
   - delivery-verify
@@ -65,6 +65,8 @@ PR332已复现Silent自然构筑夹具在Windows原30000ms超时；仅诊断并�
 2026-11-17 Release三仓准入组合：复用b6准备后继合准确707@845，选择性接712@208内联准入/完整Quick与必要reader；保留709 edited/scope与707冻结Full。先验证严格job身份、同HEAD/BASE和Release合同；来源闭包过大时保留实际组合及具名失败，不批量扩映射或库存。
 
 2026-11-17 既有707执行线：从已审359隔离正常合703@698，先merge-tree核无产品冲突，只组合真实CI/source接缝；保原完整前驱/pin/当前断言，复用703产品独审和359CI foundation。等待真实703 squash后正常merge同步并断言tree不变，再绑定实际BASE和必要一次Fork Full；当前准备不冒称Release base已更新。
+
+2026-11-18 Release必要工程协助：依据一次调度快照与hosted未获取runner原annotation，仅将Quality的impact/check/engineering-posix三个廉价ubuntu-slim入口改为已有ubuntu-24.04；保留18/15分片、Required名称、权限、超时及Full语义。以完整准确workflow身份注册历史接续，先红后绿及部分迁移/无关漂移负控，独立本地提交待审，不推送/派CI或改规则，不勾性能AC。
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -129,4 +131,8 @@ Release三源组合后续已修完旧11红，并补齐Full base_sha四组真实�
 359×703 merge-tree仅4个CI/source冲突，无产品/core冲突。语义组合双保Freeze/Quick与capacity/review/reduction/audio链，必要来源显式分359历史view与698容量view，10个真实CI输入完整source固定，两个单父入口缺席view保持raw。11个703产品脚本逐字698、三workflow及原CI/freeze准入13路径逐字359，src/data/config tree两父相同；无新测试库存。当前本地227项组合通过，最终窄负控及准确merge独审待绑定。A359/3c/c650及正式PR不动，未push/dispatch/新PR或Full。
 
 本地359×703最终11文件定向组合228/228、0skip；原12红、advisory缺席view负控红及caller漏参负控红保留原始输出，修复不改旧hash/断言。严格advisory guard揭示release-ci.cases旧fixture须显式359 parent，已作唯一必要reader接续，因此最终11row/真实父view逐字Git；测试库存仍881，产品及CI核心字节身份不变。准确正常merge候选及独审将单独绑定，当前不称真实Release BASE已变或正式准入已完成。
+
+2026-11-18 Release runner fallback独立本地切片：Quality仅impact/check/engineering-posix从ubuntu-slim改已有ubuntu-24.04；Windows18/POSIX15/Full/Required/权限/超时逐字保全。旧全源断言通过6文件精确af77逆映射接续，旧archive零改；定向91项及calibration2项通过，warm6源/6前驱57负控通过。hosted未获取runner原annotation及一次快照保留；没有新派CI/重跑/推送/规则改动。待独审与冷pack回执；未勾性能或设备AC。
+
+更正上述定向计数：最终gates-pass.log为92/92，calibration2/2，均无跳过；91是前一轮总数，前一轮文本匹配失败已保留原日志。
 <!-- SECTION:NOTES:END -->

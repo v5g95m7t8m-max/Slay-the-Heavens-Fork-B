@@ -1,0 +1,14 @@
+✔ current Full38 retains full coverage and reports performance targets under unchanged execution guards (328.949207ms)
+ℹ Windows pre-V25 forecast 1794163 ms; target 1800000 ms; overrun 0 ms; actual Full pass not claimed
+ℹ Windows current forecast 1726045 ms; target 1800000 ms; overrun 0 ms; actual Full pass not claimed
+ℹ POSIX pre-V25 forecast 1128812 ms; target 1200000 ms; overrun 0 ms; actual Full pass not claimed
+ℹ POSIX current forecast 1159466 ms; target 1200000 ms; overrun 0 ms; actual Full pass not claimed
+✔ only two exact current source identities enter the unchanged pure historical CI chain and all byte drift remains visible (324.017987ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17378.676368

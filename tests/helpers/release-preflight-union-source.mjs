@@ -1,3 +1,4 @@
+import {beforeHostedRunnerFallback} from './hosted-runner-fallback-source.mjs';
 import {capacityPreflightSource,assertCapacityPreflightArchive,assertCapacityPreflightCurrent} from './release-capacity-preflight-source.mjs';
 // Exact outer continuation of the retained Release union and Quick receipts.
 import assert from 'node:assert/strict';
@@ -24,13 +25,13 @@ export function assertReleasePreflightUnionCurrent(read=readFileSync){
  assertReleasePreflightUnionArchive(read);
  assertCapacityPreflightCurrent(read);
  for(const [path,row]of Object.entries(packet.views.release)){
-  const source=capacityPreflightSource(path,read(path,'utf8'),'preflight');assert.equal(typeof source,'string');assert(!source.includes('\r\r\n'));
+  const source=capacityPreflightSource(path,beforeHostedRunnerFallback(path,read(path,'utf8')),'preflight');assert.equal(typeof source,'string');assert(!source.includes('\r\r\n'));
   assert.equal(hash(norm(source)),row.current.sha256,'fresh complete Release preflight input: '+path);
  }
 }
 export function releasePreflightUnionSource(path,source,target){
  if(!Object.hasOwn(packet.views,target)||target==='advisory'&&!Object.hasOwn(packet.views.advisory,path))return source;
- source=capacityPreflightSource(path,source,'preflight');
+ source=capacityPreflightSource(path,beforeHostedRunnerFallback(path,source),'preflight');
  if(target==='release'&&path==='tests/release-selection-map-source.test.mjs'&&typeof source==='string'&&!source.includes('\r\r\n')&&hash(norm(source))==='803e0effb38fd39ec153b4f508b50722fac0993a5faee36ff54c42be5077908a'){
   const prior=norm(source).replace("[norm(raw),norm(raw).replaceAll('\\n','\\r\\n')]","[raw,raw.replaceAll('\\n','\\r\\n')]");
   assert.equal(hash(prior),'5726b421c7e56d56e28d5787f795df5e442c58f38f55e61ca283b1fcac189eba','exact selection-map EOL-fixture predecessor');

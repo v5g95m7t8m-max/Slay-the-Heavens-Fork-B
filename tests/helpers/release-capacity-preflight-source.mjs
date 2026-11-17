@@ -1,3 +1,4 @@
+import {beforeHostedRunnerFallback,assertHostedRunnerFallbackCurrent} from './hosted-runner-fallback-source.mjs';
 // Exact CI-only parent views for the prepared 359 + 703 source join.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -15,13 +16,16 @@ for(const row of Object.values(packet.files))for(const binding of Object.values(
 export function assertCapacityPreflightArchive(read=readFileSync){assert.equal(hash(read(path)),sha,'fresh complete capacity/preflight archive');}
 export function assertCapacityPreflightCurrent(read=readFileSync){
  assertCapacityPreflightArchive(read);
+ assertHostedRunnerFallbackCurrent(read);
  for(const [p,row]of Object.entries(packet.files)){
-  const source=read(p,'utf8');assert.equal(typeof source,'string');assert(!source.includes('\r\r\n'));
+  const source=beforeHostedRunnerFallback(p,read(p,'utf8'));assert.equal(typeof source,'string');assert(!source.includes('\r\r\n'));
   assert.equal(hash(norm(source)),row.currentSha256,'fresh complete integration source: capacity/preflight '+p);
  }
 }
 export function capacityPreflightSource(path,source,view,before){
  const row=Object.hasOwn(packet.files,path)?packet.files[path]:null,binding=row&&Object.hasOwn(row.views,view)?row.views[view]:null;
- if(!binding||before&&before.sha256!==binding.sha256||typeof source!=='string'||source.includes('\r\r\n')||hash(norm(source))!==row.currentSha256)return source;
+ if(!binding||before&&before.sha256!==binding.sha256)return source;
+ source=beforeHostedRunnerFallback(path,source);
+ if(typeof source!=='string'||source.includes('\r\r\n')||hash(norm(source))!==row.currentSha256)return source;
  return source.includes('\r\n')?binding.source.replaceAll('\n','\r\n'):binding.source;
 }
