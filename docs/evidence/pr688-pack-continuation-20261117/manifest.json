@@ -1,0 +1,42 @@
+{
+  "headBefore": "f03605d69b0943139a2d1f015edd953cb9958089",
+  "base": "af77fb2461c548f0faf104761d107397f75dca08",
+  "hostedRun": 44114037126,
+  "hostedJob": 134147873007,
+  "hostedPackBytes": 135484524,
+  "localBeforePackBytes": 135484843,
+  "limitBytes": 134217728,
+  "logSource": "GitHub connector decoded job log, preserved as returned including BOM/CRLF; compressed losslessly",
+  "files": [
+    {
+      "path": "hosted-pack-failure-connector.log.gz",
+      "decodedBytes": 25248,
+      "decodedSha256": "96dcd229d627244374de761fcafcda0b72b04fd3d53043d839d6256754be1e6c",
+      "gzipSha256": "38abcd0c59ab95eb2cf90c869ee5094049d58776607202d099a559a86d391121"
+    },
+    {
+      "path": "cold-before-red.log.gz",
+      "decodedBytes": 112,
+      "decodedSha256": "30d881c30da14f4ae1e7a1a72137bd90963b5db11cf144e56b825624fe731d83",
+      "gzipSha256": "ea040d02760cbf20a753670913b736cccf554fa736844a833e20407a8e642f2e"
+    },
+    {
+      "path": "cold-before-public-comparison.log.gz",
+      "decodedBytes": 322,
+      "decodedSha256": "79347f326e887c3cfdf51229c70270381d68fe03accf61c0ac265d6e95edd326",
+      "gzipSha256": "63d7e3c8b0748349015753ae6d157067d752589feb33dc6d8141871c9c72889a"
+    },
+    {
+      "path": "source-preservation-hydrated.log.gz",
+      "decodedBytes": 255,
+      "decodedSha256": "d3dd1477a4b2e830417e5360de319aa3e90044453df4a6d4595d0db10007bf16",
+      "gzipSha256": "7660fe7ae3df1221b7f1d99d6ac95d612059ef221fd85d589f70e921bdcffdef"
+    },
+    {
+      "path": "source-preservation.log.gz",
+      "decodedBytes": 1299,
+      "decodedSha256": "74f3a250662d8b3eee73fecb84cae4965d7fa7be2bfe6e867af8a9dc01f6a0ab",
+      "gzipSha256": "9bc4129a2235cdb6afaf49fd62ac5ea60da816e965100106474a097ea9031b4f"
+    }
+  ]
+}
