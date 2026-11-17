@@ -84,7 +84,7 @@ export function runBacklog(args,{root=process.cwd()}={}) {
 }
 
 export function syncBacklogCloseout({pr,files,targetSha,root=process.cwd()},run=runBacklog) {
-  if(pr?.merged!==true||pr?.base?.ref!=='develop')throw Error('Backlog synchronization requires a verified merged develop PR');
+  if(pr?.merged!==true||pr?.base?.ref!=='develop'&&!/^release\/[\w][\w.-]*$/.test(pr?.base?.ref??''))throw Error('Backlog synchronization requires a verified merged develop or Release PR');
   const changedTaskIds=[...new Set(files.map(file=>file.filename?.match(/^backlog\/(?:tasks|completed|archive\/tasks)\/task-(\d+(?:\.\d+)*) - /)?.[1]).filter(Boolean).map(id=>'TASK-'+id))];
   const declaration=(pr.body??'').split(/\r?\n/).filter(line=>/^Backlog:/.test(line)).join('\n');
   const ids=new Set(declaration.match(/TASK-\d+(?:\.\d+)*/g)??[]);
@@ -98,7 +98,7 @@ export function syncBacklogCloseout({pr,files,targetSha,root=process.cwd()},run=
     return result.stdout;
   };
   if(!/^[a-f0-9]{40}$/.test(targetSha??'')||git('rev-parse','HEAD').trim()!==targetSha)
-    throw Error('Backlog pending: refresh checkout to the actual current develop SHA');
+    throw Error('Backlog pending: refresh checkout to the actual current '+pr.base.ref+' SHA');
   git('merge-base','--is-ancestor',pr.merge_commit_sha,targetSha);
   const digest=list=>createHash('sha256').update(JSON.stringify(list.filter(record=>ids.has(record.id))
     .map(record=>[record.id,record.filePath,record.source]).sort((a,b)=>a[0].localeCompare(b[0])))).digest('hex');

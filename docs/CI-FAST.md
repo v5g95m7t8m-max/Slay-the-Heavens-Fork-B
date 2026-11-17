@@ -25,3 +25,17 @@ fast/advisory 对未知输入只提供可独立映射部分的反馈，并明确
 验收口径：按固定工作流版本采集自然PR运行，分别报告Fast/Full样本数、SHA、attempt、结论、创建到最后Required Check完成的耗时，以及各job排队/执行时间。P50/P90用nearest-rank；失败和取消单列，不从样本中静默删除，不用重跑历史SHA刷样本。Fast至少20个真实PR样本且覆盖源码、测试和纯文档后判断P50≤300秒、P90≤600秒；未达样本量只报告观测值，不宣布总体达标。M7本轮只验真实安全Fast入队和Full组合/合后阻断链路，不把Full总耗时≤1800秒作为收口目标，也不为此追加调优；Full 作业与所有子进程预算、完整回归和门禁保持。
 
 美术输入分两组：原六张审阅 PNG 仍仅由审阅测试/许可审计准备，预算 5983528 字节；运行时只准备固定三张卡牌预览和一张背景预览，独立上限 181870 字节。JS 测试会通过辅助模块/子进程开启美术，因此 Full 分片与 Fast 对非空 JS 集合保守准备这四项；纯文字、空集合、仅 Lua 和默认关闭美术的 presentation 构建不新增下载。两组共用本地 LFS 对象缓存，重叠三张预览不重复传输；读取前核对索引指针，读取后核对 PNG、长度及 SHA。这里的字节数是逻辑输入上限，不是实际计费读数。
+
+
+
+## 普通 Release 的交付验证（工具候选）
+
+普通Release修复沿原入口 `npm run verify:delivery -- <PR号> <精确独审.json>` 采集schema3的Release kind。它读取主仓PR、当前Release ref、主PR的完整Full或双平台Fast及不可变checkout/plan、License唯一inventory，保存精确HEAD/BASE/tested/tree；Fork预检不替代该证明。当前工具可在独立审查树读取实际主PR，不要求先把工具增量推入正在验收的候选。
+
+实际合入后，用保存的本轮凭证运行 `npm run verify:delivery -- <PR号> <preflight-evidence.json> --merged --read-only`，重验主PR最新运行及实际squash parent/tree、Release分支归属，输出本地merged证据。普通Release不要求不存在的push Full或develop队列。读回通过才算该源组合合后验证；这不替代正式冻结版Full、官方ready或设备验收。
+
+去掉 `--read-only` 时仍执行原Backlog计划：需在实际当前Release checkout运行，保持任务快照、未验AC与owner，明确 `Backlog:` disposition后由CLI写入并读回。原develop/master、schema2–8及Release→master冻结Full门禁不变。本节工具尚为独立本地候选，不能据此声称主仓入口已上线。
+
+永久入口准备在既有 #677 的独立后继，保留其develop队列授权与旧来源；尚未落地的 #712 不作为已上线依赖。不修改正在验收的Release候选。当前可从独立已审工具树读取703/707真实主PR。
+
+启用原生auto时，应在PR仍open且主Quality/License已关联后保存一次。未完成CI只保存 `pr_pending`：精确独审、open HEAD/BASE/tested/tree、独立Release ref和主运行身份，不称 `pr_passed`，也没有伪造checkout。命令会输出保存路径并以非零退出；保留该真实凭证。合后用同一凭证运行上述只读入口，鲜读同候选成功Quality/不可变checkout/License与实际squash，方能得到 `merged_passed`。原pending记录保持原样，不倒填合前成功，也不靠关闭auto抢采集时机。

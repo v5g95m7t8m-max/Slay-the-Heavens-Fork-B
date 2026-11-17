@@ -54,6 +54,13 @@ const paths=(values,pattern)=>Array.isArray(values)&&new Set(values).size===valu
 // Bind it to the same checkout artifact instead of accepting a green summary
 // with an arbitrary locally supplied selection. Full remains mandatory in queue.
 export function prFastErrors(e,{allowRunningAggregate=false,metadataOnly=false}={}) {
+ return fastPrErrors(e,{allowRunningAggregate,metadataOnly},'develop');
+}
+export function releasePrFastErrors(e,options={}) {
+ if(!/^release\/[\w][\w.-]*$/.test(e?.pr?.base?.ref??''))return ['Invalid Release Fast target'];
+ return fastPrErrors(e,options,e.pr.base.ref);
+}
+function fastPrErrors(e,{allowRunningAggregate=false,metadataOnly=false,knownPrRun}={},baseRef) {
  if(!e||typeof e!=='object')return ['Missing Fast PR evidence'];
  const errors=[],run=e.run;
  const running=allowRunningAggregate&&run?.status==='in_progress'&&run.conclusion==null;
@@ -61,7 +68,7 @@ export function prFastErrors(e,{allowRunningAggregate=false,metadataOnly=false}=
   !positive(e.runId)||!positive(e.attempt)||run?.id!==e.runId||run?.run_attempt!==e.attempt||
   run?.head_sha!==e.head||run?.event!=='pull_request'||run?.path!==workflowPath||
   run?.repository?.full_name!==e.repo||!Array.isArray(run?.pull_requests)||
-  !run.pull_requests.some(p=>p?.number===e.number)||
+  !(run.pull_requests.some(p=>p?.number===e.number)||baseRef!=='develop'&&!run.pull_requests.length&&run.id===knownPrRun?.id&&knownPrRun?.pull_requests?.some(p=>p.number===e.number))||
   !running&&(run?.status!=='completed'||run?.conclusion!=='success')||
   e.latestRun?.id!==e.runId||e.latestRun?.run_attempt!==e.attempt)
   errors.push('Stale or invalid Fast run/attempt');
@@ -69,7 +76,7 @@ export function prFastErrors(e,{allowRunningAggregate=false,metadataOnly=false}=
  if(!sha(e.head)||!sha(e.base)||!sha(e.tested)||!positive(e.number)||
   pr?.number!==e.number||pr?.state!=='open'||pr.merged!==false||pr.draft!==false||
   pr.head?.sha!==e.head||pr.head.repo?.full_name!==e.repo||
-  pr.base?.ref!=='develop'||pr.base.sha!==e.base||e.target!==e.base||
+  pr.base?.ref!==baseRef||pr.base.sha!==e.base||e.target!==e.base||
   pr.merge_commit_sha!==e.tested||e.commit?.sha!==e.tested||
   JSON.stringify(e.commit?.parents?.map(p=>p?.sha))!==JSON.stringify([e.base,e.head]))
   errors.push('Fast tested merge differs from current ready PR HEAD/BASE');

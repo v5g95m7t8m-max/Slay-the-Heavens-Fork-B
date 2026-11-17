@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - Furinya
 created_date: '2026-10-28 15:30'
-updated_date: '2026-11-14 10:13'
+updated_date: '2026-11-17 10:53'
 labels:
   - 待验
   - delivery-verify
@@ -111,4 +111,6 @@ e22本地重放验证：相对basename参考与短模式原生CLI对当前360个
 2026-11-14逐项对账：选测与保守Full边界已交付；仅剩自然Fast样本P50/P90和Full30分钟性能验收，不重写选择器。
 
 2026-11-14第二轮状态纠正：选测机制与前两项AC已交付，尚缺自然Fast样本及真实耗时；属于进行中待验，不重新实现选择器。 更正上一轮将待验统一退回To Do的处理；未勾AC及独立审批保持，In Progress表示工作已开展，不表示有人正持续占用执行窗口。
+
+2026-11-17 普通Release交付只读入口准备在既有677正式873d4392/develop c240后继，不改正式head或在途A359/B7d。选择性移植已审operator5332及pending竞态后继3c943142：schema3区分Release kind，main PR Full/Fast不可变receipt、License、精确独审、tested与actual squash/target核验；无Release push Full或队列假要求。真实open时可保存pr_pending并于native auto合后鲜读完成，未完成不称pr_passed，不回填历史成功。三核心脚本与677/791原基线相同；只改六个真实来源的完整字节接续，完整保留正式677、5332与3c来源，712未落且本工具不依赖它。AC、owner和任务状态保持；本地定向与独审待准确candidate绑定，未push/dispatch/新PR。
 <!-- SECTION:NOTES:END -->

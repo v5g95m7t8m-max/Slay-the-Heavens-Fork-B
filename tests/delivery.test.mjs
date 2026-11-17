@@ -839,3 +839,212 @@ test('documentation waiver rejects agent instruction entrypoints in every allowe
   assert.equal(isLowRiskDocumentationChange([{filename,status:'added',sha:'a'.repeat(40)}],1),false,filename);
  }
 });
+
+import {currentFastQualityJobs,prFastErrors} from '../scripts/pr-quality-evidence.mjs';
+function releaseProof(mode='full') {
+ const e=mergedEvidence(3).preflight,repo='FurinyaWorks/Slay-the-Heavens';
+ Object.assign(e,{kind:'release-pr',mode,repo,baseRef:'release/v2.0.0'});
+ e.run.repository={id:1429751262,full_name:repo};e.currentRun=structuredClone(e.run);
+ e.pr={number:e.prNumber,state:'open',merged:false,draft:false,labels:[],head:{sha:e.head,repo:{id:1429751262,full_name:repo}},
+  base:{ref:e.baseRef,sha:e.base,repo:{id:1429751262,full_name:repo}},merge_commit_sha:e.tested};e.current=structuredClone(e.pr);
+ const run={id:12,run_attempt:1,head_sha:e.head,event:'pull_request',path:'.github/workflows/licenses.yml',repository:{id:1429751262,full_name:repo},status:'completed',conclusion:'success',pull_requests:[{number:e.prNumber}]};
+ e.licenses={run,currentRun:structuredClone(run),jobs:[{id:901,name:'inventory',run_id:12,run_attempt:1,head_sha:e.head,status:'completed',conclusion:'success'}]};
+ if(mode==='fast'){
+  e.jobs=currentFastQualityJobs.map((name,i)=>({id:100+i,name,run_id:e.runId,run_attempt:e.attempt,head_sha:e.head,status:'completed',conclusion:name.includes('format(')?'skipped':'success'}));
+  e.checkoutArtifact.name=`quality-${e.runId}-${e.attempt}-fast`;
+  e.plan={mode:'fast',sha:e.tested,head:e.head,base:e.base,runId:e.runId,attempt:e.attempt,changed:['scripts/value.mjs'],js:['tests/value.test.mjs'],lua:[],reason:'Complete affected set'};
+ }
+ return e;
+}
+function releaseMerged(mode='full') {
+ const preflight=releaseProof(mode),pr={...structuredClone(preflight.pr),state:'closed',merged:true,merge_commit_sha:sha('e')};
+ return {schemaVersion:3,kind:'release-merged',repo:preflight.repo,preflight,pr,current:structuredClone(pr),testedCommit:structuredClone(preflight.testedCommit),commit:{sha:sha('e'),parents:[{sha:preflight.base}],commit:{tree:{sha:preflight.sourceTree}}},
+  quality:Object.fromEntries(['run','jobs','checkout','checkoutArtifact','plan','currentRun'].map(k=>[k,structuredClone(preflight[k])])),licenses:structuredClone(preflight.licenses),
+  targetBeforeSha:sha('e'),targetAfterSha:sha('e'),targetComparison:{status:'identical',base_commit:{sha:sha('e')},merge_base_commit:{sha:sha('e')},commits:[]}};
+}
+test('ordinary Release delivery verifies genuine Full and Fast PRs with immutable receipts and all four required jobs',()=>{
+ for(const mode of ['full','fast']){
+  const e=releaseProof(mode);assert.deepEqual(verifyDelivery(e),[],mode);
+  const legacy=structuredClone(e);delete legacy.kind;assert(verifyDelivery(legacy).length,'ordinary schemas are not silently reclassified');
+  if(mode==='fast')assert(prFastErrors({...e,number:e.prNumber,latestRun:e.currentRun,commit:e.testedCommit,target:e.base}).length,'develop Fast admission remains develop-only');
+ }
+});
+test('ordinary Release delivery rejects stale sources, Fork greens, partial jobs, License drift and weak review',()=>{
+ for(const mode of ['full','fast'])for(const mutate of [
+  e=>e.targetAfterSha=sha('f'),e=>e.pr.base.sha=sha('f'),e=>e.current.head.sha=sha('f'),e=>e.pr.draft=true,
+  e=>e.schemaVersion=2,e=>e.kind='pr-fast',e=>e.mode='unknown',e=>e.baseRef='release/',e=>e.baseRef='release/v2/other',
+  e=>e.baseRef='master',e=>e.run.repository={id:1460097312,full_name:e.repo},e=>e.currentRun.run_attempt++,
+  e=>e.currentRun.repository.id=1460097312,e=>e.run.pull_requests=[],
+  e=>e.jobs.pop(),e=>e.jobs.push({...e.jobs[0],id:999}),e=>e.checkout.tested=sha('f'),e=>e.checkoutArtifact.expired=true,
+  e=>e.testedCommit.parents.reverse(),e=>e.review.reviewedBaseSha=sha('f'),e=>e.review.disposition='low-risk-docs',
+  e=>e.licenses.jobs=[],e=>e.licenses.jobs[0].conclusion='failure',e=>e.licenses.jobs.push({...e.licenses.jobs[0],id:902}),
+  e=>e.licenses.run.head_sha=sha('f'),e=>e.licenses.currentRun.id++,e=>e.licenses.run.repository.id=1460133275,
+ ]){const e=releaseProof(mode);mutate(e);assert(verifyDelivery(e).length,mode+' '+mutate);}
+ const e=releaseProof('fast');e.pr.labels=[{name:'ci:full'}];assert(verifyDelivery(e).length);
+ const rerun=releaseProof();rerun.licenses.run.run_attempt=rerun.licenses.currentRun.run_attempt=2;
+ rerun.licenses.jobs.push({...rerun.licenses.jobs[0],id:902,run_attempt:2});assert.deepEqual(verifyDelivery(rerun),[],'License rerun retains old execution without adding another logical job');
+});
+test('ordinary Release merged delivery proves actual squash and saved PR source without inventing push Full or queue',()=>{
+ for(const mode of ['full','fast']){
+  const e=releaseMerged(mode);assert.deepEqual(verifyMergedDelivery(e),{state:'merged_passed',errors:[]},mode);
+  for(const mutate of [v=>v.commit.parents=[{sha:sha('f')}],v=>v.commit.commit.tree.sha=sha('f'),v=>v.current.head.sha=sha('f'),
+   v=>v.quality.currentRun.run_attempt++,v=>v.quality.checkoutArtifact.expired=true,v=>v.licenses.currentRun.conclusion='failure',
+   v=>v.targetAfterSha=sha('f'),v=>v.targetBeforeSha=v.targetAfterSha=sha('f'),v=>v.targetComparison.base_commit.sha=sha('f'),
+   v=>v.targetComparison.merge_base_commit.sha=sha('f'),v=>v.pr.base.ref='develop',v=>v.testedCommit.commit.tree.sha=sha('f'),
+   v=>v.preflight.sourceTree=v.preflight.testedCommit.commit.tree.sha=v.commit.commit.tree.sha=sha('f')]){
+   const bad=releaseMerged(mode);mutate(bad);assert.equal(verifyMergedDelivery(bad).state,'merged_pending',String(mutate));
+  }
+ }
+ const advanced=releaseMerged();advanced.targetBeforeSha=advanced.targetAfterSha=sha('f');
+ advanced.targetComparison={status:'ahead',base_commit:{sha:sha('e')},merge_base_commit:{sha:sha('e')},commits:[{sha:sha('f')}]};
+ assert.equal(verifyMergedDelivery(advanced).state,'merged_passed');
+ advanced.targetComparison.commits[0].sha=sha('a');assert.equal(verifyMergedDelivery(advanced).state,'merged_pending');
+});
+function releaseQuery(e,{merged=false}={}) {
+ const calls=[],directories=[],m=releaseMerged(e.mode);m.preflight=e;
+ const query=(...args)=>{
+  const p=args.at(-1);calls.push(p);
+  if(args[0]==='run'&&args[1]==='download'){
+   const dir=args[args.indexOf('--dir')+1];directories.push(dir);mkdirSync(dir,{recursive:true});
+   writeFileSync(join(dir,'ci-checkout.json'),JSON.stringify(e.checkout));
+   if(e.plan)writeFileSync(join(dir,'ci-impact.json'),JSON.stringify(e.plan));return '';
+  }
+  if(p===`repos/${e.repo}/pulls/${e.prNumber}`)return JSON.stringify(merged?m.pr:e.pr);
+  if(p.includes('/git/ref/heads/'))return JSON.stringify({ref:'refs/heads/'+e.baseRef,object:{type:'commit',sha:merged?m.targetBeforeSha:e.base}});
+  if(p.includes('/actions/workflows/quality.yml/'))return JSON.stringify([{workflow_runs:[e.currentRun]}]);
+  if(p.includes('/actions/workflows/licenses.yml/'))return JSON.stringify([{workflow_runs:[e.licenses.currentRun]}]);
+  if(p.includes('/actions/runs/12/jobs?'))return JSON.stringify([{jobs:e.licenses.jobs}]);
+  if(p.includes('/jobs?'))return JSON.stringify([{jobs:e.jobs}]);
+  if(p.includes('/artifacts?'))return JSON.stringify([{artifacts:[e.checkoutArtifact]}]);
+  if(p.endsWith('/artifacts/'+e.checkoutArtifact.id))return JSON.stringify(e.checkoutArtifact);
+  if(p.endsWith('/commits/'+e.tested))return JSON.stringify(e.testedCommit);
+  if(p.endsWith('/commits/'+m.commit.sha))return JSON.stringify(m.commit);
+  if(p.includes('/compare/'))return JSON.stringify(m.targetComparison);
+  throw Error('Unexpected Release query '+p);
+ };
+ return {query,calls,cleanup:()=>directories.forEach(p=>rmSync(p,{recursive:true,force:true})),load:()=>Object.fromEntries(['checkout','checkoutArtifact','plan'].map(k=>[k,structuredClone(e[k])]))};
+}
+test('ordinary Release collectors read actual target and PR evidence before and after artifacts without push or queue queries',()=>{
+ for(const mode of ['full','fast']){
+  const e=releaseProof(mode),q=releaseQuery(e),collected=collectPrDelivery(e.repo,e.prNumber,e.review,q.query,q.load);
+  assert.deepEqual(verifyDelivery(collected.evidence),[]);assert.equal(collected.evidence.baseRef,e.baseRef);
+  const merged=releaseQuery(e,{merged:true}),proof=collectMergedDelivery(e.repo,e.prNumber,collected.evidence,merged.query,merged.load);
+  assert.deepEqual(verifyMergedDelivery(proof),{state:'merged_passed',errors:[]});
+  assert(!merged.calls.some(p=>p.includes('event=push')||p.includes('event=merge_group')));
+  assert.equal(q.calls.filter(p=>p.includes('/git/ref/heads/')).length,2);
+  const stale=releaseQuery(e);assert.throws(()=>collectPrDelivery(e.repo,e.prNumber,e.review,(...args)=>args.at(-1).includes('/git/ref/heads/')?JSON.stringify({ref:'refs/heads/'+e.baseRef,object:{type:'commit',sha:sha('f')}}):stale.query(...args),stale.load),/stale/);
+ }
+});
+test('ordinary Release Backlog closeout keeps the existing snapshot and open AC protections',t=>{
+ const f=closeoutFixture(t);f.pr.base.ref='release/v2.0.0';f.pr.body='Backlog: TASK-1=recorded';
+ assert.equal(delivery.syncBacklogCloseout({...f,targetSha:f.mergeSha},()=>assert.fail('recorded is read-only')).state,'backlog_synced');
+ f.pr.body='Backlog: TASK-1=done';assert.throws(()=>delivery.syncBacklogCloseout({...f,targetSha:f.mergeSha},()=>assert.fail('open AC cannot finish')),/every existing AC/);
+});
+test('ordinary Release default collectors select actual Fast or Full immutable artifacts and reject download-time races',()=>{
+ for(const mode of ['full','fast']){
+  const e=releaseProof(mode),q=releaseQuery(e),m=releaseQuery(e,{merged:true});
+  try{
+   const p=collectPrDelivery(e.repo,e.prNumber,e.review,q.query).evidence;assert.deepEqual(verifyDelivery(p),[]);
+   assert.equal(verifyMergedDelivery(collectMergedDelivery(e.repo,e.prNumber,p,m.query)).state,'merged_passed');
+   assert(!q.calls.some(p=>typeof p==='string'&&/statuses|dispatches/.test(p)));
+  }finally{q.cleanup();m.cleanup();}
+  const raced=releaseQuery(e);let loads=0;
+  const result=collectPrDelivery(e.repo,e.prNumber,e.review,raced.query,()=>{loads++;const receipt=raced.load();e.currentRun={...e.currentRun,id:999,conclusion:'failure'};return receipt;});
+  assert.equal(loads,1);assert(verifyDelivery(result.evidence).length,'a newer failure after download cannot borrow the older result');
+ }
+});
+test('ordinary Release merged collection preserves saved PR association when GitHub removes old links',()=>{
+ const p=releaseProof('fast'),q=releaseQuery(p,{merged:true});
+ const query=(...args)=>{const result=q.query(...args);if(args.at(-1).includes('/actions/workflows/')){
+  const pages=JSON.parse(result);for(const page of pages)for(const r of page.workflow_runs)r.pull_requests=[];return JSON.stringify(pages);
+ }return result;};
+ assert.equal(verifyMergedDelivery(collectMergedDelivery(p.repo,p.prNumber,p,query,q.load)).state,'merged_passed');
+ const bad=releaseMerged('fast');bad.quality.run.id++;bad.quality.run.pull_requests=[];assert.equal(verifyMergedDelivery(bad).state,'merged_pending');
+});
+test('ordinary Release collectors never fall back past a newer unassociated failed run',()=>{
+ const p=releaseProof(),q=releaseQuery(p,{merged:true});
+ assert.throws(()=>collectMergedDelivery(p.repo,p.prNumber,p,(...args)=>{
+  const raw=q.query(...args);if(!args.at(-1).includes('/actions/workflows/quality.yml/'))return raw;
+  const pages=JSON.parse(raw);pages[0].workflow_runs.push({...p.run,id:999,conclusion:'failure',pull_requests:[]});return JSON.stringify(pages);
+ },q.load),/missing or unsuccessful/);
+});
+test('ordinary Release verifiers reject conflicting fresh PR links but accept fully reverified successful reruns',()=>{
+ for(const mode of ['full','fast']){
+  for(const field of ['run','currentRun']){
+   const e=releaseMerged(mode);e.quality[field].pull_requests=[{number:999}];assert.equal(verifyMergedDelivery(e).state,'merged_pending');
+  }
+  const pr=releaseProof(mode);pr.currentRun.pull_requests=[];assert(verifyDelivery(pr).length);
+  const license=releaseProof(mode);license.licenses.currentRun.pull_requests=[];assert(verifyDelivery(license).length);
+  const e=releaseMerged(mode),q=e.quality;
+  q.run.run_attempt=q.currentRun.run_attempt=3;q.jobs.forEach(j=>j.run_attempt=3);q.checkout.attempt=3;
+  q.checkoutArtifact.name=`quality-${q.run.id}-3-${mode==='fast'?'fast':'check'}`;
+  if(q.plan)q.plan.attempt=3;
+  assert.equal(verifyMergedDelivery(e).state,'merged_passed',mode+' immutable successful rerun');
+  q.jobs[0].conclusion='failure';assert.equal(verifyMergedDelivery(e).state,'merged_pending');
+ }
+});
+test('ordinary Release read-only merged CLI is explicit and preserves legacy argument rejection',()=>{
+ assert.deepEqual(delivery.deliveryArguments(['707','proof.json','--merged','--read-only']),{number:'707',evidenceFile:'proof.json',mode:'--merged',readOnly:true});
+ assert.equal(delivery.deliveryArguments(['707','review.json']).readOnly,false);
+ for(const args of [['707','review.json','--read-only'],['707','proof.json','--merged','--write'],['707','proof.json','--merged','--read-only','extra']])assert.throws(()=>delivery.deliveryArguments(args),/Usage/);
+});
+test('ordinary Release evidence cannot be borrowed by the existing develop Full auto-merge authorization',()=>{
+ const p=releaseProof(),arm={schemaVersion:4,kind:'auto-merge-arm',repo:p.repo,baseRef:'develop',prNumber:p.prNumber,
+  head:p.head,base:p.base,tested:p.tested,sourceTree:p.sourceTree,targetBeforeSha:p.base,targetAfterSha:p.base,parents:p.parents,
+  review:p.review,fullPreflight:p};
+ assert(delivery.verifyAutoMergeArm(arm).length,'Release kind must not authorize develop merely because both use schema3');
+});
+test('ordinary Release pending snapshot survives native auto-merge without claiming an open successful preflight',()=>{
+ for(const mode of ['full','fast']){
+  const e=releaseProof(mode);e.run.status=e.currentRun.status='in_progress';e.run.conclusion=e.currentRun.conclusion=null;
+  e.licenses.run.status=e.licenses.currentRun.status='queued';e.licenses.run.conclusion=e.licenses.currentRun.conclusion=null;
+  const q=releaseQuery(e),saved=collectPrDelivery(e.repo,e.prNumber,e.review,q.query,()=>assert.fail('pending has no checkout to download')).evidence;
+  assert.equal(saved.state,'pr_pending');assert.equal(saved.checkout,undefined);assert(verifyDelivery(saved).length);
+  assert.equal(saved.pr.state,'open');assert.equal(saved.pr.merged,false);
+  const complete=releaseProof(mode),m=releaseQuery(complete,{merged:true});
+  const merged=collectMergedDelivery(complete.repo,complete.prNumber,saved,m.query,m.load);
+  assert.deepEqual(verifyMergedDelivery(merged),{state:'merged_passed',errors:[]});assert.equal(merged.preflight.state,'pr_pending');assert.equal(merged.preflight.checkout,undefined);
+  for(const mutate of [p=>p.pr.state='closed',p=>p.targetBeforeSha=sha('f'),p=>p.review.reviewedHeadSha=sha('f'),p=>p.run.pull_requests=[],p=>p.licenses.run.repository.id=1460097312]){
+   const bad=structuredClone(merged);mutate(bad.preflight);assert.equal(verifyMergedDelivery(bad).state,'merged_pending');
+  }
+  const wrong=structuredClone(merged);wrong.quality.checkout.base=sha('f');assert.equal(verifyMergedDelivery(wrong).state,'merged_pending');
+ }
+});
+test('ordinary Release captures truthful pending when auto-merge closes the PR during successful artifact download',()=>{
+ const e=releaseProof(),q=releaseQuery(e);let closed=false;
+ const query=(...args)=>{
+  if(closed&&args.at(-1).includes('/git/ref/heads/'))return JSON.stringify({ref:'refs/heads/'+e.baseRef,object:{type:'commit',sha:sha('e')}});
+  return q.query(...args);
+ };
+ const saved=collectPrDelivery(e.repo,e.prNumber,e.review,query,()=>{
+  const proof=q.load();closed=true;e.pr.state='closed';e.pr.merged=true;e.pr.merge_commit_sha=sha('e');return proof;
+ }).evidence;
+ assert.equal(saved.state,'pr_pending');assert.equal(saved.pr.state,'open');assert.equal(saved.current.state,'closed');assert(verifyDelivery(saved).length);
+ const completed=releaseProof(),m=releaseQuery(completed,{merged:true});assert.equal(verifyMergedDelivery(collectMergedDelivery(completed.repo,completed.prNumber,saved,m.query,m.load)).state,'merged_passed');
+});
+test('ordinary Release pending completion requires the saved source association and every fresh successful gate',()=>{
+ const seed=releaseProof();seed.run.status=seed.currentRun.status='queued';seed.run.conclusion=seed.currentRun.conclusion=null;seed.jobs=[];
+ const q=releaseQuery(seed),saved=collectPrDelivery(seed.repo,seed.prNumber,seed.review,q.query,q.load).evidence;
+ assert.equal(saved.mode,'pending');assert.equal(saved.checkout,undefined);
+ const complete=releaseProof(),m=releaseQuery(complete,{merged:true}),merged=collectMergedDelivery(complete.repo,complete.prNumber,saved,m.query,m.load);
+ assert.deepEqual(verifyMergedDelivery(merged),{state:'merged_passed',errors:[]});
+ for(const mutate of [
+  e=>e.preflight.testedCommit.parents.reverse(),e=>e.preflight.sourceTree=sha('f'),e=>e.preflight.tested=sha('f'),
+  e=>e.preflight.run.id++,e=>e.preflight.attempt++,e=>e.preflight.run.path='.github/workflows/other.yml',
+  e=>e.preflight.pr.draft=true,e=>e.preflight.review.unresolved.push('open'),e=>e.preflight.licenses.run.pull_requests=[],
+  e=>e.quality.run.conclusion='failure',e=>e.quality.currentRun.run_attempt++,e=>e.quality.jobs.pop(),
+  e=>e.quality.checkoutArtifact.expired=true,e=>e.quality.checkout.tested=sha('f'),e=>e.quality.run.pull_requests=[{number:999}],
+  e=>e.licenses.jobs[0].conclusion='failure',e=>e.licenses.currentRun.id++,e=>e.commit.parents.push({sha:sha('f')}),
+  e=>e.targetComparison.base_commit.sha=sha('f'),e=>e.current.head.sha=sha('f'),
+ ]){const bad=structuredClone(merged);mutate(bad);assert.equal(verifyMergedDelivery(bad).state,'merged_pending',String(mutate));}
+ const failed=structuredClone(seed);failed.run.status='completed';failed.run.conclusion='failure';
+ const bad=releaseQuery(failed),pending=collectPrDelivery(failed.repo,failed.prNumber,failed.review,bad.query,()=>assert.fail('failed run has no successful checkout')).evidence;
+ assert.equal(pending.state,'pr_pending');assert(verifyDelivery(pending).length);
+});
+test('ordinary Release pending Fast download failure is superseded only by a fresh successful immutable receipt',()=>{
+ const e=releaseProof('fast'),q=releaseQuery(e),saved=collectPrDelivery(e.repo,e.prNumber,e.review,q.query,()=>{throw Error('temporary artifact download failure');}).evidence;
+ assert.equal(saved.state,'pr_pending');assert.match(saved.receiptError,/temporary/);assert.equal(saved.checkout,undefined);
+ const fresh=releaseQuery(releaseProof('fast'),{merged:true}),merged=collectMergedDelivery(e.repo,e.prNumber,saved,fresh.query,fresh.load);
+ assert.deepEqual(verifyMergedDelivery(merged),{state:'merged_passed',errors:[]});assert.equal(merged.preflight.receiptError,saved.receiptError);
+ const bad=structuredClone(merged);bad.quality.receiptError='fresh download failure';assert.equal(verifyMergedDelivery(bad).state,'merged_pending');
+});

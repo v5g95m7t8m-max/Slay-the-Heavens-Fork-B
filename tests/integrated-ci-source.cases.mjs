@@ -70,6 +70,32 @@ test('Release bootstrap exact sources retain every old byte and reject missing d
  const bytes=rawReadFileSync('tests/helpers/release-bootstrap-ci-source.json.gz');
  const marker="const bytes=readFileSync(new URL('./release-bootstrap-ci-source.json.gz',import.meta.url));";
  assert.equal(leaf.split(marker).length,2);
- const broken=leaf.replace(marker,`const bytes=Buffer.from(${JSON.stringify(bytes.subarray(0,bytes.length-1).toString('base64'))},'base64');`);
+ const broken=leaf.replace("from './release-delivery-677-source.mjs'",'from '+JSON.stringify(new URL('./helpers/release-delivery-677-source.mjs',import.meta.url).href))
+  .replace(marker,`const bytes=Buffer.from(${JSON.stringify(bytes.subarray(0,bytes.length-1).toString('base64'))},'base64');`);
  await assert.rejects(import('data:text/javascript;base64,'+Buffer.from(broken).toString('base64')),/complete Release bootstrap CI continuation/);
+});
+
+import {releaseDelivery677Source,assertReleaseDelivery677Current} from './helpers/release-delivery-677-source.mjs';
+import {gunzipSync} from 'node:zlib';
+test('permanent 677 delivery join preserves exact source identities and does not depend on unlanded 712',()=>{
+ const packet=JSON.parse(gunzipSync(rawReadFileSync('tests/helpers/release-delivery-677-source.json.gz')));
+ assertReleaseDelivery677Current();assert.deepEqual(packet.unlanded712,{included:false,required:false});
+ for(const [path,row]of Object.entries(packet.files)){
+  const current=rawReadFileSync(path,'utf8').replaceAll('\r\n','\n');assert.equal(hash(current),row.currentSha256);
+  for(const eol of ['\n','\r\n']){
+   const source=current.replaceAll('\n',eol);
+   assert.equal(releaseDelivery677Source(path,source).replaceAll('\r\n','\n'),row.before.source);
+   assert.equal(releaseDelivery677Source(path,source,{sha256:row.before.sha256}).replaceAll('\r\n','\n'),row.before.source);
+   for(const before of [{},{sha256:'0'.repeat(64)}])assert.strictEqual(releaseDelivery677Source(path,source,before),source);
+   for(const bad of [source+eol,source.slice(1),source.replaceAll(eol,'\r\r\n'),null,{},17])assert.strictEqual(releaseDelivery677Source(path,bad),bad);
+   for(const foreign of ['foreign/'+path,'__proto__','constructor','src/lua/abyss_ui.lua'])assert.strictEqual(releaseDelivery677Source(foreign,source),source);
+  }
+  for(const mode of ['changed','missing','null','buffer'])assert.throws(()=>assertReleaseDelivery677Current((p,e)=>{
+   if(p!==path)return rawReadFileSync(p,e);if(mode==='missing')throw Error('missing');if(mode==='null')return null;
+   if(mode==='buffer')return rawReadFileSync(p);return rawReadFileSync(p,e)+'\n';
+  }));
+ }
+ for(const path of Object.keys(packet.pendingOperatorFiles).filter(p=>p.startsWith('scripts/')))
+  assert.equal(rawReadFileSync(path,'utf8').replaceAll('\r\n','\n'),packet.pendingOperatorFiles[path].source,'reviewed pending operator core is byte exact');
+ assert.throws(()=>assertReleaseDelivery677Current((p,e)=>p==='tests/helpers/release-delivery-677-source.json.gz'?Buffer.from('bad'):rawReadFileSync(p,e)));
 });

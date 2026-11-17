@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import {qualityShardJobs} from './ci-quality-shape.mjs';
 import {projectRepositoryId,currentProjectRepository,projectRepositoryMatches,collectIdentityWitness,identityWitnessValid} from './repository-identity.mjs';
-import {prFastErrors,collectFastCheckout} from './pr-quality-evidence.mjs';
+import {prFastErrors,releasePrFastErrors,collectFastCheckout} from './pr-quality-evidence.mjs';
 import {syncBacklogCloseout} from './backlog-closeout.mjs';
 export {planBacklogCloseout,syncBacklogCloseout} from './backlog-closeout.mjs';
 
@@ -20,6 +20,7 @@ export const deliverySchemaVersion=3;
 export const currentFullQualityJobs=[...requiredJobs,...qualityShardJobs,'impact','fast'];
 const validSha=value=>/^[a-f0-9]{40}$/.test(value??'');
 const positiveId=value=>Number.isSafeInteger(value)&&value>0;
+const releaseTarget=value=>/^release\/[\w][\w.-]*$/.test(value??'');
 const parentShas=commit=>Array.isArray(commit?.parents)?commit.parents.map(parent=>parent?.sha):undefined;
 // Deliberately narrow: only non-executable narrative documents qualify.
 const lowRiskDocPath=/^(?:README\.md|CHANGELOG\.md|docs\/(?:drafts|history|lore|research)\/.+\.(?:md|txt))$/;
@@ -146,7 +147,7 @@ export function verifyAutoMergeArm(e) {
   }else if(e.fullPreflight===undefined){
     if(!positiveId(e.pendingRun?.id)||!positiveId(e.pendingRun?.attempt)||e.pendingRun.head!==e.head)
       errors.push('Auto-merge requires the exact pending Full run identity');
-  }else if(e.fullPreflight.schemaVersion!==3)errors.push('Auto-merge requires current Full preflight evidence');
+  }else if(e.fullPreflight.schemaVersion!==3||e.fullPreflight.kind==='release-pr')errors.push('Auto-merge requires current develop Full preflight evidence');
   else {
     errors.push(...verifyDelivery(e.fullPreflight).map(error=>'Full preflight: '+error));
     for(const field of ['repo','prNumber','head','base','tested','sourceTree'])
@@ -175,7 +176,151 @@ export function verifyAutoMergeArm(e) {
     errors.push('Auto-merge review is for another PR');
   return errors;
 }
+// Ordinary protected Release PRs reuse the current jobs and immutable receipts.
+// They use native protected merging, without develop's queue or Release push Full.
+function releaseRunAssociated(run,number,knownRun) {
+  return Array.isArray(run?.pull_requests)&&(run.pull_requests.some(p=>p.number===number)||
+    !run.pull_requests.length&&run.id===knownRun?.id&&run.head_sha===knownRun?.head_sha&&knownRun?.pull_requests?.some(p=>p.number===number));
+}
+function releaseLicenseErrors(proof,{repo,head,number},knownRun) {
+  const errors=[],run=proof?.run,current=proof?.currentRun;
+  const valid=r=>positiveId(r?.id)&&positiveId(r.run_attempt)&&r.head_sha===head&&r.event==='pull_request'&&
+    r.path==='.github/workflows/licenses.yml'&&projectRepositoryMatches(r.repository,repo)&&
+    r.status==='completed'&&r.conclusion==='success'&&releaseRunAssociated(r,number,knownRun);
+  if(!valid(run)||!valid(current)||current?.id!==run?.id||current?.run_attempt!==run?.run_attempt)errors.push('Release License run is missing, stale or mismatched');
+  const jobs=proof?.jobs,ids=new Set(),attempts=new Set();
+  if(!Array.isArray(jobs))return [...errors,'Release License inventory is missing'];
+  for(const job of jobs){
+    if(job?.name!=='inventory'||!positiveId(job.id)||ids.has(job.id)||attempts.has(job.run_attempt)||
+      job.run_id!==run?.id||job.head_sha!==head||!positiveId(job.run_attempt)||job.run_attempt>run?.run_attempt)
+      errors.push('Invalid or duplicate Release License inventory identity');
+    ids.add(job?.id);attempts.add(job?.run_attempt);
+  }
+  const latest=latestJob(jobs,'inventory');
+  if(latest?.run_attempt!==run?.run_attempt||latest?.status!=='completed'||latest?.conclusion!=='success')errors.push('Release License latest inventory is not successful');
+  return errors;
+}
+// A pending record proves only the real open source checkpoint. It is never
+// successful preflight evidence; completion is established from fresh main CI.
+function releasePendingErrors(e) {
+  const errors=[],pr=e.pr,review=e.review;
+  if(e.schemaVersion!==3||e.kind!=='release-pr'||e.state!=='pr_pending'||!['pending','full','fast'].includes(e.mode)||!releaseTarget(e.baseRef)||!positiveId(e.prNumber))errors.push('Invalid pending Release identity');
+  for(const key of ['head','base','tested','sourceTree','targetBeforeSha'])if(!validSha(e[key]))errors.push('Invalid pending Release '+key);
+  if(e.targetBeforeSha!==e.base||pr?.number!==e.prNumber||pr.state!=='open'||pr.merged!==false||pr.draft!==false||pr.head?.sha!==e.head||pr.base?.sha!==e.base||pr.base?.ref!==e.baseRef||pr.merge_commit_sha!==e.tested||!projectRepositoryMatches(pr.head?.repo,e.repo)||!projectRepositoryMatches(pr.base?.repo,e.repo))errors.push('Pending Release open source checkpoint differs');
+  if(e.event!=='pull_request'||e.testedCommit?.sha!==e.tested||e.testedCommit?.commit?.tree?.sha!==e.sourceTree||JSON.stringify(parentShas(e.testedCommit))!==JSON.stringify([e.base,e.head])||JSON.stringify(e.parents)!==JSON.stringify([e.base,e.head]))errors.push('Pending Release tested source differs');
+  const associated=(run,path)=>positiveId(run?.id)&&positiveId(run.run_attempt)&&run.head_sha===e.head&&run.event==='pull_request'&&run.path===path&&projectRepositoryMatches(run.repository,e.repo)&&releaseRunAssociated(run,e.prNumber);
+  if(!associated(e.run,qualityWorkflowPath)||e.runId!==e.run?.id||e.attempt!==e.run?.run_attempt)errors.push('Pending Release Quality association differs');
+  if(!associated(e.licenses?.run,'.github/workflows/licenses.yml'))errors.push('Pending Release License association differs');
+  if(review?.disposition!==undefined||review?.reviewedHeadSha!==e.head||review?.reviewedBaseSha!==e.base||typeof review?.reviewId!=='string'||!review.reviewId.trim()||review.conclusion!=='pass'||!Array.isArray(review.unresolved)||review.unresolved.length||review.repo!=null&&review.repo!==e.repo||review.prNumber!=null&&review.prNumber!==e.prNumber)errors.push('Pending Release independent review differs');
+  return errors;
+}
+function releasePrDeliveryErrors(e,knownPrRun,{checkpoint=false,knownLicenseRun}={}) {
+  const errors=[],pr=e.pr,current=e.current;
+  if(e.schemaVersion!==3||e.kind!=='release-pr'||!['full','fast'].includes(e.mode)||!releaseTarget(e.baseRef))errors.push('Invalid ordinary Release delivery kind, schema, mode or target');
+  if(!projectRepositoryMatches(e.run?.repository,e.repo)||!projectRepositoryMatches(e.currentRun?.repository,e.repo))errors.push('Ordinary Release delivery requires the main repository');
+  for(const key of ['head','base','tested','sourceTree','targetBeforeSha',...(checkpoint?[]:['targetAfterSha'])])if(!validSha(e[key]))errors.push('Invalid Release '+key);
+  if(e.targetBeforeSha!==e.base||!checkpoint&&e.targetAfterSha!==e.base)errors.push('Release target moved during collection');
+  const ready=p=>p?.number===e.prNumber&&p.state==='open'&&p.merged===false&&p.draft===false&&
+    p.head?.sha===e.head&&projectRepositoryMatches(p.head?.repo,e.repo)&&p.base?.ref===e.baseRef&&p.base.sha===e.base&&
+    projectRepositoryMatches(p.base?.repo,e.repo)&&p.merge_commit_sha===e.tested;
+  if(!positiveId(e.prNumber)||!ready(pr)||!checkpoint&&!ready(current))errors.push('Release ready PR HEAD/BASE/tested identity changed');
+  if(e.event!=='pull_request'||e.testedCommit?.sha!==e.tested||e.testedCommit?.commit?.tree?.sha!==e.sourceTree||
+    JSON.stringify(parentShas(e.testedCommit))!==JSON.stringify([e.base,e.head])||JSON.stringify(e.parents)!==JSON.stringify([e.base,e.head]))errors.push('Release tested commit/tree/parents differ');
+  errors.push(...runErrors(e.run,{head:e.head,event:'pull_request',runId:e.runId,attempt:e.attempt,repo:e.repo}),
+    ...runErrors(e.currentRun,{head:e.head,event:'pull_request',runId:e.runId,attempt:e.attempt,repo:e.repo}));
+  if(!releaseRunAssociated(e.run,e.prNumber,knownPrRun)||!releaseRunAssociated(e.currentRun,e.prNumber,knownPrRun))errors.push('Current Release Quality run belongs to another or unknown PR');
+  if(e.mode==='fast')errors.push(...releasePrFastErrors({...e,number:e.prNumber,target:e.base,commit:e.testedCommit,latestRun:e.currentRun},{knownPrRun}));
+  else{
+    errors.push(...qualityErrors(e.jobs,{attempt:e.attempt,runId:e.runId,head:e.head,schemaVersion:3}),...receiptErrors(e.checkout,e.checkoutArtifact,e.jobs,e.run,3));
+    for(const [key,value]of Object.entries({schemaVersion:1,head:e.head,base:e.base,tested:e.tested,runId:e.runId,event:'pull_request',prNumber:e.prNumber}))
+      if(e.checkout?.[key]!==value)errors.push('Release immutable checkout differs: '+key);
+    if(JSON.stringify(e.checkout?.parents)!==JSON.stringify([e.base,e.head]))errors.push('Release checkout parents differ');
+    if(!releaseRunAssociated(e.run,e.prNumber,knownPrRun))errors.push('Release Full run belongs to another PR');
+  }
+  const review=e.review;
+  if(review?.disposition!==undefined||review?.reviewedHeadSha!==e.head||review?.reviewedBaseSha!==e.base||typeof review?.reviewId!=='string'||!review.reviewId.trim()||review.conclusion!=='pass'||!Array.isArray(review.unresolved)||review.unresolved.length||
+    review.repo!=null&&review.repo!==e.repo||review.prNumber!=null&&review.prNumber!==e.prNumber)errors.push('Release independent review is missing, stale or unresolved');
+  errors.push(...releaseLicenseErrors(e.licenses,{repo:e.repo,head:e.head,number:e.prNumber},knownLicenseRun));
+  return errors;
+}
+function verifyReleaseMergedDelivery(e) {
+  const p=e.preflight??{},pending=p.state==='pr_pending',errors=(pending?releasePendingErrors(p):releasePrDeliveryErrors(p)).map(message=>'Preflight: '+message),pr=e.pr,current=e.current;
+  if(e.schemaVersion!==3||e.kind!=='release-merged'||e.repo!==p.repo)errors.push('Invalid Release merged evidence identity');
+  const merged=v=>v?.number===p.prNumber&&v.merged===true&&v.state==='closed'&&v.head?.sha===p.head&&
+    projectRepositoryMatches(v.head?.repo,e.repo)&&v.base?.ref===p.baseRef&&projectRepositoryMatches(v.base?.repo,e.repo)&&v.merge_commit_sha===e.commit?.sha;
+  if(!merged(pr)||!merged(current))errors.push('Actual merged Release PR changed');
+  if(!validSha(e.commit?.sha)||JSON.stringify(parentShas(e.commit))!==JSON.stringify([p.base])||e.commit?.commit?.tree?.sha!==p.sourceTree)errors.push('Actual Release squash parent or source tree differs');
+  if(e.testedCommit?.sha!==p.tested||e.testedCommit?.commit?.tree?.sha!==p.sourceTree||JSON.stringify(parentShas(e.testedCommit))!==JSON.stringify([p.base,p.head]))errors.push('Current tested source commit/tree differs from saved Release proof');
+  if(!validSha(e.targetBeforeSha)||e.targetBeforeSha!==e.targetAfterSha||
+    !['ahead','identical'].includes(e.targetComparison?.status)||e.targetComparison?.base_commit?.sha!==e.commit?.sha||e.targetComparison?.merge_base_commit?.sha!==e.commit?.sha||
+    (e.targetComparison.status==='identical'?e.targetBeforeSha!==e.commit?.sha:e.targetComparison.commits?.at(-1)?.sha!==e.targetBeforeSha))errors.push('Current Release target moved or does not contain the actual squash');
+  const q=e.quality??{};
+  if(q.mode!==undefined&&p.mode!=='pending'&&q.mode!==p.mode)errors.push('Current Release PR route differs from saved preflight');
+  // Saved PR association survives GitHub removing pull_requests links after
+  // merge. Re-read raw metadata, jobs and artifacts; never rewrite a closed PR.
+  errors.push(...releasePrDeliveryErrors({...p,...Object.fromEntries(['run','jobs','checkout','checkoutArtifact','plan','currentRun'].map(key=>[key,q[key]])),mode:q.mode??p.mode,receiptError:q.receiptError,licenses:e.licenses,runId:q.run?.id,attempt:q.run?.run_attempt},p.run,{checkpoint:pending,knownLicenseRun:p.licenses?.run}).map(message=>'Current PR evidence: '+message));
+  errors.push(...releaseLicenseErrors(e.licenses,{repo:e.repo,head:p.head,number:p.prNumber},p.licenses?.run));
+  return {state:errors.length?'merged_pending':'merged_passed',errors};
+}
+function releaseRuns(query,repo,workflow,head,number,knownRun) {
+  const latest=pages(query,`repos/${repo}/actions/workflows/${workflow}/runs?event=pull_request&head_sha=${head}&per_page=100`,'workflow_runs')
+    .filter(r=>r.head_sha===head&&r.event==='pull_request'&&Array.isArray(r.pull_requests)&&
+      (r.pull_requests.some(p=>p.number===number)||!r.pull_requests.length)).sort((a,b)=>b.id-a.id)[0];
+  // An unassociated newer run closes the gate; never fall back to old green.
+  return latest&&(latest.pull_requests.some(p=>p.number===number)||latest.id===knownRun?.id&&knownRun?.pull_requests?.some(p=>p.number===number))?latest:undefined;
+}
+function releaseCheckout(query,repo,run,jobs,loadCheckout) {
+  const fast=jobs.some(job=>job.name==='fast (windows-2025)');
+  const load=loadCheckout??((r,j)=>{const dir=join('build/delivery',randomUUID());mkdirSync(dir,{recursive:true});return fast?collectFastCheckout(repo,r,j,dir,query):checkoutReceipt(repo,r,j,dir,query);});
+  return load(run,jobs);
+}
+function collectReleaseQuality(query,repo,number,head,loadCheckout,knownRun,pending=false) {
+  const run=releaseRuns(query,repo,'quality.yml',head,number,knownRun);
+  if(!run||!pending&&(run.status!=='completed'||run.conclusion!=='success'))throw Error('Current Release PR Quality run is missing or unsuccessful');
+  const jobs=pages(query,`repos/${repo}/actions/runs/${run.id}/jobs?filter=all&per_page=100`,'jobs');
+  const mode=jobs.some(job=>job.name==='fast (windows-2025)')?'fast':jobs.some(job=>/^rules \(/.test(job.name))?'full':'pending';
+  return {run,jobs,...(pending?{}:releaseCheckout(query,repo,run,jobs,loadCheckout)),currentRun:releaseRuns(query,repo,'quality.yml',head,number,knownRun),mode};
+}
+function collectReleaseLicense(query,repo,number,head,knownRun) {
+  const run=releaseRuns(query,repo,'licenses.yml',head,number,knownRun);
+  const jobs=run?pages(query,`repos/${repo}/actions/runs/${run.id}/jobs?filter=all&per_page=100`,'jobs'):[];
+  return {run,jobs,currentRun:releaseRuns(query,repo,'licenses.yml',head,number,knownRun)};
+}
+function collectReleasePrDelivery(repo,number,review,query,loadCheckout,pr) {
+  if(pr.state!=='open'||pr.merged)throw Error('Release preflight requires an open PR');
+  const before=targetHead(query,repo,pr.base.ref);
+  if(before!==pr.base.sha)throw Error('Release PR base is stale');
+  const q=collectReleaseQuality(query,repo,number,pr.head.sha,loadCheckout,undefined,true),commit=JSON.parse(query('api',`repos/${repo}/commits/${pr.merge_commit_sha}`));
+  const licenses=collectReleaseLicense(query,repo,number,pr.head.sha);
+  const evidence={schemaVersion:3,kind:'release-pr',state:'pr_pending',repo,baseRef:pr.base.ref,mode:q.mode,head:pr.head.sha,base:pr.base.sha,tested:pr.merge_commit_sha,sourceTree:commit.commit?.tree?.sha,
+    testedCommit:commit,parents:parentShas(commit),runId:q.run.id,attempt:q.run.run_attempt,event:q.run.event,prNumber:number,pr,review,...q,licenses,targetBeforeSha:before};
+  if(q.run.status!=='completed'||q.run.conclusion!=='success'||licenses.run?.status!=='completed'||licenses.run?.conclusion!=='success')return {evidence,current:pr};
+  try{Object.assign(evidence,releaseCheckout(query,repo,q.run,q.jobs,loadCheckout));}catch(error){evidence.receiptError=error.message;return {evidence,current:pr};}
+  evidence.current=JSON.parse(query('api',`repos/${repo}/pulls/${number}`));
+  evidence.currentRun=releaseRuns(query,repo,'quality.yml',pr.head.sha,number);
+  licenses.currentRun=releaseRuns(query,repo,'licenses.yml',pr.head.sha,number);
+  evidence.targetAfterSha=targetHead(query,repo,pr.base.ref);
+  if(!releasePrDeliveryErrors(evidence).length)evidence.state='pr_passed';
+  return {evidence,current:evidence.current};
+}
+
+function collectReleaseMergedDelivery(repo,number,preflight,query,loadCheckout) {
+  const pr=JSON.parse(query('api',`repos/${repo}/pulls/${number}`));
+  if(!pr.merged||!releaseTarget(pr.base?.ref))throw Error('Expected merged Release PR');
+  const before=targetHead(query,repo,pr.base.ref),commit=JSON.parse(query('api',`repos/${repo}/commits/${pr.merge_commit_sha}`));
+  const testedCommit=JSON.parse(query('api',`repos/${repo}/commits/${preflight.tested}`));
+  const quality=collectReleaseQuality(query,repo,number,preflight.head,loadCheckout,preflight.run),licenses=collectReleaseLicense(query,repo,number,preflight.head,preflight.licenses?.run);
+  const comparisonPath=`repos/${repo}/compare/${commit.sha}...${before}?per_page=1`;
+  let targetComparison=JSON.parse(query('api',comparisonPath));
+  if(targetComparison.status==='ahead'&&targetComparison.commits?.at(-1)?.sha!==before&&positiveId(targetComparison.total_commits))
+    targetComparison=JSON.parse(query('api',comparisonPath+'&page='+targetComparison.total_commits));
+  const current=JSON.parse(query('api',`repos/${repo}/pulls/${number}`));
+  quality.currentRun=releaseRuns(query,repo,'quality.yml',preflight.head,number,preflight.run);
+  licenses.currentRun=releaseRuns(query,repo,'licenses.yml',preflight.head,number,preflight.licenses?.run);
+  return {schemaVersion:3,kind:'release-merged',repo,preflight,pr,commit,testedCommit,quality,licenses,current,targetComparison,targetBeforeSha:before,targetAfterSha:targetHead(query,repo,pr.base.ref)};
+}
 export function verifyDelivery(e) {
+  if(e?.kind==='release-pr')return e.state==='pr_pending'?[...releasePendingErrors(e),'Release preflight is pending; fresh completed CI is required after merge']:releasePrDeliveryErrors(e);
   if(e?.schemaVersion===6)return verifyAutoMergeArm(e);
   if(e?.schemaVersion===7){
     const errors=prFastErrors(e);
@@ -218,6 +363,7 @@ export function verifyDelivery(e) {
   return errors;
 }
 export function verifyMergedDelivery(e) {
+  if(e?.kind==='release-merged')return verifyReleaseMergedDelivery(e);
   if(!e||typeof e!=='object')return {state:'merged_pending',errors:['Missing merged evidence']};
   const preflight=e.preflight??{},early=preflight.schemaVersion===4&&preflight.fullPreflight===undefined;
   const errors=(early?verifyAutoMergeArm(preflight):verifyDelivery(preflight)).map(error=>`Preflight: ${error}`);
@@ -358,7 +504,7 @@ function latestQualityRun(query,repo,{event,head,branch,number,allowMissingPrLin
     .sort((a,b)=>b.id-a.id)[0];
 }
 function targetHead(query,repo,baseRef) {
-  if(!['develop','master'].includes(baseRef))throw new Error('Unexpected target branch');
+  if(!['develop','master'].includes(baseRef)&&!releaseTarget(baseRef))throw new Error('Unexpected target branch');
   const ref=JSON.parse(query('api',`repos/${repo}/git/ref/heads/${baseRef}`));
   if(ref?.ref!==`refs/heads/${baseRef}`||ref.object?.type!=='commit'||!validSha(ref.object?.sha))
     throw new Error('Actual target Git ref is missing or malformed');
@@ -366,6 +512,7 @@ function targetHead(query,repo,baseRef) {
 }
 export function collectPrDelivery(repo,number,review,query=gh,loadCheckout) {
   const pr=JSON.parse(query('api',`repos/${repo}/pulls/${number}`));
+  if(releaseTarget(pr.base?.ref))return collectReleasePrDelivery(repo,number,review,query,loadCheckout,pr);
   if(pr.state!=='open'||pr.merged)throw new Error('Preflight requires an open PR; use --merged with its saved preflight evidence after merge');
   // PR base.sha and refs/pull/*/merge can both retain the old combination after
   // the actual target advances. Read the independent branch ref, not that pair.
@@ -404,6 +551,7 @@ export function collectMergedDelivery(repo,number,preflight,query=gh,loadCheckou
   const dir=join('build/delivery',randomUUID());mkdirSync(dir,{recursive:true});
   return checkoutReceipt(repo,run,jobs,dir,query);
 }) {
+  if(preflight.kind==='release-pr')return collectReleaseMergedDelivery(repo,number,preflight,query,arguments.length<5?undefined:loadCheckout);
   const pr=JSON.parse(query('api',`repos/${repo}/pulls/${number}`));
   if(!pr.merged||!validSha(pr.merge_commit_sha))throw new Error('PR is not merged; its passing preflight is only pr_passed');
   const commit=JSON.parse(query('api',`repos/${repo}/commits/${pr.merge_commit_sha}`));
@@ -445,31 +593,41 @@ export function collectMergedDelivery(repo,number,preflight,query=gh,loadCheckou
   return {schemaVersion:deliverySchemaVersion,repo,preflight,pr,commit,run,jobs,...receipt,current,currentRun,...(prFull?{prFull}:{}),...(queueFull?{queueFull}:{}),
     ...(waived?{changedFileCount,changedFiles}:{})};
 }
+export function deliveryArguments(args) {
+  const [number,evidenceFile,mode,...extra]=args,readOnly=mode==='--merged'&&extra.length===1&&extra[0]==='--read-only';
+  if(!/^[1-9]\d*$/.test(number??'')||!evidenceFile||mode!==undefined&&mode!=='--merged'||extra.length&&!readOnly)
+    throw Error('Usage: npm run verify:delivery -- <PR-number> <independent-review.json>|--low-risk-docs OR <PR-number> <preflight-evidence.json> --merged [--read-only]');
+  return {number,evidenceFile,mode,readOnly};
+}
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   try {
-    const [number,evidenceFile,mode,...extra]=process.argv.slice(2);
-    if(!/^[1-9]\d*$/.test(number??'')||!evidenceFile||mode!==undefined&&mode!=='--merged'||extra.length)throw new Error('Usage: npm run verify:delivery -- <PR-number> <independent-review.json>|--low-risk-docs OR <PR-number> <preflight-evidence.json> --merged');
+    const {number,evidenceFile,mode,readOnly}=deliveryArguments(process.argv.slice(2));
     const repo=gh('repo','view','--json','nameWithOwner','--jq','.nameWithOwner').trim();
     if(!projectRepositoryMatches(currentProjectRepository(gh),repo))throw Error('Current repository differs from the fixed project');
     const dir=join('build/delivery',randomUUID());mkdirSync(dir,{recursive:true});
     if(mode==='--merged') {
       const preflightText=readFileSync(evidenceFile,'utf8'),preflight=JSON.parse(preflightText);
-      const errors=[4,6].includes(preflight.schemaVersion)?verifyAutoMergeArm(preflight):verifyDelivery(preflight);
+      if(readOnly&&preflight.kind!=='release-pr')throw Error('Read-only merged validation requires ordinary Release evidence');
+      const errors=preflight.kind==='release-pr'&&preflight.state==='pr_pending'?releasePendingErrors(preflight):[4,6].includes(preflight.schemaVersion)?verifyAutoMergeArm(preflight):verifyDelivery(preflight);
       const identityWitness=preflight.repo!==repo?collectIdentityWitness(preflightText,repo,gh):undefined;
       if(preflight.prNumber!==Number(number)||errors.length)throw new Error('Preflight evidence is invalid, stale or belongs to a different PR/repository');
-      const evidence=collectMergedDelivery(repo,Number(number),preflight,gh,(run,jobs)=>checkoutReceipt(repo,run,jobs,join(dir,String(run.id))));
+      const evidence=collectMergedDelivery(repo,Number(number),preflight,gh,(run,jobs)=>jobs.some(job=>job.name==='fast (windows-2025)')?
+        collectFastCheckout(repo,run,jobs,join(dir,String(run.id)),gh):checkoutReceipt(repo,run,jobs,join(dir,String(run.id))));
       if(identityWitness)evidence.identityWitness=identityWitness;
       const result=verifyMergedDelivery(evidence);
       writeFileSync(join(dir,'evidence.json'),JSON.stringify({...evidence,...result},null,2)+'\n');
       console.log(`Delivery state: ${result.state}; actual merged commit ${evidence.pr.merge_commit_sha}; evidence ${dir}`);
       if(result.errors.length)throw new Error(result.errors.join('\n'));
+      if(readOnly)console.log('Backlog state: not requested by read-only Release validation');
+      else {
       const filePages=JSON.parse(gh('api','--paginate','--slurp',`repos/${repo}/pulls/${number}/files?per_page=100`));
       if(!Array.isArray(filePages)||filePages.some(page=>!Array.isArray(page))||filePages.flat().length!==evidence.pr.changed_files)
         throw Error('Backlog pending: incomplete PR file list');
-      const target=JSON.parse(gh('api',`repos/${repo}/git/ref/heads/develop`));
+      const target=JSON.parse(gh('api',`repos/${repo}/git/ref/heads/${evidence.pr.base.ref}`));
       const backlog=syncBacklogCloseout({pr:evidence.pr,files:filePages.flat(),targetSha:target.object?.sha});
       writeFileSync(join(dir,'backlog.json'),JSON.stringify(backlog,null,2)+'\n');
       console.log(`Backlog state: ${backlog.state}; ${backlog.taskIds.join(', ')||'no tasks declared'}`);
+      }
       process.exitCode=0;
     } else {
       const {evidence,current}=collectPrDelivery(repo,Number(number),evidenceFile==='--low-risk-docs'?{disposition:'low-risk-docs'}:JSON.parse(readFileSync(evidenceFile,'utf8')),gh,
@@ -477,7 +635,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
       const errors=verifyDelivery(evidence);
       if(current.state!=='open'||current.merged||current.head.sha!==evidence.head||current.base.sha!==evidence.base||current.base.ref!==evidence.baseRef||current.merge_commit_sha!==evidence.tested)errors.push('PR head/base/merge combination changed during verification');
       writeFileSync(join(dir,'evidence.json'),JSON.stringify({...evidence,state:errors.length?'pr_pending':'pr_passed',errors},null,2)+'\n');
-      if(errors.length)throw new Error(errors.join('\n'));
+      if(errors.length){console.log(`Delivery state: pr_pending; evidence ${join(dir,'evidence.json')}`);throw new Error(errors.join('\n'));}
       console.log(`Delivery state: pr_passed; evidence ${dir}; merge with --match-head-commit ${evidence.head}. Then run verify:delivery -- ${number} ${join(dir,'evidence.json')} --merged. External reviewer provenance must still be inspected when required.`);
     }
   }catch(error){console.error(error.message);process.exitCode=1;}
