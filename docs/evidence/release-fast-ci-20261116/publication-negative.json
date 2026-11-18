@@ -1,8 +1,0 @@
-{
-  "repo": "FurinyaWorks/Slay-the-Heavens",
-  "branch": "release/v2.0.0",
-  "head": "33d71575c5f186a1b54f7bf3e4f1826c145aa1d9",
-  "observed": "publication-blocked",
-  "reason": "Frozen Release HEAD requires its latest successful hosted Full run",
-  "fullDispatched": false
-}

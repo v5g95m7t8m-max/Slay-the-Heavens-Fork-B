@@ -1,3 +1,0 @@
-ACCEPT local text="--"; io.open("x")
-REJECT local text=[[io.open("x")]]; return os.clock() Unsupported native Lua API
-REJECT io--[[comment]] .open("x") Unsupported native Lua API

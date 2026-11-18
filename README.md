@@ -1,27 +1,17 @@
-# 杀戮原塔2 / Slay the Abyss
+# Retired source refs
 
-原神「千星奇域」平台上的卡牌关卡项目。开发入口见 [交接说明](docs/HANDOFF.md) 与 [工具链](docs/TOOLCHAIN.md)。公众开发基线和 GitHub 默认分支为 **develop**；master 只用于正式发行。版本可在 [版本总览](docs/versions/README.md) 和 [更新说明](CHANGELOG.md) 查看，与 Backlog 里程碑分开管理。
+Repository: `v5g95m7t8m-max/Slay-the-Heavens-Fork-B`
 
-修改代码前可先看 [模块与生成物导航](docs/ARCHITECTURE.md)、[数据入口](data/README.md) 和 [工程检查](docs/ENGINEERING.md)，定位规则、界面、构建与验证职责。
+Each listed exact Git commit is a direct parent of this archive commit.
+The archived commits preserve source trees, history, and Git LFS pointers.
+Restore a working branch from the listed SHA to continue or review the work.
+The archive records ref retirement only and makes no integration claim.
 
-## 授权与商用
-
-**项目自有原创代码采用 PolyForm Noncommercial 1.0.0；第三方商业使用不在本项目授予的许可内，须另获相应权利人书面授权。** 允许的用途以 [LICENSE](LICENSE) 原文为准，包括其列举的个人及非商业机构用途。这是源码可见的非商用授权，不是 OSI 意义上的开源许可证。
-
-请同时阅读 [授权范围](LICENSE-SCOPE.md) 和 [第三方版权声明](THIRD_PARTY_NOTICES.md)。许可证仅覆盖项目有权授权的原创代码部分，**不覆盖整仓所有文件**：
-
-- 第三方 MIT、Apache-2.0、GPL 等代码保留各自许可，不能给它们追加禁止商用条款。
-- 游戏 IP、美术、截图、字体、音乐、音效、平台资源及授权未明的参考代码不因公开托管而获得复用或商用许可。
-- 项目权利人保留对自有代码另行商业授权和自行商用的权利；第三方内容按各自条款处理。
-
-本项目用于原神官方支持的千星奇域创作场景；平台内创作及收益遵循适用的官方条款，相关游戏 IP 归原权利人。本仓库不向使用者转授平台 IP。部分实验导出文件包含第三方运行时代码，其具体范围见 [第三方版权声明](THIRD_PARTY_NOTICES.md)；这不代表整个游戏采用该第三方许可证。商业授权询问可在本仓库提出；讨论或未回复不构成授权。
-
-## 许可证检查
-
-Node >=22、npm >=10，无需安装依赖或启动游戏：
-
-```sh
-node scripts/check-license.mjs
-```
-
-独立 Licenses CI 使用 npm 自带 CycloneDX SBOM 检查锁定依赖，并核对素材/第三方运行时清单。检查通过只表示清单未漂移，不代表获得了缺失的授权。新增或修改素材应先补来源、权利人、许可及证据，再更新清单；禁止把 unknown 改为原创来消除报错。
+| Original ref | Commit | Tree |
+| --- | --- | --- |
+| `refs/heads/chore/v2-release-bootstrap-20261115` | `c650a5c252c795c85a5010c1d9acd21eb68c0862` | `c8d68d2b86690d687a081c4fc323d4a233610c9e` |
+| `refs/heads/preflight/release-688-f05e60f8-1118` | `f05e60f8992e665c3305b20445d10dc9c851ebfd` | `617cae172daf3b645edde39e0b45455a8d91e19a` |
+| `refs/heads/preflight/release-695-2e5a7b3e-1118` | `2e5a7b3efc281cddec816c3bd6cbadf135a43700` | `dbdc05b7c86e021411e4ac2a0326d68375b23230` |
+| `refs/heads/preflight/release-695-bc0ecb99-1118` | `bc0ecb993298cf3bf143ac9735ab31648e93c683` | `82131cc4725f0360f1ed2dbeb08a78136c5b84ab` |
+| `refs/heads/preflight/release-695-c2ea1804-1118` | `c2ea180437eaf343c0525d480338f83072ec8579` | `7b74d748b929ae7b56dd2ff3af4f2b59c716d935` |
+| `refs/heads/preflight/release-runner-2c242625-1118` | `2c24262533b09b9ddd53c1034a043927ecc65e43` | `2d71d6d26247f9a5be14311fef4041e74c500e1e` |

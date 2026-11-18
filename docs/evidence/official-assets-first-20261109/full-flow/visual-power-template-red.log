@@ -1,3 +1,0 @@
-(command line):19: attempt to index a nil value (field 'text')
-stack traceback:
-	(command line):19: in main chunk
