@@ -55,7 +55,7 @@ local function draw(pool,icon,token,registry,asset,size,platform)
    if shape then
     call(control,'SetImage',platform.imageSource,shape.image)
     call(control,'SetAnchoredPosition',shape.x,shape.y);call(control,'SetSizeDelta',shape.w,shape.h)
-    call(control,'SetLocalRotation',0,0,shape.rotation or 0)
+    call(control,'SetLocalRotation',shape.rx or 0,shape.ry or 0,shape.rotation or 0)
     local c=shape.colour;colour(pool,icon,token,control,c.r,c.g,c.b,c.a or 255)
    end
    call(control,'SetVisible',shape~=nil)

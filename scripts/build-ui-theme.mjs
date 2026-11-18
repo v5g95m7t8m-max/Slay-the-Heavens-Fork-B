@@ -91,7 +91,7 @@ function rejectInputOutputAlias(themeFile, dataDirectory, output) {
   }
 }
 
-export function buildUiTheme(themeFile = 'data/presentation/ui_theme.json', dataDirectory = 'data', output = 'build/lua/abyss_theme.lua') {
+export function buildUiTheme(themeFile = 'data/presentation/ui_theme.json', dataDirectory = 'data', output = 'build/lua/abyss_theme.lua', enemyArt) {
   const theme = JSON.parse(readFileSync(themeFile, 'utf8').replace(/^﻿/, ''));
   const errors = validateTheme(theme, loadContent(dataDirectory));
   if (errors.length) throw new Error(errors.join('\n'));
@@ -99,6 +99,7 @@ export function buildUiTheme(themeFile = 'data/presentation/ui_theme.json', data
   const { note, ...runtime } = theme;
   runtime.icon = { ...runtime.icon, status: Object.fromEntries(
     Object.entries(runtime.icon.status).map(([key, value]) => [key, iconId(value)])) };
+  if (enemyArt) runtime.lowCostArt = enemyArt;
   const source = `-- Generated from data/presentation/ui_theme.json. Do not edit.\nreturn ${toLua(convertColours(runtime))}\n`;
   mkdirSync(dirname(output), { recursive: true });
   writeFileSync(output, source, 'utf8');

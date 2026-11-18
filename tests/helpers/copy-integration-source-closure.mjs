@@ -37,6 +37,24 @@ for(const rows of [releasePc22BasicFeedbackHelperCopies,releaseSelectionMapHelpe
  if(row.path!=='tests/helpers/closeout-source-epoch.mjs')files[row.path]=row.after;
 }
 files['tests/helpers/closeout-source-epoch.mjs']='3101ebf6deee9f081fad6e3c8d4617b6db4bf17ee01453c82fc8d8a3fb742215';
+export const releaseEnemyArtHelperCopies=[
+  {
+    "path": "tests/helpers/closeout-source-epoch.mjs",
+    "before": "3101ebf6deee9f081fad6e3c8d4617b6db4bf17ee01453c82fc8d8a3fb742215",
+    "after": "2a89d96cd40b689dc9ba73cbcb1abe4023a5cf79a0002023d3ebc61aeecaf1aa"
+  },
+  {
+    "path": "tests/helpers/release-enemy-art-source.mjs",
+    "before": null,
+    "after": "4ae006a612f0604081c8135ce6f7ccad6459416232dad2f3cfccbf7ad02a2b65"
+  },
+  {
+    "path": "tests/helpers/release-enemy-art-source.json.gz",
+    "before": null,
+    "after": "b2c17392b591bc57ec0f8de9236cfc862d74fcfef76d13261baa746966e411a4"
+  }
+];
+for(const row of releaseEnemyArtHelperCopies){assert.equal(files[row.path]??null,row.before,'exact release enemy art helper-copy predecessor');files[row.path]=row.after;}
 const inside=(root,path)=>{const r=relative(root,path);return r!==''&&!isAbsolute(r)&&r!=='..'&&!r.startsWith('../')&&!r.startsWith('..\\');};
 export function copyIntegrationSourceClosure(directory,{sourceRoot=process.cwd()}={}){
  const destination=realpathSync.native(directory);

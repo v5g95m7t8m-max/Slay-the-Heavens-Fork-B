@@ -1,3 +1,5 @@
+import {capacityPreflightSource} from './helpers/release-capacity-preflight-source.mjs';
+import {enemyFastSource} from './helpers/release-enemy-fast-source.mjs';
 import {releaseFreezeCiBefore} from './helpers/release-selection-map-ci-source.mjs';
 import test from 'node:test';
 import {historicalTest} from './helpers/historical-baseline-inputs.mjs';
@@ -12,9 +14,38 @@ import { beforeAutoMergeWorkflow, beforeExecutionTimeoutWorkflow } from './helpe
 import {closeoutRead,closeoutInventory} from './helpers/closeout-ci-source.mjs';
 import {beforeHostedCheckoutWorkflow} from './helpers/hosted-checkout-workflow.mjs';
 
-const workflow = readFileSync('.github/workflows/quality.yml', 'utf8').replaceAll('\r\n', '\n');
+const rawWorkflow = readFileSync('.github/workflows/quality.yml', 'utf8').replaceAll('\r\n', '\n');
+const workflow = enemyFastSource('.github/workflows/quality.yml',rawWorkflow,'release');
 const job = (name,source=workflow) => source.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [\\w-]+:|(?![\\s\\S]))`, 'm'))[1];
 const digest = text => createHash('sha256').update(text).digest('hex');
+
+test('raw Release controls use standard hosted runners with only the three runner labels changed',()=>{
+ let restored=rawWorkflow;
+ for(const name of ['impact','check','engineering-posix']){
+  const current=job(name,rawWorkflow),previous=job(name,workflow);
+  assert.match(current,/^    runs-on: ubuntu-24\.04$/m);
+  assert.equal((current.match(/^    runs-on:/gm)??[]).length,1,name+' single runner');
+  const prior=current.replace('    runs-on: ubuntu-24.04','    runs-on: ubuntu-slim');
+  assert.equal(prior,previous,name+' retains every condition, permission, dependency and timeout');
+  restored=restored.replace(current,prior);
+ }
+ assert.equal(restored,workflow,'all other Release workflow bytes retain the exact af77 parent');
+ assert.notEqual(rawWorkflow,workflow);
+ assert.equal((rawWorkflow.match(/^    runs-on: ubuntu-slim$/gm)??[]).length,0);
+ for(const path of ['.github/workflows/quality.yml','tests/ci-summary-runners.test.mjs']){
+  const raw=readFileSync(path,'utf8').replaceAll('\r\n','\n');
+  for(const eol of ['\n','\r\n']){
+   const source=raw.replaceAll('\n',eol),prior=enemyFastSource(path,source,'release');
+   assert.equal(capacityPreflightSource(path,source,'preflight'),prior);
+   for(const bad of [source+eol,source.slice(1),raw.replaceAll('\n','\r\r\n'),null,{},17,Buffer.from(source)])
+    assert.strictEqual(capacityPreflightSource(path,bad,'preflight'),bad);
+   for(const foreign of ['foreign/'+path,'__proto__','constructor','src/lua/abyss_run.lua'])
+    assert.strictEqual(capacityPreflightSource(foreign,source,'preflight'),source);
+   assert.strictEqual(capacityPreflightSource(path,source,'foreign'),source);
+   for(const before of [{},{sha256:'0'.repeat(64)}])assert.strictEqual(capacityPreflightSource(path,source,'preflight',before),source);
+  }
+ }
+});
 
 test('only the lightweight impact planner and two required summaries use slim', () => {
   assert.equal((workflow.match(/^    runs-on: ubuntu-slim$/gm) ?? []).length, 3);

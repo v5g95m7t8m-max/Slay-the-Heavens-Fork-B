@@ -1,3 +1,5 @@
+import {assertSettingsReleaseStsOwners} from './settings-release-source.mjs';
+import {assertEnemyFastStsOwners} from './release-enemy-fast-source.mjs';
 import assert from 'node:assert/strict';
 import {integratedSource,integratedRead,integratedPriorInventory} from './integrated-ci-source.mjs';
 import {readFileSync} from 'node:fs';
@@ -40,6 +42,9 @@ export function stsStylePriorInventory(paths,read=readFileSync){
  return [...proof.beforeInventory];
 }
 export function assertStsStyleCiCurrent(paths,read=readFileSync){
+ const owners=[...Object.keys(stsStyleCiProof.files),...Object.keys(stsStyleCiProof.helperSources)];
+ assertEnemyFastStsOwners(owners,read);
+ assertSettingsReleaseStsOwners(owners,read);
  paths=integratedPriorInventory(paths,'sts','js',read);
  read=integratedRead('sts',{read});
  assert.deepEqual([...paths].sort(),stsStyleCiProof.afterInventory,'complete StS current Full inventory');

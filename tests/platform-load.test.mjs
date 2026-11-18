@@ -1,3 +1,4 @@
+import {enemyFastRead} from './helpers/release-enemy-fast-source.mjs';
 import {artFeatureReceipt} from '../scripts/art-features.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -222,6 +223,7 @@ test('generated default and Official configurations are recorded separately and 
 test('capacity CI continuation authenticates every current source before replaying immutable predecessors',async()=>{
  const adapter=await import('./helpers/release-bootstrap-ci-source.mjs');
  const {integratedCiProof,assertIntegratedCurrent}=await import('./helpers/integrated-ci-source.mjs');
+ const historicalRead=enemyFastRead('release',readFileSync);
  const packet=adapter.capacityCiPacket;
  assert.ok(packet,'explicit complete capacity CI continuation is required');
  assert.deepEqual(Object.keys(packet.files).sort(),['scripts/official-portraits.mjs','scripts/platform-load.mjs','tests/official-portraits-build.test.mjs','tests/platform-load.test.mjs','tests/v25-portrait-profile.test.mjs']);
@@ -230,7 +232,7 @@ test('capacity CI continuation authenticates every current source before replayi
   if(integratedCiProof.files[path])assert.deepEqual(row.before,integratedCiProof.files[path].current,'unchanged complete predecessor');
   else assert.equal(row.before.sha256,{'scripts/platform-load.mjs':'020cfad431d2924bc925690d972a4f732eff73de35af72c3592997404af6bf39',
    'tests/platform-load.test.mjs':'0c1bc43441bf22c0dfcdeac8a2512faff28fc6da31f962711229c66f71feaab5'}[path],'unchanged complete platform-load predecessor');
-  const current=readFileSync(path,'utf8').replaceAll('\r\n','\n');
+  const current=historicalRead(path,'utf8').replaceAll('\r\n','\n');
   assert.equal(adapter.releaseBootstrapCiSource(path,current,row.before),row.before.source);
   for(const changed of [current+'\n',current.replace(/./,'!')]){
    assert.equal(adapter.releaseBootstrapCiSource(path,changed,row.before),changed,'unknown bytes cannot receive a trusted source view');
@@ -239,7 +241,7 @@ test('capacity CI continuation authenticates every current source before replayi
   assert.throws(()=>assertIntegratedCurrent((file,encoding)=>{if(file===path)throw Error('ENOENT '+path);return readFileSync(file,encoding);}),/ENOENT/);
  }
  for(const [path,row]of Object.entries(adapter.capacityReviewCiPacket.files)){
-  const current=readFileSync(path,'utf8').replaceAll('\r\n','\n');
+  const current=historicalRead(path,'utf8').replaceAll('\r\n','\n');
   assert.equal(createHash('sha256').update(current).digest('hex'),row.current.sha256);
   for(const changed of [current+'\n',current.replace(/./,'!')]){
    assert.equal(adapter.releaseBootstrapCiSource(path,changed),changed);
