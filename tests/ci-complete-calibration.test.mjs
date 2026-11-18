@@ -48,8 +48,10 @@ import {releaseBootstrapCiRead,assertReleaseBootstrapCiCurrent,assertReleaseBoot
 import {releaseSelectionMapCiRead,releaseSelectionMapPriorInventory,assertReleaseSelectionMapCiCurrent,releaseSelectionMapCiPacket,assertReleaseSelectionMapExecutionGuards} from './helpers/release-selection-map-ci-source.mjs';
 import {integrationRead,integrationCapacityCiRead,integrationPriorInventory,integrationPacket,assertReleaseIntegrationCurrent} from './helpers/release-card-contact-integration.mjs';
 import {settingsReleaseHistoricalRead} from './helpers/settings-release-source.mjs';
-const sideRead=integrationRead('pc22',settingsReleaseHistoricalRead('release',rawReleaseReadFileSync));
-const rawBootstrapReadFileSync=releasePc22BasicFeedbackCiRead(sideRead);
+const sideRead=integrationRead('pc22',rawReleaseReadFileSync);
+const historicalSettingsRead=settingsReleaseHistoricalRead('release',rawReleaseReadFileSync);
+const rawBootstrapReadFileSync=releasePc22BasicFeedbackCiRead((path,encoding)=>
+ path==='scripts/official-battle-hud.mjs'?historicalSettingsRead(path,encoding):sideRead(path,encoding));
 const liveDiskReadFileSync=releaseBootstrapCiRead(rawBootstrapReadFileSync);
 import {preJoustCiSource,joustCiProof} from './helpers/joust-ci-source-inverse.mjs';
 import {sourceEpoch as joustEpoch} from './helpers/combined-epoch/source-epoch.mjs';

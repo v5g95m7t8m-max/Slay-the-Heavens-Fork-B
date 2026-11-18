@@ -40,8 +40,19 @@ for(let mask=0;mask<32;mask++)test(`independent category build ${mask.toString(2
  assertReadyCardGameHosts(layout,{enabled:artFeatures.cards});
  assert.equal(counts.monsterArt,0,'art belongs to each dynamic actor template, not static layout');
  const actor=templates.find(t=>t.name==='AbyssMonsterActor');
- assert.equal(nodes(actor).length,artFeatures.monsters?647:35);
- assert.equal(nodes(actor).filter(node=>/^shape[0-9]+$/.test(node.name)).length,artFeatures.monsters?600:0);
+ // Only the exact standard Release mask uses the bounded native portrait pool;
+ // optional monster art remains a separate, explicitly opted-in payload.
+ const formalEnemyPortraits=mask===0b01110;
+ assert.equal(nodes(actor).length,artFeatures.monsters?647:formalEnemyPortraits?77:35);
+ assert.equal(nodes(actor).filter(node=>/^shape[0-9]+$/.test(node.name)).length,artFeatures.monsters?600:formalEnemyPortraits?41:0);
+ const formalPools=nodes(actor).filter(node=>node.name==='portraitArt');
+ assert.equal(formalPools.length,formalEnemyPortraits?1:0);
+ if(formalEnemyPortraits){
+  const [pool]=formalPools;
+  assert.equal(pool.raycastTarget,false);
+  assert.deepEqual(pool.children.map(shape=>shape.name),Array.from({length:41},(_,i)=>'shape'+i));
+  assert.ok(pool.children.every(shape=>shape.visible===false&&shape.raycastTarget===false));
+ }
  assert.equal(nodes(actor).filter(node=>node.name==='monsterArt').length,artFeatures.monsters?1:0);
  assert.equal(templates.some(t=>t.name==='AbyssOfficialBackgroundImage'),artFeatures.menuBackground);
  assert.equal(templates.some(t=>t.name==='AbyssReadyCardImage'),artFeatures.cards||artFeatures.menuBackground||artFeatures.selectionAvatar||artFeatures.battlePortrait);

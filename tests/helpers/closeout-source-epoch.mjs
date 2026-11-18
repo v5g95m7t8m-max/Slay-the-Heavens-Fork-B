@@ -13,6 +13,7 @@ import {extendReleaseSourceEpoch} from './release-source-epoch.mjs';
 import {extendSessionMenuEpoch} from './session-menu-source-epoch.mjs';
 import {extendReleasePc22BasicFeedbackSource} from './release-pc22-basic-feedback-source.mjs';
 import {extendReleaseSelectionMapSource} from './release-selection-map-source.mjs';
+import {extendReleaseEnemyArtSource} from './release-enemy-art-source.mjs';
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const bytes=readFileSync(new URL('./closeout-source-epoch.json.gz',import.meta.url));
 assert.equal(hash(bytes),'36aba7fc07f732a191a750d437eefd27e9b9567221811747abf13c97a9ac237a');
@@ -55,15 +56,19 @@ export const preReleasePc22BasicFeedbackSourceEpoch=extendSessionMenuEpoch(relea
 export const preReleaseSelectionMapSourceEpoch=preReleasePc22BasicFeedbackSourceEpoch;
 export const releasePc22BasicFeedbackSourceEpoch=extendReleasePc22BasicFeedbackSource(preReleasePc22BasicFeedbackSourceEpoch);
 export const releaseSelectionMapSourceEpoch=extendReleaseSelectionMapSource(preReleaseSelectionMapSourceEpoch);
-// Join disjoint approved owners against their exact common predecessor. Both
-// standalone corpora and every original target retain their original identity.
+export const preReleaseEnemyArtSourceEpoch=releaseSelectionMapSourceEpoch;
+export const releaseEnemyArtSourceEpoch=extendReleaseEnemyArtSource(preReleaseEnemyArtSourceEpoch);
+// Preserve each standalone history. The enemy-art side inherits selection;
+// a repeated owner must be exactly identical to the already joined row.
 function joinReleaseSources(){
 const base=preReleasePc22BasicFeedbackSourceEpoch.proof;
 const pc22=releasePc22BasicFeedbackSourceEpoch.proof,selection=releaseSelectionMapSourceEpoch.proof;
 const current={...base.current},targets={...base.targets};
-for(const side of [pc22,selection]){
+const enemy=releaseEnemyArtSourceEpoch.proof;
+for(const side of [pc22,selection,enemy]){
  for(const [path,row]of Object.entries(side.current))if(row?.sha256!==base.current[path]?.sha256){
-  assert.deepEqual(current[path],base.current[path],'disjoint Release integration owner: '+path);
+  if(current[path]?.sha256===row?.sha256)assert.deepEqual(current[path],row,'identical inherited Release integration owner: '+path);
+  else assert.deepEqual(current[path],base.current[path],'disjoint Release integration owner: '+path);
   current[path]=row;
  }
  for(const [name,target]of Object.entries(side.targets)){
@@ -73,10 +78,11 @@ for(const side of [pc22,selection]){
 }
 targets.releasePc22BasicFeedbackReviewed={commit:pc22.currentCommit,files:pc22.current};
 targets.releaseSelectionMapReviewed={commit:selection.currentCommit,files:selection.current};
+targets.releaseEnemyArtReviewed={commit:enemy.currentCommit,files:enemy.current};
 const owners=Object.keys(current).sort().filter(path=>Object.values(targets).some(target=>target.files[path]?.sha256!==current[path]?.sha256));
 return createSourceEpochProjector(freeze({...base,current,targets,owners,
- currentTreeCommitted:false,currentCommit:'17580f25c742a7facb5626db8fc17efb4abe269b',
- currentCommitRole:'integration worktree capture; standalone committed product producers are retained separately',
+ currentTreeCommitted:false,currentCommit:'8025fc9f585f2ca98bfa05c5e5c68de1593005d1',
+ currentCommitRole:'integration worktree capture against b9bca884; standalone source producers are retained separately',
  releasePc22BasicFeedbackProducers:pc22.releasePc22BasicFeedbackProducers,
  releaseSelectionMapProducers:selection.releaseSelectionMapProducers}),{allowConfigLayout:true,reuseFrozenInput:true});
 }

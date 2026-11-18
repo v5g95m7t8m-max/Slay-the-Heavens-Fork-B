@@ -1,3 +1,4 @@
+import {releaseSettingsEnemyParentSource} from './release-settings-enemy-source.mjs';
 // Fixed CI-only join of the reviewed settings input and the actual Release.
 // This trust leaf is excluded from its own packet; old packets stay unchanged.
 import assert from 'node:assert/strict';
@@ -21,13 +22,14 @@ export function assertSettingsReleaseArchive(read=readFileSync){assert.equal(has
 export function assertSettingsReleaseCurrent(read=readFileSync){
  assertSettingsReleaseArchive(read);
  for(const [path,row]of Object.entries(settingsReleasePacket.files)){
-  const source=read(path,'utf8'),message='fresh complete integration source: settings Release '+path;
+  const source=releaseSettingsEnemyParentSource(path,read(path,'utf8'),'settings'),message='fresh complete integration source: settings Release '+path;
   assert.equal(typeof source,'string',message);assert(!source.includes('\r\r\n'),message);assert.equal(hash(norm(source)),row.current.sha256,message);
  }
 }
 export function settingsReleaseSource(path,source,side='release'){
  assert(['settings','release'].includes(side),'known settings Release parent');
  if(path.startsWith('src/')||path==='config/architecture.json'||path==='scripts/official-battle-hud.mjs')return source;
+ source=releaseSettingsEnemyParentSource(path,source,'settings');
  const row=Object.hasOwn(settingsReleasePacket.files,path)?settingsReleasePacket.files[path]:null;
  if(!row?.views[side]||typeof source!=='string'||source.includes('\r\r\n')||hash(norm(source))!==row.current.sha256)return source;
  return row.views[side].sha256===row.current.sha256?source:row.views[side].source;

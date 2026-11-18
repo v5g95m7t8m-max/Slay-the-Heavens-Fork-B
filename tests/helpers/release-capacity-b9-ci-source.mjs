@@ -1,3 +1,5 @@
+import {enemyFastRead,enemyFastSource} from './release-enemy-fast-source.mjs';
+import {assertEnemyCapacityCurrent,enemyCapacitySource} from './release-enemy-capacity-join.mjs';
 import {capacityPreflightSource,assertCapacityPreflightArchive} from './release-capacity-preflight-source.mjs';
 // CI-only exact join of the reviewed capacity and B9 card-contact sources.
 import assert from 'node:assert/strict';
@@ -32,6 +34,8 @@ for(const [path,row]of Object.entries(repair.files))for(const binding of [row.be
  assert.equal(createHash('sha1').update(`blob ${Buffer.byteLength(binding.source)}\0`).update(binding.source).digest('hex'),binding.gitBlob,path);
 }
 export function assertCapacityB9ReaderRepairCurrent(read=readFileSync){
+ assertEnemyCapacityCurrent(read);
+ read=enemyFastRead('release',read);
  assertCapacityPreflightArchive(read);
  assert.equal(hash(read('tests/helpers/release-capacity-b9-reader-repair.json.gz')),hash(repairBytes),'fresh complete capacity B9 reader repair packet');
  for(const [path,row]of Object.entries(repair.files)){
@@ -41,10 +45,14 @@ export function assertCapacityB9ReaderRepairCurrent(read=readFileSync){
   assert.equal(hash(norm(source)),row.current.sha256,'fresh complete integration source: capacity B9 reader repair '+path);
  }
 }
-export function beforeCapacityB9Ci(path,source,view='b9',before){
+export function beforeCapacityB9Ci(path,source,view='b9',before,{read=readFileSync}={}){
  if(!['b9','capacity'].includes(view))return source;
  const binding=view==='b9'&&Object.hasOwn(repair.files,path)?repair.files[path].before:packet.files[path]?.before?.[view];
- if(!binding||before&&before.sha256!==binding.sha256)return source;
+ if(before&&(!binding||before.sha256!==binding.sha256))return source;
+ const joinedSource=enemyFastSource(path,source,'release');
+ if(joinedSource!==source)assertEnemyCapacityCurrent(read);
+ source=joinedSource;
+ source=enemyCapacitySource(path,source,'release',{read});
  source=capacityPreflightSource(path,source,'capacity');
  if(view==='b9'&&typeof path==='string'&&Object.hasOwn(repair.files,path)){
   const row=repair.files[path];
@@ -61,6 +69,6 @@ export const capacityB9CiBindings=Object.freeze(Object.fromEntries(Object.entrie
 export function capacityB9CiRead(read=readFileSync,view='b9'){return(path,encoding)=>{
  const raw=read(path,encoding);
  if(typeof raw!=='string'&&!Buffer.isBuffer(raw))return raw;
- const source=typeof raw==='string'?raw:raw.toString('utf8'),prior=beforeCapacityB9Ci(path,source,view);
+ const source=typeof raw==='string'?raw:raw.toString('utf8'),prior=beforeCapacityB9Ci(path,source,view,undefined,{read});
  return typeof raw==='string'?prior:prior===source?raw:Buffer.from(prior);
 };}

@@ -1,4 +1,6 @@
 import {assertSettingsReleaseCurrent,settingsReleaseRead,settingsReleasePriorInventory,settingsReleasePacket,assertSettingsReleaseRawInventory} from './settings-release-source.mjs';
+import {enemyFastRead} from './release-enemy-fast-source.mjs';
+import {assertReleaseSettingsEnemyCurrent} from './release-settings-enemy-source.mjs';
 import {assertCapacityPreflightCurrent} from './release-capacity-preflight-source.mjs';
 import {beforePreflightSource,preflightPriorRead} from './fork-preflight-source.mjs';
 // Explicit immutable source views for the reviewed integration inputs.
@@ -9,7 +11,7 @@ import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import {integratedCiBytes} from './integrated-ci-binding.mjs';
 import {releasePc22BasicFeedbackCiSource,releasePc22BasicFeedbackCiCheckedSource,releasePc22BasicFeedbackPriorInventory,releasePc22BasicFeedbackCiPacket,assertReleasePc22BasicFeedbackCiCurrent} from './release-pc22-basic-feedback-ci-source.mjs';
-import {releaseBootstrapCiSource,releaseBootstrapCiCheckedSource,assertReleaseBootstrapCiCurrent} from './release-bootstrap-ci-source.mjs';
+import {releaseBootstrapCiSource,releaseBootstrapCiCheckedSource,assertReleaseBootstrapCiCurrent,assertCapacityOwnersCurrent} from './release-bootstrap-ci-source.mjs';
 import {releasePc22BasicFeedbackCiRead} from './release-pc22-basic-feedback-ci-source.mjs';
 import {integrationRead,integrationProductionRead,integrationCiSource,integrationPriorInventory,assertReleaseIntegrationCurrent,integrationInventory} from './release-card-contact-integration.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex'),norm=s=>s.replaceAll('\r\n','\n');
@@ -22,7 +24,7 @@ for(const [path,row]of Object.entries(integratedCiProof.files))for(const binding
  assert.equal(createHash('sha1').update(`blob ${Buffer.byteLength(binding.source)}\0`).update(binding.source).digest('hex'),binding.gitBlob);
 }
 export function integratedSource(path,source,target,read=readFileSync){
- read=settingsReleaseRead('release',read);
+ read=typeof read==='function'?read:read?.read??readFileSync;
  source=beforePreflightSource(path,source);
  assert(Object.hasOwn(integratedCiProof.sources,target),'known integration input');
  if(path.startsWith('src/')||path==='config/architecture.json')return source;
@@ -33,21 +35,23 @@ export function integratedSource(path,source,target,read=readFileSync){
  if(row.views[target].sha256===row.current.sha256)return source;
  return row.views[target].source;
 }
-export function integratedRead(target,{read=readFileSync}={}){read=preflightPriorRead(settingsReleaseRead('release',read));return(path,encoding)=>{
+export function integratedRead(target,{read=readFileSync}={}){const currentRead=read;read=preflightPriorRead(read);return(path,encoding)=>{
  const raw=read(path,encoding);
  const binary=Object.hasOwn(integratedCiProof.binaryViews,path)?integratedCiProof.binaryViews[path]:null;
  if(Buffer.isBuffer(raw)&&binary?.views[target]&&hash(raw)===binary.current){
   const saved=binary.views[target],bytes=read(saved.path);assert.equal(hash(bytes),saved.sha256,'complete immutable integration binary predecessor');return bytes;
  }
- const text=typeof raw==='string'?raw:raw.toString('utf8'),prior=integratedSource(path,text,target,read);
+ const text=typeof raw==='string'?raw:raw.toString('utf8'),prior=integratedSource(path,text,target,currentRead);
  return typeof raw==='string'?prior:prior===text?raw:Buffer.from(prior);
 };}
 export function assertIntegratedCurrent(read=readFileSync){
- assertSettingsReleaseCurrent(read);read=settingsReleaseRead('release',read);
- const capacityRead=read;assertCapacityPreflightCurrent(read);
- read=preflightPriorRead(read);
- assertReleaseIntegrationCurrent(read,capacityRead);
- read=integrationProductionRead('pc22',read);
+ assertSettingsReleaseCurrent(read);
+ assertReleaseSettingsEnemyCurrent(read);
+ assertCapacityOwnersCurrent(enemyFastRead('release',read));
+ const capacityRead=read;
+ assertCapacityPreflightCurrent(capacityRead);
+ assertReleaseIntegrationCurrent(capacityRead,capacityRead);
+ read=integrationProductionRead('pc22',capacityRead);
  assertReleasePc22BasicFeedbackCiCurrent(read);
  assertReleaseBootstrapCiCurrent(releasePc22BasicFeedbackCiRead(read));
  for(const [path,row]of Object.entries(integratedCiProof.files))assert.equal(hash(norm(releaseBootstrapCiCheckedSource(path,releasePc22BasicFeedbackCiCheckedSource(path,read(path,'utf8')),row.current))),row.current.sha256,'fresh complete integration source: '+path);

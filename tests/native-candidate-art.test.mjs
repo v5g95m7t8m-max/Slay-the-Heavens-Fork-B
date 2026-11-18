@@ -39,14 +39,14 @@ export class Client {
  }
 }
 `;
-function fixture(t,{monsterOnly=false,officialAssets=false}={}) {
+function fixture(t,{monsterOnly=false,officialAssets=false,standardRelease=false}={}) {
   mkdirSync(join(repo,'build'),{recursive:true});
   const root=mkdtempSync(join(repo,'build/native-art-entry-'));
   t.after(()=>rmSync(root,{recursive:true,force:true}));
   for(const file of ['src/lua','data','scripts','tools','art/monsters/acid_slime_m/native-art-r02','package.json','package-lock.json','CHANGELOG.md','.release-please-manifest.json'])
     cpSync(join(repo,file),join(root,file),{recursive:true});
   const put=(file,bytes)=>{const path=join(root,file);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,bytes);return path;};
-  if(officialAssets)put(lumineSelectionPath,readFileSync(join(repo,lumineSelectionPath)));
+  if(officialAssets||standardRelease)put(lumineSelectionPath,readFileSync(join(repo,lumineSelectionPath)));
   // This isolated experiment exercises the opt-in renderer, not production permission.
   // The explicit test policy remains an ordinary hashed source input.
   if(!monsterOnly)put('data/release/candidate-art-policy.json',JSON.stringify({schemaVersion:1,disabledFeatures:{}}));
@@ -390,4 +390,34 @@ test('MCP mock: monster-only audio preserves source receipt and rejects changed 
  const audio=await run();assert.deepEqual(audio.nativeMonsterArt,full.nativeMonsterArt);
  const path=join(f.root,full.nativeMonsterArt.inputs[0].path);writeFileSync(path,readFileSync(path,'utf8')+'\n-- changed');
  await assert.rejects(run(),/Source changed during audio/);
+});
+
+const releaseEnemyFlags={cards:false,menuBackground:true,selectionAvatar:true,battlePortrait:true,monsters:false};
+test('MCP mock: standard audio profile packages the bounded enemy template and correct runtime data',t=>{
+ const f=fixture(t,{standardRelease:true}),run=f.api({artFeatures:releaseEnemyFlags});success(run);
+ const receipt=run.receipt();
+ assert.deepEqual(receipt.artFeatures.flags,releaseEnemyFlags);
+ assert.equal(receipt.monsterActors.shapesPerActor,41);
+ assert.equal(receipt.monsterActors.controlsPerActor,77);
+ assert.equal(receipt.nativeMonsterArt,undefined);
+ const actor=run.calls.find(c=>c.name==='scene_add_client_template'&&c.args.template.name==='AbyssMonsterActor').args.template;
+ const pool=actor.children.find(n=>n.name==='portraitArt');
+ assert.equal(pool.children.length,41);
+ assert(pool.children.every(n=>n.visible===false&&n.raycastTarget===false));
+ const theme=run.calls.find(c=>c.name==='native_batch_script'&&c.args.name==='abyss_theme').args.source;
+ assert(theme.includes('["lowCostArt"]={["enemy"]='));
+ assert(theme.includes('["ry"]='));
+ assert.equal(receipt.statuses.officialImport,'not_run');
+ assert.equal(receipt.liveWriteEnabled,false);
+});
+
+test('MCP mock: incomplete standard enemy template rejects before connection',t=>{
+ const f=fixture(t,{standardRelease:true}),path=join(f.root,'scripts/build-ui.mjs');
+ writeFileSync(path,readFileSync(path,'utf8')+`\nconst p=join(process.argv[2],'game-ui-templates.json'),tree=JSON.parse(readFileSync(p,'utf8'));
+ tree.find(n=>n.name==='AbyssMonsterActor').children.find(n=>n.name==='portraitArt').children.pop();
+ writeFileSync(p,JSON.stringify(tree));`);
+ const run=f.api({artFeatures:releaseEnemyFlags});
+ assert.notEqual(run.result.status,0);
+ assert.match(run.result.stderr,/Monster actor template differs/);
+ assert.deepEqual(run.calls,[]);
 });

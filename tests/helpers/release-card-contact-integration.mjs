@@ -1,7 +1,11 @@
+import {settingsReleaseSource} from './settings-release-source.mjs';
+import {beforePreflightSource} from './fork-preflight-source.mjs';
 // CI-only join of #697 and #698. Original packets and assertions stay immutable.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {assertEnemyJoinCurrent,enemyJoinRead} from './release-enemy-art-join.mjs';
+import {assertReleaseEnemyArtCiCurrent} from './release-enemy-art-ci-source.mjs';
 import {beforeReleaseFastB9Ci} from './release-fast-b9-ci-source.mjs';
 import {beforeCapacityB9Ci,capacityB9CiBindings,assertCapacityB9ReaderRepairCurrent} from './release-capacity-b9-ci-source.mjs';
 import {sourceEpoch} from './closeout-source-epoch.mjs';
@@ -25,13 +29,19 @@ for(const side of Object.keys(packets))for(const kind of ['js','lua'])
 // CI projections never intercept production authorization. Complete standalone
 // production views below explicitly go through the fresh joint owner validator.
 export function integrationCiSource(path,source,side='pc22',read=readFileSync){
+ read=typeof read==='function'?read:read?.read??readFileSync;
  assert(Object.hasOwn(packets,side),'known Release integration side');
- source=beforeReleaseFastB9Ci(path,beforeCapacityB9Ci(path,source),undefined,read);
+ source=beforePreflightSource(path,source);
+ source=releaseIntegrationSource(path,source,read);
  if(path.startsWith('src/')||path==='config/architecture.json')return source;
- source=beforeCapacityB9Ci(path,source);
+ source=beforeCapacityB9Ci(path,source,'b9',undefined,{read});
  if(typeof source!=='string'||source.includes('\r\r\n')||!Object.hasOwn(integrationPacket.files,path)||hash(norm(source))!==integrationPacket.files[path])return source;
  const own=packets[side].files[path],other=packets[side==='pc22'?'selection':'pc22'].files[path];
  return own?.current.source??other?.before?.source??source;
+}
+function releaseIntegrationSource(path,source,read){
+ const beforeCapacity=beforeCapacityB9Ci(path,source,'b9',undefined,{read});
+ return beforeReleaseFastB9Ci(path,settingsReleaseSource(path,beforeCapacity,'release'),undefined,read);
 }
 export function integrationRead(side='pc22',read=readFileSync){return(path,encoding)=>{
  const raw=read(path,encoding);
@@ -46,7 +56,7 @@ export function integrationCapacityCiRead(read=readFileSync){return(path,encodin
  const raw=read(path,encoding);
  if(typeof raw!=='string'&&!Buffer.isBuffer(raw))return raw;
  const source=typeof raw==='string'?raw:raw.toString('utf8');
- const prior=Object.hasOwn(capacityB9CiBindings,path)?beforeCapacityB9Ci(path,source,'capacity'):integrationCiSource(path,source,'selection',read);
+ const prior=Object.hasOwn(capacityB9CiBindings,path)?beforeCapacityB9Ci(path,source,'capacity',undefined,{read}):integrationCiSource(path,settingsReleaseSource(path,source,'release'),'selection',read);
  return typeof raw==='string'?prior:prior===source?raw:Buffer.from(prior);
 };}
 export function integrationProductionRead(side='pc22',read=readFileSync){
@@ -72,12 +82,14 @@ export function integrationPriorInventory(paths,side='pc22',kind='js',read=readF
  const current=integrationPacket.inventory[kind],prior=packets[side].currentInventory[kind],added=current.filter(p=>!prior.includes(p));
  if(!added.some(p=>paths.includes(p)))return [...paths];
  assertIntegrationRawInventory(paths,kind);
- for(const path of added)assert.equal(hash(norm(beforeReleaseFastB9Ci(path,beforeCapacityB9Ci(path,read(path,'utf8')),undefined,read))),integrationPacket.files[path],'fresh Release integration added inventory source: '+path);
+ for(const path of added)assert.equal(hash(norm(releaseIntegrationSource(path,read(path,'utf8'),read))),integrationPacket.files[path],'fresh Release integration added inventory source: '+path);
  return [...prior];
 }
 export function assertReleaseIntegrationCurrent(read=readFileSync,capacityRead=read){
+ assertEnemyJoinCurrent(capacityRead);
+ assertReleaseEnemyArtCiCurrent(enemyJoinRead('enemy',capacityRead));
  assertCapacityB9ReaderRepairCurrent(capacityRead);
- for(const [path,sha]of Object.entries(integrationPacket.files))assert.equal(hash(norm(beforeReleaseFastB9Ci(path,beforeCapacityB9Ci(path,read(path,'utf8')),undefined,read))),sha,'fresh complete integration source: Release join '+path);
+ for(const [path,sha]of Object.entries(integrationPacket.files))assert.equal(hash(norm(releaseIntegrationSource(path,read(path,'utf8'),read))),sha,'fresh complete integration source: Release join '+path);
  for(const [path,sha]of Object.entries(integrationPacket.archives))assert.equal(hash(read(path)),sha,'retained complete immutable Release join predecessor: '+path);
  assertReleasePc22BasicFeedbackCiCurrent(integrationRead('pc22',read));
  // The capacity validator first checks its complete live CI owners before

@@ -157,7 +157,7 @@ export function assertReleaseBootstrapRawInventory(paths,kind='js'){
  assert(['js','lua'].includes(kind));
  assert.deepEqual([...paths].sort(),packet.currentInventory[kind],'complete Release bootstrap raw discovery inventory');
 }
-export function assertReleaseBootstrapCiCurrent(read=readFileSync){
+export function assertCapacityOwnersCurrent(read=readFileSync){
  for(const [path,row]of Object.entries(audio.files))
   assert.equal(hash(norm(read(path,'utf8'))),row.current.sha256,'fresh complete TASK-111 CI source: audio handoff / fresh complete integration source: '+path);
  for(const [path,row]of Object.entries({...reduction.files,...reduction.addedFiles}))
@@ -166,6 +166,9 @@ export function assertReleaseBootstrapCiCurrent(read=readFileSync){
   assert.equal(hash(norm(reductionBefore(path,read(path,'utf8')))),row.current.sha256,'fresh complete TASK-111 CI source: review '+path);
  for(const [path,row]of Object.entries(capacity.files))
   assert.equal(hash(norm(reviewBefore(path,read(path,'utf8')))),row.current.sha256,'fresh complete TASK-111 CI source: '+path);
+}
+export function assertReleaseBootstrapCiCurrent(read=readFileSync){
+ assertCapacityOwnersCurrent(read);
  const rawRead=read;
  read=(path,encoding)=>{
   const raw=rawRead(path,encoding);

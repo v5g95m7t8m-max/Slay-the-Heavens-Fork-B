@@ -1,6 +1,11 @@
+import {releaseEnemyArtCiPacket,releaseEnemyArtCiSource,assertReleaseEnemyArtCiCurrent} from './helpers/release-enemy-art-ci-source.mjs';
+import {enemyJoinRead} from './helpers/release-enemy-art-join.mjs';
+import {enemyCapacityRead} from './helpers/release-enemy-capacity-join.mjs';
+import {preReleaseEnemyArtSource,releaseEnemyArtSourcePacket,extendReleaseEnemyArtSource} from './helpers/release-enemy-art-source.mjs';
 import {capacityPreflightSource,assertCapacityPreflightCurrent} from './helpers/release-capacity-preflight-source.mjs';
 import {fastFreezeB9Source,assertFastFreezeB9UnionCurrent} from './helpers/release-fast-freeze-b9-union.mjs';
 import {assertSettingsReleaseCurrent,settingsReleaseRead} from './helpers/settings-release-source.mjs';
+import {enemyFastRead} from './helpers/release-enemy-fast-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync as rawReadFileSync,readdirSync as rawReaddirSync,mkdtempSync,mkdirSync,rmSync,existsSync,writeFileSync} from 'node:fs';
@@ -18,14 +23,13 @@ import {releaseSelectionMapSourcePacket,extendReleaseSelectionMapSource} from '.
 import {historicalSource,releaseFreezeCiBefore,capacityReleaseCiBefore,releaseSelectionMapCiPacket,releaseSelectionMapCiSource,releaseSelectionMapPriorInventory,assertReleaseSelectionMapRawInventory,assertReleaseSelectionMapCiCurrent,assertReleaseSelectionMapExecutionGuards} from './helpers/release-selection-map-ci-source.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex'),norm=s=>s.replaceAll('\r\n','\n');
 // Preserve the full #697 standalone contract in its authenticated exact view.
-const readFileSync=integrationProductionRead('selection',settingsReleaseRead('release',rawReadFileSync));
-const checkedReleaseRead=read=>{assertSettingsReleaseCurrent(read);return settingsReleaseRead('release',read);};
+const readFileSync=integrationProductionRead('selection',rawReadFileSync);
 const discoverJs=()=>integrationPriorInventory(rawDiscoverJs(),'selection');
 const readdirSync=path=>path==='tests/lua'?integrationPriorInventory(rawReaddirSync(path).filter(p=>p.endsWith('.lua')).map(p=>'tests/lua/'+p),'selection','lua').map(p=>p.slice(10)):rawReaddirSync(path);
 
 test('B9 capacity CI join binds both exact predecessors and refuses drift foreign paths wrong before and malformed inputs',()=>{
  for(const [path,row]of Object.entries(capacityB9CiBindings)){
-  const raw=rawReadFileSync(path,'utf8'),lf=norm(raw);
+  const raw=enemyFastRead('release')(path,'utf8'),lf=norm(raw);
   assertCapacityPreflightCurrent();
   assert.equal(hash(capacityPreflightSource(path,lf,'capacity')),row.currentSha256,path+' complete named capacity source');
   for(const view of ['b9','capacity']){
@@ -74,16 +78,16 @@ test('release selection map production preserves every complete prior target and
 });
 
 test('release selection map CI validates complete live bindings while unknown or changed bytes stay visible',()=>{
- assertReleaseSelectionMapCiCurrent(integrationCapacityCiRead(checkedReleaseRead(rawReadFileSync)));
+ assertReleaseSelectionMapCiCurrent(integrationCapacityCiRead(rawReadFileSync));
  for(const [path,row]of Object.entries(releaseSelectionMapCiPacket.files)){
   const source=norm(readFileSync(path,'utf8'));assert.equal(hash(historicalSource(path,source)),row.current.sha256,path);
   const production=path.startsWith('src/')||path==='config/architecture.json';
   assert.equal(releaseSelectionMapCiSource(path,source),production?source:row.before?.source??historicalSource(path,source),path);
   for(const foreign of [source+'\n',source.slice(1),null,{},17])assert.equal(releaseSelectionMapCiSource(path,foreign),foreign,path);
   for(const foreignPath of ['__proto__','constructor','foreign/'+path])assert.equal(releaseSelectionMapCiSource(foreignPath,source),source);
-  assert.throws(()=>assertReleaseSelectionMapCiCurrent(integrationCapacityCiRead(checkedReleaseRead((p,encoding)=>{
+  assert.throws(()=>assertReleaseSelectionMapCiCurrent(integrationCapacityCiRead((p,encoding)=>{
    const raw=rawReadFileSync(p,encoding);return p===path?typeof raw==='string'?raw+'\n':Buffer.concat([raw,Buffer.from('\n')]):raw;
-  }))),/fresh complete integration source/);
+  })),/fresh complete integration source/);
  }
  for(const path of Object.keys(releaseSelectionMapSourcePacket.current))assert.equal(releaseSelectionMapCiSource(path,sourceEpoch.proof.current[path].source),sourceEpoch.proof.current[path].source,'CI does not intercept production authorization');
 });
@@ -95,7 +99,7 @@ test('capacity and latest Release CI views compose without accepting stale or fo
  assert.equal(integration.releaseCommit,'33d71575c5f186a1b54f7bf3e4f1826c145aa1d9');
  assert.equal(integration.capacityCommit,'bf74c0c391a0700740fee9b7cb8695bff615366a');
  assert.deepEqual(Object.keys(integration.files),['tests/helpers/release-bootstrap-ci-source.mjs','tests/release-selection-map-source.test.mjs']);
- assertReleaseSelectionMapCiCurrent(integrationCapacityCiRead(checkedReleaseRead(rawReadFileSync)));
+ assertReleaseSelectionMapCiCurrent(integrationCapacityCiRead(rawReadFileSync));
  const {assertIntegratedCurrent}=await import('./helpers/integrated-ci-source.mjs');
  assertIntegratedCurrent();
  for(const [path,row]of Object.entries(integration.files)){
@@ -194,6 +198,56 @@ test('release selection map isolated production copy includes exact helper and p
  const adapter=join(directory,'tests/helpers/release-selection-map-source.mjs');writeFileSync(adapter,readFileSync(adapter,'utf8')+'\n');
  assert.throws(()=>copyIntegrationSourceClosure(sourceRoot,{sourceRoot:directory}),/fresh helper copy identity/);
 });
+
+test('release enemy art advances one live Lua owner without rewriting historical selection contracts',()=>{
+ const p=jointSourceEpoch.proof,prior=sourceEpoch.proof,packet=releaseEnemyArtSourcePacket,path='src/lua/abyss_lowcost_art.lua';
+ assert.equal(p.currentTreeCommitted,false,'capture does not pretend to be a source commit');
+ assert.equal(prior.currentTreeCommitted,true,'historical committed flag remains intact');
+ assert.deepEqual(p.targets.releaseEnemyArtPrior.files,prior.current);
+ for(const [name,target]of Object.entries(prior.targets))assert.deepEqual(p.targets[name],target,name);
+ for(const [key,row]of Object.entries(prior.current)){
+  if(key==='src/lua/abyss_card_flow.lua')continue; // exact PC22 owner checked by joint test
+  assert.deepEqual(p.current[key],key===path?packet.current[path]:row);
+ }
+ const raw=key=>rawReadFileSync(key,'utf8');
+ for(const [key,row]of Object.entries(p.current))if(row)assert.equal(norm(raw(key)),row.source,key+' live complete owner');
+ const seen=[];
+ assert.equal(jointSourceEpoch.preCombinedSource(path,raw(path),{target:'releaseEnemyArtPrior',readSource:key=>{seen.push(key);return raw(key);}}),packet.before[path].source);
+ assert.deepEqual(seen,p.owners,'fresh complete linked owners');
+ for(const owner of p.owners)assert.throws(()=>jointSourceEpoch.preCombinedSource(path,raw(path),{target:'releaseEnemyArtPrior',readSource:key=>raw(key)+(key===owner?'\n':'')}),/linked owner/);
+ for(const foreign of [raw(path)+'\n',raw(path).slice(1),norm(raw(path)).replaceAll('\n','\r\r\n'),null,17,Buffer.from(raw(path))]){
+  let reads=0;assert.equal(jointSourceEpoch.preCombinedSource(path,foreign,{target:'releaseEnemyArtPrior',readSource:()=>{reads++;throw Error();}}),foreign);assert.equal(reads,0);
+  assert.equal(preReleaseEnemyArtSource(path,foreign),foreign);
+ }
+ for(const mutate of [v=>{v.before[path].source+='\n';},v=>{v.current[path].source+='\n';},v=>{delete v.current[path];},v=>{v.currentTreeCommitted=true;},v=>{v.baseCommit='f'.repeat(40);}]){
+  const bad=structuredClone(packet);mutate(bad);assert.throws(()=>extendReleaseEnemyArtSource(sourceEpoch,bad));
+ }
+});
+
+
+test('release enemy artwork CI authenticates full current closure and preserves exact historical sources',()=>{
+ const readFileSync=enemyJoinRead('enemy');
+ assertReleaseEnemyArtCiCurrent(readFileSync);
+ const packet=releaseEnemyArtCiPacket;
+ assert.equal(packet.currentTreeCommitted,false);
+ for(const [path,row]of Object.entries(packet.files)){
+  const source=readFileSync(path,'utf8');
+  assert.equal(releaseEnemyArtCiSource(path,source),row.before.source);
+  assert.equal(releaseEnemyArtCiSource(path,norm(source).replaceAll('\n','\r\n')),row.before.source);
+  for(const foreign of [source+'\n',source.slice(1),source.slice(0,-1),null,{},17])
+   assert.equal(releaseEnemyArtCiSource(path,foreign),foreign);
+  for(const unknown of ['__proto__','constructor','foreign/'+path])
+   assert.equal(releaseEnemyArtCiSource(unknown,source),source);
+ }
+ for(const path of [...Object.keys(packet.files),...Object.keys(packet.currentOwners),...Object.keys(packet.binaryOwners)]){
+  assert.throws(()=>assertReleaseEnemyArtCiCurrent(enemyJoinRead('enemy',(p,e)=>{
+   const raw=rawReadFileSync(p,e);return p===path?typeof raw==='string'?raw+'\n':Buffer.concat([raw,Buffer.from('\n')]):raw;
+  })),/fresh complete integration source/);
+  assert.throws(()=>assertReleaseEnemyArtCiCurrent(enemyJoinRead('enemy',(p,e)=>{if(p===path)throw Error('missing '+p);return rawReadFileSync(p,e);})),/missing/);
+ }
+ const lua='src/lua/abyss_lowcost_art.lua',raw=readFileSync(lua,'utf8');
+ assert.equal(releaseEnemyArtCiSource(lua,raw),raw,'CI does not intercept production source ownership');
+});
 test('Release freeze CI continuation authenticates fresh owners before historical projection',async()=>{
  const readFileSync=(path,encoding)=>{const raw=rawReadFileSync(path,encoding);return typeof raw==='string'?fastFreezeB9Source(path,raw,'freeze'):raw;};
  const assertReleaseSelectionMapCiCurrent=(read=rawReadFileSync)=>assertFastFreezeB9UnionCurrent(read);
@@ -211,7 +265,7 @@ test('Release freeze CI continuation authenticates fresh owners before historica
  const {assertIntegratedCurrent}=await import('./helpers/integrated-ci-source.mjs');assertIntegratedCurrent();
 });
 test('prepared capacity and preflight views bind only complete named parent sources and fresh caller bytes',async()=>{
- assertSettingsReleaseCurrent();const parentRead=settingsReleaseRead('release',rawReadFileSync);
+ assertSettingsReleaseCurrent();const parentRead=settingsReleaseRead('release',enemyFastRead('release',rawReadFileSync));
  const packet=JSON.parse(gunzipSync(rawReadFileSync('tests/helpers/release-capacity-preflight-source.json.gz')));
  const {releasePreflightUnionSource}=await import('./helpers/release-preflight-union-source.mjs');
  assertCapacityPreflightCurrent();

@@ -17,6 +17,7 @@ import { battleLayout, enemyPowerTemplate } from './ui-layout.mjs';
 import { gameLayout } from './game-ui-layout.mjs';
 import { withViewport } from './viewport-layout.mjs';
 import { buildUiTheme } from './build-ui-theme.mjs';
+import {attachLowCostEnemyArt,loadReleaseEnemyArt,releaseEnemyArtInputs,usesReleaseEnemyArt} from './lowcost-art.mjs';
 import { buildMapUI } from './map-ui-layout.mjs';
 import { deckCardTemplate, battlePileCardTemplate } from './deck-ui-layout.mjs';
 import { contentFiles } from './validate-data.mjs';
@@ -134,6 +135,7 @@ export function buildUI(outputDirectory = 'build/lua', python = process.env.ABYS
   const nativePageLifecycle=validateUiProfileOptions(options);
   if(options.legacyCardFrames===true&&options.lightweight2d!==true)throw Error('Legacy card comparison requires the bounded 2D experiment');
   const flags = resolveArtFeatures(options);
+  const standardEnemyArt=usesReleaseEnemyArt(flags,{officialAssets,v25BattleChrome,lightweight2d:options.lightweight2d});
   if(v25BattleChrome&&flags.selectionAvatar!==flags.battlePortrait)throw Error('V25 portraits require paired selection and battle source assets');
   const art = prepareNativeCardArt(options.nativeCardArt?.count===0?undefined:options.nativeCardArt);
   const readyArt = flags.cards && !art;
@@ -142,7 +144,7 @@ export function buildUI(outputDirectory = 'build/lua', python = process.env.ABYS
   const performance=compact?loadPerformancePack():null;
   if(flags.menuBackground)backgroundSources();
   portraitSources(process.cwd(),flags);
-  rejectInputOutputAliases(outputDirectory, [...(v25Cards?.inputs.map(row=>row.path)??[]),...(v25Masks?.inputs.map(row=>row.path)??[]),...(flags.menuBackground?backgroundInputs:[]),...portraitRuntimeInputs(flags), ...(readyArt?readyArtSourceInputs():[]), ...(art?.inputPaths??[])].map(path=>resolve(path)));
+  rejectInputOutputAliases(outputDirectory, [...(v25Cards?.inputs.map(row=>row.path)??[]),...(v25Masks?.inputs.map(row=>row.path)??[]),...(flags.menuBackground?backgroundInputs:[]),...portraitRuntimeInputs(flags), ...(standardEnemyArt?releaseEnemyArtInputs.map(input=>fileURLToPath(input)):[]), ...(readyArt?readyArtSourceInputs():[]), ...(art?.inputPaths??[])].map(path=>resolve(path)));
   // The optional-art identity scan above also protects grass sources before decoding.
   const monsterArt=flags.monsters?prepareMonsterArt(options.monsterArt):null;
   if(flags.monsters&&!monsterArt)throw Error('Enabled monster artwork requires its registry');
@@ -163,8 +165,11 @@ export function buildUI(outputDirectory = 'build/lua', python = process.env.ABYS
   if(flags.menuBackground)attachOfficialBackground(layout, templates);
   attachOfficialPortraits(layout,flags);attachLowpolyScenes(layout,flags);
   const genericTemplates=readyArtTemplates();
+  const actor=monsterActorTemplate(monsterArt);
+  const enemyArt=standardEnemyArt?loadReleaseEnemyArt():null;
+  if(enemyArt)attachLowCostEnemyArt(actor,enemyArt.enemy.capacity);
   templates.push(...(flags.cards||flags.menuBackground||flags.selectionAvatar||flags.battlePortrait?genericTemplates:genericTemplates.filter(t=>t.name===readyArtGroupTemplate)),
-    monsterActorTemplate(monsterArt),enemyPowerTemplate());
+    actor,enemyPowerTemplate());
   if((v25Cards||v25Masks)&&!templates.some(t=>t.name===readyArtImageTemplate))templates.push(genericTemplates.find(t=>t.name===readyArtImageTemplate));
   if(readyArt){attachReadyCardHosts(battle);attachReadyCardHosts(layout);attachReadyCardHosts(templates[0]);}
   if (art) { attachNativeCardArt(battle,art,{battleOnly:true}); attachNativeCardArt(layout,art); }
@@ -223,7 +228,7 @@ export function buildUI(outputDirectory = 'build/lua', python = process.env.ABYS
   const officialTheme=join(outputDirectory,'official-assets-theme.json');
   if(officialAssets)writeFileSync(officialTheme,JSON.stringify(theme));
   else rmSync(officialTheme,{force:true});
-  buildUiTheme(officialAssets?officialTheme:v25BattleChrome?variantTheme:undefined, undefined, join(outputDirectory, 'abyss_theme.lua'));
+  buildUiTheme(officialAssets?officialTheme:v25BattleChrome?variantTheme:undefined, undefined, join(outputDirectory, 'abyss_theme.lua'), enemyArt);
   buildMapUI(outputDirectory);
   writeFileSync(join(outputDirectory,'abyss_monster_art_data.lua'),`-- Generated from the bounded native monster registry.\nreturn ${toLua(monsterArt??{})}\n`);
   const narrative = JSON.parse(readFileSync('data/presentation/narrative.zh-CN.json', 'utf8'));
