@@ -1,6 +1,7 @@
 import { readFileSync, statSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { checkHostedSlice } from './check-pr-slice.mjs';
 
 const limits = {
   'AGENTS.md': { lines: 80, characters: 5000 },
@@ -46,4 +47,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const result = auditGuidance();
   console.log(JSON.stringify(result, null, 2));
   if (result.errors.length) process.exitCode = 1;
+  else {
+    try { checkHostedSlice(); }
+    catch (error) { console.error(error.message); process.exitCode = 1; }
+  }
 }

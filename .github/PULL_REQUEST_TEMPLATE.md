@@ -38,11 +38,17 @@ Use recorded for cleanup/status updates already committed; it validates without 
 verify:delivery --merged applies this line via CLI after exact merged verification.
 Use none only when this PR has no task updates. -->
 
+## Integration slice
+<!-- Describe the independently verified behavior, the next dependent slice if any, and the
+flag owner/removal condition if applicable. For over-budget production that cannot reasonably be split, use
+Slice-exception: atomic | why it must land together | verification command or evidence
+Other valid reasons: mechanical, generated, tests. The independent reviewer verifies the reason and evidence. -->
+
 ## How to test
 1.
 
 ## Checklist
-- [ ] PR < ~400 lines (or explained why not)
+- [ ] Production fits 400 added/deleted lines and 10 files, or includes a reviewed exception
 - [ ] Tests added/updated and passing locally
 - [ ] No secrets/PII in diff
 - [ ] Breaking changes documented + migration notes
