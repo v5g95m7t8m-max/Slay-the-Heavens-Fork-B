@@ -3,6 +3,7 @@ import {generatedRuntimeModules,payloadDigest} from '../scripts/build-native-can
 import {monsterActorTemplate} from '../scripts/monster-art.mjs';
 import {enemyPowerTemplate} from '../scripts/ui-layout.mjs';
 import {readyArtTemplates,readyArtGroupTemplate} from '../scripts/art/ready-card-runtime.mjs';
+import {deckBrowserBindingModule,deckBrowserBindingSource,deckBrowserTemplateName,deckCardTemplate,plainBrowserCardTemplate} from '../scripts/deck-ui-layout.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
@@ -17,8 +18,10 @@ const builder = fileURLToPath(new URL('../scripts/build-native-candidate.mjs', i
 const existing = { id: 1073741899, name: '_GSTS_ABYSS_SETTLEMENT', type: 20000, writable: true };
 const uiModules = Object.keys(generatedRuntimeModules).filter(name=>generatedRuntimeModules[name]==='scripts/build-ui.mjs');
 // Rebuild/ownership fixtures exercise the ordinary default-off candidate.
-// Artwork binding and template contracts have separate opt-in integration tests.
-const templates = [readyArtTemplates().find(template=>template.name===readyArtGroupTemplate),monsterActorTemplate(null),enemyPowerTemplate()];
+// The read-only browser is mandatory even with all optional artwork off.
+const browserTemplateIndex=1073741853;
+const templates = [readyArtTemplates().find(template=>template.name===readyArtGroupTemplate),monsterActorTemplate(null),enemyPowerTemplate(),
+  plainBrowserCardTemplate(deckCardTemplate())];
 const generatedSource = name => name === artFeatureModule ? artFeaturesSource({})
   : name === 'abyss_ui_profile' ? uiProfileSource()
   : name === 'abyss_monster_art_data' ? '-- Generated from the bounded native monster registry.\nreturn {}\n' : 'return {}';
@@ -78,10 +81,12 @@ function run(scenario, check) {
     put('src/lua/abyss_ui.lua','return {}');
     for(const file of ['data/cards.json','data/release/candidate-art-policy.json'])put(file,readFileSync(file));
     put('scripts/build-lua-data.mjs',`import {writeFileSync} from 'node:fs';import {dirname,join} from 'node:path';writeFileSync(process.argv[3],'return {}');writeFileSync(join(dirname(process.argv[3]),'abyss_original_v4_data.lua'),'return {}');`);
-    put('scripts/build-ui.mjs',`import {writeFileSync} from 'node:fs';import {join} from 'node:path';const out=process.argv[2];for(const [name,source] of ${JSON.stringify(uiModules.map(name=>[name,generatedSource(name)]))})writeFileSync(join(out,name+'.lua'),source);writeFileSync(join(out,'game-ui.json'),JSON.stringify({name:'SlayTheAbyss',script:'abyss_ui',controls:[]}));writeFileSync(join(out,'game-ui-templates.json'),${JSON.stringify(JSON.stringify(templates))});`);
+    const generatedTemplates=scenario.omitBrowserTemplate?templates.filter(t=>t.name!==deckBrowserTemplateName)
+      :scenario.repeatBrowserTemplate?[...templates,templates.find(t=>t.name===deckBrowserTemplateName)]:templates;
+    put('scripts/build-ui.mjs',`import {writeFileSync} from 'node:fs';import {join} from 'node:path';const out=process.argv[2];for(const [name,source] of ${JSON.stringify(uiModules.map(name=>[name,generatedSource(name)]))})writeFileSync(join(out,name+'.lua'),source);writeFileSync(join(out,'game-ui.json'),JSON.stringify({name:'SlayTheAbyss',script:'abyss_ui',controls:[]}));writeFileSync(join(out,'game-ui-templates.json'),${JSON.stringify(JSON.stringify(generatedTemplates))});`);
     for(const name of Object.keys(generatedRuntimeModules))put('build/lua/'+name+'.lua',generatedSource(name));
     put('build/lua/game-ui.json',JSON.stringify({name:'SlayTheAbyss',script:'abyss_ui',controls:[]}));
-    put('build/lua/game-ui-templates.json',JSON.stringify(templates));
+    put('build/lua/game-ui-templates.json',JSON.stringify(generatedTemplates));
     put('scenario.json',JSON.stringify(scenario));
     put('calls.jsonl',''); put('base.gil',fixtureMapBytes(scenario.malformedTool==='scene_list_client_scripts'?[{file:'malformed.lua',source:'return {}'}]:scenario.scripts??[]));
     const result=spawnSync(process.execPath,[builder,join(dir,'base.gil'),join(dir,'out'),'--art-cards=false','--art-menu-background=false','--art-selection-avatar=false','--art-battle-portrait=false'],{cwd:dir,encoding:'utf8',env:{...process.env,MILIASTRA_MCP_ROOT:join(dir,'tool'),REBUILD_SCENARIO:join(dir,'scenario.json'),REBUILD_CALLS:join(dir,'calls.jsonl')}});
@@ -98,6 +103,10 @@ function run(scenario, check) {
      assert.equal(receipt.monsterActors.templateIndex,1073741849);
      assert.equal(receipt.monsterActors.containerTemplateIndex,1073741848);
      assert.equal(receipt.monsterActors.powerTemplateIndex,1073741850);
+     assert.deepEqual(receipt.deckBrowser,{templateIndex:browserTemplateIndex,maxFaces:10,parts:[]});
+     const browserBinding=actual.find(module=>module.name===deckBrowserBindingModule);
+     assert.ok(browserBinding,'browser binding must be read back from the written map');
+     assert.equal(browserBinding.source,deckBrowserBindingSource(browserTemplateIndex,[]),'runtime binding must carry the exact SDK-returned index');
      assert.deepEqual(actual.map(s=>s.name).sort(),Object.keys(receipt.moduleDigests).sort(),'final inventory must be read from the batch-written map');
      for(const row of actual)assert.equal(sha256(row.source),receipt.moduleDigests[row.name]);
      assert(calls.some(c=>c.name==='native_batch_script'),'actual production batch writer must construct records');
@@ -111,8 +120,8 @@ test('rebuilding existing scene replaces UI, reuses actual graph id and preserve
   success(result);
   assert.equal(calls.find(c=>c.name==='scene_add_client_ui').args.replace,true);
   assert.deepEqual(calls.filter(c=>c.name==='scene_add_client_template').map(c=>c.args.template.name).sort(),
-    ['AbyssMonsterActor','AbyssMonsterPower','AbyssReadyCardGroup'],
-    'default-off keeps required actor/power/group templates and excludes all optional image artwork');
+    [deckBrowserTemplateName,'AbyssMonsterActor','AbyssMonsterPower','AbyssReadyCardGroup'].sort(),
+    'default-off keeps required browser/actor/power/group templates and excludes optional artwork');
   const flags=calls.find(c=>c.name==='native_batch_script'&&c.args.name===artFeatureModule);
   assert(flags,'canonical default-off configuration must reach the real candidate payload');
   assert.equal(flags.args.source,artFeaturesSource({}));
@@ -136,6 +145,15 @@ test('partially configured scene adds only its missing signal and retains unrela
   assert.deepEqual(calls.filter(c=>c.name==='scene_add_signal').map(c=>c.args.name),['ABYSS_LOSE']);
   assert.equal(calls.filter(c=>c.name==='scene_add_graph').length,0);
 }));
+
+for(const [name,scenario] of [['missing',{omitBrowserTemplate:true}],['duplicate',{repeatBrowserTemplate:true}]])
+  test(`${name} deck-browser template index cannot produce an accepted candidate`,()=>run(scenario,(result,calls)=>{
+    assert.notEqual(result.status,0);
+    assert.match(result.stderr,/Deck browser requires one candidate-local template index/);
+    const browserWrites=calls.filter(c=>c.transport==='local-sdk'&&c.name==='scene_add_client_template'&&c.args.template.name===deckBrowserTemplateName);
+    assert.equal(browserWrites.length,scenario.omitBrowserTemplate?0:2);
+    assert.ok(!calls.some(c=>c.name==='native_batch_script'||c.name==='scene_check_client'));
+  }));
 
 for(const failTool of ['inspect_map','scene_list_signals','scene_add_signal','scene_add_graph'])test(`${failTool} failure is not swallowed or certified`,()=>run({failTool},(result,calls)=>{
   assert.notEqual(result.status,0);
