@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - Furinya
 created_date: '2026-10-31 10:47'
-updated_date: '2026-11-22 08:23'
+updated_date: '2026-11-22 08:44'
 labels:
   - art
   - technical-spike
@@ -82,4 +82,8 @@ PR648 Full共同失败定位为hosted检出Git pack 139374936字节，超过既�
 Fork B experiment/card-art-precision-lab，主仓基线00229683d0d38660c98ced2f4a41e89d84fc5e4e，实测源码214f02b117764138d9133f0c962589a6daca361e，候选GIL ed09bb8b914f0dc7a5b7cd9a2fa0e247dd14e5d2a674871a88e60125f89d7f6c。默认关闭；原生静态0错误，模拟器读回零差异且ready。160档10不同卡在Fengari从24/26次更新首张/齐牌缩为1/10，新增动态1640控件。证据experiments/card-art-precision-lab/RESULTS.md。
 
 条件放行隔离验证。原作复刻与最低精度缺证，75张官方容量、实体安卓、完整战斗GPU/输入未验。商店/节点卡两项定向测试在干净基线重复失败。Fork B Actions API Forbidden，未执行Hosted Full；主仓未提交PR。
+
+接续实际卡面：b8d2648bf90f717389dc3450f6ee0ce16f6d633e，两个 75 绘图候选。100/160 图元档相对同一底图实际 GIL 增量 290958/398958 字节。用共用三套原生图元预制，修正同 Id 多 Lua 包装竞用及文本适配丢插画，关闭时未请求图库数据。
+
+0/1/5/10、10 不同／重复，实际共享 CardDisplay 四怪回合、拖牌、出牌、牌库、奖励、商店与清理，0/100/160不同/160重复四组 SDK 通过。160 档十卡 1660 动态控件，第44步可操作、第51步齐图，退出新增图元归零。证据 experiments/card-art-precision-lab/PACKED_RESULTS.md 和 sdk-replays.json，官方容量/GPU/实体安卓与最低可接受画质仍未验，保持原状态和 AC。
 <!-- SECTION:NOTES:END -->
