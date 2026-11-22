@@ -33,4 +33,50 @@ test("audio failure cannot prevent starting/restarting a run or mutate RNG", fun
     ui.run.phase = "defeat"; ui:refresh()
     assert(testStart(ui) and attempts == 4)
 end)
+test("map and title navigation neither restarts nor leaks music across a retained or ended run", function()
+    local sent, settlement = {}, 0
+    local cursor = {CursorDown="down", CursorUp="up", CursorExit="exit", CursorEndDrag="endDrag"}
+    local ui, root = F.fixture(nil, function(victory) assert(not victory); settlement = settlement + 1; return true end,
+        function(signal) sent[#sent + 1] = signal end, cursor)
+    local id = 0
+    local function tap(panel, name)
+        id = id + 1
+        local hit = root:GetChild(panel):GetChild(name):GetChild("hit")
+        local event = {touchId=id}
+        hit.listeners.down(event); hit.listeners.up(event)
+        return hit.click(event)
+    end
+    local function exact(sequence)
+        assert(table.concat(sent, ",") == sequence, table.concat(sent, ","))
+    end
+    local stop, map = "ABYSS_BGM_STOP", "ABYSS_BGM_MAP"
+    local expected = stop
+    exact(expected)
+    assert(testStart(ui))
+    expected = expected .. "," .. map
+    local run, mapState = ui.run, ui.map
+    exact(expected)
+    for _ = 1, 2 do
+        assert(ui:openMenu())
+        exact(expected)
+        assert(tap("runMenu", "mainMenu") and ui.sessionPaused)
+        expected = expected .. "," .. stop
+        exact(expected)
+        ui:refresh(); ui:update(1)
+        assert(tap("menuPanel", "titleQuit") and tap("exitPanel", "cancel") and settlement == 0)
+        exact(expected)
+        assert(tap("menuPanel", "continueRun") and not ui.sessionPaused)
+        assert(ui.run == run and ui.map == mapState)
+        expected = expected .. "," .. map
+        exact(expected)
+        ui:refresh(); ui:update(1)
+        exact(expected)
+    end
+    assert(ui:openMenu() and tap("runMenu", "mainMenu"))
+    expected = expected .. "," .. stop
+    assert(tap("menuPanel", "titleQuit") and tap("exitPanel", "confirm"))
+    assert(settlement == 1 and ui.settlementRequested and not ui:continueRun())
+    ui:update(1); ui:refresh()
+    exact(expected)
+end)
 print("native BGM host: " .. count .. " passed")
