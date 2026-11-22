@@ -18,6 +18,8 @@ local function start(config,broken,previous)
  backgrounds={};viewDeaths=0;cardDeaths=0;componentParams=0
  local function owner()return {release=function()released=released+1 end,onEngineDestroy=function()dead=dead+1 end}end
  modules={abyss_ui_profile={schemaVersion=1,nativePageLifecycle=false},abyss_monster_actor_binding={templateIndex=31,containerTemplateIndex=32,powerTemplateIndex=33,enabled=true},abyss_art_features=config,abyss_data={},abyss_presentation={},abyss_theme={sound={}},
+  -- The standard UI build emits this binding even when no browser template is installed.
+  abyss_deck_browser_binding={templateIndex=0,parts={}},
   -- This fixture substitutes GameUI itself; provide its page-intent boundary too.
   abyss_page_reveal={intent=function()return {page='menuPanel'}end},
   abyss_viewport={apply=function()return {GetChild=function()error('all-off has no custom hosts')end}end},
@@ -47,6 +49,8 @@ local function start(config,broken,previous)
   if p=='nativeComponentControls' then componentParams=componentParams+1;return false end
   params[#params+1]=p;return true end}
  assert(load(ENTRY))();OnStart();assert(updates and views==1,'art availability must not disable GameUI')
+ assert(requested.abyss_deck_browser_binding==1 and options.deckBrowser==nil,
+  'the generated default binding must be loaded once without activating the native deck browser')
  assert(componentParams==1,'comparison switch must be read once with its registered default off')
  assert(#params==1 and params[1]=='nativeBgmEnabled','art must not expose player parameters')
  return options
@@ -93,6 +97,14 @@ for _,bad in ipairs({false,{schemaVersion=0,nativePageLifecycle=false},{schemaVe
  local ok=pcall(start,snapshot(),function(m)if bad==false then m.abyss_ui_profile=nil else m.abyss_ui_profile=bad end end)
  assert(not ok and not updates and views==0,'mandatory profile failure was silently defaulted or bypassed')
 end
+`));
+test('missing mandatory deck browser binding fails closed before GameUI attaches',()=>vm(setup+`
+local messages={}
+print=function(message)messages[#messages+1]=message end
+local ok=pcall(start,snapshot(),function(m)m.abyss_deck_browser_binding=nil end)
+assert(not ok and updates==false and views==0,'missing browser binding must not start GameUI')
+assert(requested.abyss_deck_browser_binding==1,'the missing binding must be consulted exactly once')
+assert(table.concat(messages,'|'):find('missing abyss_deck_browser_binding',1,true),'startup must report the missing module')
 `));
 test('missing and malformed configuration fail closed and default world retires old card runtime',()=>vm(setup+`
 start(nil,nil,true);off();assert(cleared==1,'default world must release old custom card ownership')
