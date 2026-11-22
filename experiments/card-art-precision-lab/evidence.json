@@ -1,0 +1,1197 @@
+{
+  "projectBaseCommit": "00229683d0d38660c98ced2f4a41e89d84fc5e4e",
+  "testedSourceCommit": "214f02b117764138d9133f0c962589a6daca361e",
+  "candidateBuildId": "87980278-3b10-4ff1-a6ad-0a9d304cf0ff",
+  "sourceDirty": false,
+  "baseGil": {
+    "sha256": "25a3da9c43861434d975a6ec5e131dc1fcc88f3f9e5f1d7596fe131c9d5a583c",
+    "bytes": 15744225
+  },
+  "probeGil": {
+    "sha256": "ed09bb8b914f0dc7a5b7cd9a2fa0e247dd14e5d2a674871a88e60125f89d7f6c",
+    "bytes": 17514494
+  },
+  "sourceGilFixture": {
+    "sha256": "b8aa63c8e6c5c24964784842329a37adeb60d50c2f56272f6cc512907baf3706",
+    "bytes": 23751
+  },
+  "probeBudget": 160,
+  "emptyHosts": 61,
+  "nativeStaticCheck": {
+    "errors": 0,
+    "warnings": 444,
+    "baseWarnings": 444
+  },
+  "templateIndices": [
+    {
+      "id": "strike",
+      "name": "PrecisionArt0",
+      "templateIndex": 1073757433,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "defend",
+      "name": "PrecisionArt1",
+      "templateIndex": 1073757597,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "bash",
+      "name": "PrecisionArt2",
+      "templateIndex": 1073757761,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "whirlwind",
+      "name": "PrecisionArt3",
+      "templateIndex": 1073757925,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "barricade",
+      "name": "PrecisionArt4",
+      "templateIndex": 1073758089,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "demon_form",
+      "name": "PrecisionArt5",
+      "templateIndex": 1073758253,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "armaments",
+      "name": "PrecisionArt6",
+      "templateIndex": 1073758417,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "cleave",
+      "name": "PrecisionArt7",
+      "templateIndex": 1073758581,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "heavy_blade",
+      "name": "PrecisionArt8",
+      "templateIndex": 1073758745,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    },
+    {
+      "id": "anger",
+      "name": "PrecisionArt9",
+      "templateIndex": 1073758909,
+      "images": 160,
+      "containers": 4,
+      "rawGilDelta": 137308
+    }
+  ],
+  "newBytes": 1770269,
+  "rawGeometryJsonBytes": 71119,
+  "legacyLuaBytes": 350157,
+  "prefabBindingLuaBytes": 1149,
+  "simulator": {
+    "version": "0.5.2",
+    "saveSha256": "b120ec945cb7bee0b1793e9998e61ecf847806f3a7c8c8b7e5385629eb59e2da",
+    "inverseControls": 17143,
+    "inverseFaults": 0,
+    "moduleCount": 374,
+    "assetWarnings": [
+      106056,
+      106025
+    ],
+    "startMs": 6028.777810999998,
+    "softwareScreenshotMs": 5187.155216000003,
+    "scope": "Simulator RPC and software screenshot",
+    "mode": 0
+  },
+  "legacyAudit": {
+    "all75CompactAnd3NonCardEntriesMatch": true,
+    "spotChecks": {
+      "schemaVersion": 1,
+      "scope": "Existing opaque card compact baseline only; no new algorithm or quality victory claim",
+      "performance_boundary": "Single offline Python generation observation, excludes decoding, validation and rendering; NOT FPS, official loading or device performance",
+      "quality_boundary": "RGB sRGB-code-value MAE/PSNR are descriptive, not perceptual or equal-quality acceptance",
+      "recipe_sha256": "9bec57e68225de1fb222d9a974377e953cc2d0367232a8aa8098964b7026fdb0",
+      "pack_sha256": "417cfb4f3d65c7f95f1ffcf54a091de49bf2c9d2e8b1fc90c27da2e841f7fba1",
+      "environment": {
+        "python": "3.12.14",
+        "pillow": "13.0.0"
+      },
+      "assets": {
+        "strike": {
+          "source": "art/cards/traveler-geo/strike/preview-contain-144x64.png",
+          "source_sha256": "5e3719be1b7063d07266c7dcdd1a5af5e864d6565fbfef88959bb24a7b723118",
+          "grid": [
+            48,
+            22
+          ],
+          "canvas": [
+            144,
+            64
+          ],
+          "rectangle_controls": 918,
+          "containers_included": false,
+          "encoding_bytes": 12852,
+          "encoding_sha256": "a008dada256dd75e445936c62209af84f666bd13288112311b46c4b65a9f17c4",
+          "rebuilt_rgb_sha256": "b6994be59be22e52f9e57290c7a8ddcc2995aa13500a3c93ba4a141c46732bd5",
+          "existing_encoding_matches": true,
+          "generation_ms_single_observation": 7.787473999997019,
+          "rgb_mae": 15.408166956018519,
+          "rgb_mse": 661.2833839699074,
+          "rgb_psnr_db": 19.926927505196534,
+          "psnr_infinite": false
+        },
+        "defend": {
+          "source": "art/cards/traveler-geo/defend/preview-contain-144x64.png",
+          "source_sha256": "17fe7fb60350f06ce623dd4e4efb076c42f51ca0a601367e12b299f92d8b8dfe",
+          "grid": [
+            48,
+            22
+          ],
+          "canvas": [
+            144,
+            64
+          ],
+          "rectangle_controls": 835,
+          "containers_included": false,
+          "encoding_bytes": 11690,
+          "encoding_sha256": "476e03d096be932b85462d4a64f5e8a16c19c38b4a6e774d1d9aa8cf2b22618e",
+          "rebuilt_rgb_sha256": "ec04dd3b4b639c1aac0506757640183bc847ad5421d5a5d994da9a5038dfde2a",
+          "existing_encoding_matches": true,
+          "generation_ms_single_observation": 3.365455000022166,
+          "rgb_mae": 12.84718605324074,
+          "rgb_mse": 522.5914713541666,
+          "rgb_psnr_db": 20.94918043065672,
+          "psnr_infinite": false
+        },
+        "bash": {
+          "source": "art/cards/traveler-geo/bash/preview-source-144x64.png",
+          "source_sha256": "f5fd729de1601a4e5b0a45cbd74385c12479489618e6d93aa0a7f52b5ee1f9cb",
+          "grid": [
+            48,
+            22
+          ],
+          "canvas": [
+            144,
+            64
+          ],
+          "rectangle_controls": 916,
+          "containers_included": false,
+          "encoding_bytes": 12824,
+          "encoding_sha256": "2f398c483855d7635c31fa596984f776be63f1bf7bc9800756bbe69b4b82baa5",
+          "rebuilt_rgb_sha256": "d2d16209685668711a52b50bad0341a8d7d47317fa31948063c3615d5ee73942",
+          "existing_encoding_matches": true,
+          "generation_ms_single_observation": 4.04480100002047,
+          "rgb_mae": 14.07664207175926,
+          "rgb_mse": 559.4413700810185,
+          "rgb_psnr_db": 20.653257820401723,
+          "psnr_infinite": false
+        }
+      }
+    },
+    "reviewedNativeImages": {
+      "armaments": 1834,
+      "cleave": 2657,
+      "heavy_blade": 2043
+    }
+  },
+  "blind144": {
+    "reviewer": "independent AI session",
+    "viewport": [
+      144,
+      64
+    ],
+    "undistortedContentFit": [
+      84,
+      64
+    ],
+    "correct": 4,
+    "sample": 6,
+    "rows": [
+      {
+        "number": 1,
+        "cardId": "whirlwind",
+        "guess": "Whirlwind",
+        "confidence": "high",
+        "note": "宽弧绕过旋转的人形。"
+      },
+      {
+        "number": 2,
+        "cardId": "demon_form",
+        "guess": "Demon Form",
+        "confidence": "high",
+        "note": "展开双翼与双手红焰。"
+      },
+      {
+        "number": 3,
+        "cardId": "bash",
+        "guess": "Bash",
+        "confidence": "low",
+        "note": "看到下砸和碎裂，钉锤头不清楚。"
+      },
+      {
+        "number": 4,
+        "cardId": "defend",
+        "guess": "Defend",
+        "confidence": "low",
+        "note": "看到投射物击中盾，也可能是其他格挡牌。"
+      },
+      {
+        "number": 5,
+        "cardId": "barricade",
+        "guess": "Armaments",
+        "confidence": "medium",
+        "note": "看到成堆防具，没读出架设防线。"
+      },
+      {
+        "number": 6,
+        "cardId": "strike",
+        "guess": "Cleave",
+        "confidence": "medium",
+        "note": "只看到横向的大刀切线，尺度暗示横扫。"
+      }
+    ]
+  },
+  "benchmark": {
+    "runs": 755,
+    "scope": "Fengari and strict fixture, CPU/control scheduling only",
+    "medians": {
+      "60": {
+        "off/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.008,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.007
+        },
+        "off/1/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.066,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.054,
+          "parentMotionCpuMs": 0.016,
+          "destroyCpuMs": 0.04
+        },
+        "off/5/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.265,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.258,
+          "parentMotionCpuMs": 0.048,
+          "destroyCpuMs": 0.173
+        },
+        "off/10/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.522,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.469,
+          "parentMotionCpuMs": 0.094,
+          "destroyCpuMs": 0.355
+        },
+        "off/10/true": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.545,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.516,
+          "parentMotionCpuMs": 0.105,
+          "destroyCpuMs": 0.355
+        },
+        "legacy/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.016,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.012
+        },
+        "legacy/1/false": {
+          "callbacksAll": 1,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 61,
+          "peakCallsPerCallback": 61,
+          "createdCalls": 61,
+          "bindCpuMs": 0.153,
+          "updateCpuMs": 19.052,
+          "warmCpuMs": 0.139,
+          "parentMotionCpuMs": 0.018,
+          "destroyCpuMs": 0.421
+        },
+        "legacy/5/false": {
+          "callbacksAll": 5,
+          "callbacksFirst": 5,
+          "peakDynamicControls": 305,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 305,
+          "bindCpuMs": 0.497,
+          "updateCpuMs": 108.086,
+          "warmCpuMs": 0.49,
+          "parentMotionCpuMs": 0.067,
+          "destroyCpuMs": 2.431
+        },
+        "legacy/10/false": {
+          "callbacksAll": 10,
+          "callbacksFirst": 9,
+          "peakDynamicControls": 610,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 610,
+          "bindCpuMs": 0.792,
+          "updateCpuMs": 184.958,
+          "warmCpuMs": 0.569,
+          "parentMotionCpuMs": 0.137,
+          "destroyCpuMs": 3.403
+        },
+        "legacy/10/true": {
+          "callbacksAll": 10,
+          "callbacksFirst": 9,
+          "peakDynamicControls": 610,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 610,
+          "bindCpuMs": 0.647,
+          "updateCpuMs": 200.137,
+          "warmCpuMs": 0.57,
+          "parentMotionCpuMs": 0.132,
+          "destroyCpuMs": 3.305
+        },
+        "prefab/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.015,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.012
+        },
+        "prefab/1/false": {
+          "callbacksAll": 1,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 62,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 1,
+          "bindCpuMs": 0.1,
+          "updateCpuMs": 0.328,
+          "warmCpuMs": 0.076,
+          "parentMotionCpuMs": 0.014,
+          "destroyCpuMs": 0.238
+        },
+        "prefab/5/false": {
+          "callbacksAll": 5,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 310,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 5,
+          "bindCpuMs": 0.357,
+          "updateCpuMs": 1.64,
+          "warmCpuMs": 0.285,
+          "parentMotionCpuMs": 0.049,
+          "destroyCpuMs": 1.392
+        },
+        "prefab/10/false": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 620,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.623,
+          "updateCpuMs": 3.789,
+          "warmCpuMs": 0.588,
+          "parentMotionCpuMs": 0.096,
+          "destroyCpuMs": 3.12
+        },
+        "prefab/10/true": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 620,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.606,
+          "updateCpuMs": 4.055,
+          "warmCpuMs": 0.635,
+          "parentMotionCpuMs": 0.101,
+          "destroyCpuMs": 2.789
+        }
+      },
+      "100": {
+        "off/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.004,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.011,
+          "parentMotionCpuMs": 0.003,
+          "destroyCpuMs": 0.007
+        },
+        "off/1/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.102,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.071,
+          "parentMotionCpuMs": 0.02,
+          "destroyCpuMs": 0.058
+        },
+        "off/5/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.317,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.232,
+          "parentMotionCpuMs": 0.05,
+          "destroyCpuMs": 0.186
+        },
+        "off/10/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.484,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.647,
+          "parentMotionCpuMs": 0.12,
+          "destroyCpuMs": 0.36
+        },
+        "off/10/true": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.518,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.452,
+          "parentMotionCpuMs": 0.123,
+          "destroyCpuMs": 0.381
+        },
+        "legacy/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.02,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.012
+        },
+        "legacy/1/false": {
+          "callbacksAll": 2,
+          "callbacksFirst": 2,
+          "peakDynamicControls": 102,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 102,
+          "bindCpuMs": 0.132,
+          "updateCpuMs": 34.696,
+          "warmCpuMs": 0.093,
+          "parentMotionCpuMs": 0.014,
+          "destroyCpuMs": 0.6
+        },
+        "legacy/5/false": {
+          "callbacksAll": 8,
+          "callbacksFirst": 8,
+          "peakDynamicControls": 510,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 510,
+          "bindCpuMs": 0.381,
+          "updateCpuMs": 149.989,
+          "warmCpuMs": 0.329,
+          "parentMotionCpuMs": 0.053,
+          "destroyCpuMs": 3.242
+        },
+        "legacy/10/false": {
+          "callbacksAll": 16,
+          "callbacksFirst": 15,
+          "peakDynamicControls": 1020,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 1020,
+          "bindCpuMs": 0.811,
+          "updateCpuMs": 298.375,
+          "warmCpuMs": 0.591,
+          "parentMotionCpuMs": 0.122,
+          "destroyCpuMs": 5.385
+        },
+        "legacy/10/true": {
+          "callbacksAll": 16,
+          "callbacksFirst": 15,
+          "peakDynamicControls": 1020,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 1020,
+          "bindCpuMs": 0.629,
+          "updateCpuMs": 282.761,
+          "warmCpuMs": 0.595,
+          "parentMotionCpuMs": 0.14,
+          "destroyCpuMs": 5.392
+        },
+        "prefab/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.015,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.012
+        },
+        "prefab/1/false": {
+          "callbacksAll": 1,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 103,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 1,
+          "bindCpuMs": 0.09,
+          "updateCpuMs": 0.467,
+          "warmCpuMs": 0.082,
+          "parentMotionCpuMs": 0.016,
+          "destroyCpuMs": 0.353
+        },
+        "prefab/5/false": {
+          "callbacksAll": 5,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 515,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 5,
+          "bindCpuMs": 0.333,
+          "updateCpuMs": 2.558,
+          "warmCpuMs": 0.285,
+          "parentMotionCpuMs": 0.053,
+          "destroyCpuMs": 2.228
+        },
+        "prefab/10/false": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 1030,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.721,
+          "updateCpuMs": 5.766,
+          "warmCpuMs": 0.609,
+          "parentMotionCpuMs": 0.095,
+          "destroyCpuMs": 4.045
+        },
+        "prefab/10/true": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 1030,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.578,
+          "updateCpuMs": 5.233,
+          "warmCpuMs": 0.602,
+          "parentMotionCpuMs": 0.113,
+          "destroyCpuMs": 4.521
+        }
+      },
+      "160": {
+        "off/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.004,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.012,
+          "parentMotionCpuMs": 0.003,
+          "destroyCpuMs": 0.009
+        },
+        "off/1/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.076,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.082,
+          "parentMotionCpuMs": 0.024,
+          "destroyCpuMs": 0.052
+        },
+        "off/5/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.347,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.332,
+          "parentMotionCpuMs": 0.059,
+          "destroyCpuMs": 0.169
+        },
+        "off/10/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.722,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.574,
+          "parentMotionCpuMs": 0.121,
+          "destroyCpuMs": 0.484
+        },
+        "off/10/true": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.6,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.695,
+          "parentMotionCpuMs": 0.102,
+          "destroyCpuMs": 0.414
+        },
+        "legacy/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.021,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.013
+        },
+        "legacy/1/false": {
+          "callbacksAll": 3,
+          "callbacksFirst": 3,
+          "peakDynamicControls": 163,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 163,
+          "bindCpuMs": 0.142,
+          "updateCpuMs": 49.091,
+          "warmCpuMs": 0.116,
+          "parentMotionCpuMs": 0.018,
+          "destroyCpuMs": 1.001
+        },
+        "legacy/5/false": {
+          "callbacksAll": 13,
+          "callbacksFirst": 13,
+          "peakDynamicControls": 815,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 815,
+          "bindCpuMs": 0.447,
+          "updateCpuMs": 229.876,
+          "warmCpuMs": 0.352,
+          "parentMotionCpuMs": 0.06,
+          "destroyCpuMs": 4.003
+        },
+        "legacy/10/false": {
+          "callbacksAll": 26,
+          "callbacksFirst": 24,
+          "peakDynamicControls": 1630,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 1630,
+          "bindCpuMs": 0.771,
+          "updateCpuMs": 495.65,
+          "warmCpuMs": 0.606,
+          "parentMotionCpuMs": 0.114,
+          "destroyCpuMs": 8.684
+        },
+        "legacy/10/true": {
+          "callbacksAll": 26,
+          "callbacksFirst": 24,
+          "peakDynamicControls": 1630,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 1630,
+          "bindCpuMs": 0.846,
+          "updateCpuMs": 492.502,
+          "warmCpuMs": 0.797,
+          "parentMotionCpuMs": 0.176,
+          "destroyCpuMs": 10.399
+        },
+        "prefab/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.015,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.013
+        },
+        "prefab/1/false": {
+          "callbacksAll": 1,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 164,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 1,
+          "bindCpuMs": 0.142,
+          "updateCpuMs": 0.808,
+          "warmCpuMs": 0.096,
+          "parentMotionCpuMs": 0.025,
+          "destroyCpuMs": 0.711
+        },
+        "prefab/5/false": {
+          "callbacksAll": 5,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 820,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 5,
+          "bindCpuMs": 0.355,
+          "updateCpuMs": 3.877,
+          "warmCpuMs": 0.288,
+          "parentMotionCpuMs": 0.053,
+          "destroyCpuMs": 3.254
+        },
+        "prefab/10/false": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 1640,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.723,
+          "updateCpuMs": 14.715,
+          "warmCpuMs": 0.637,
+          "parentMotionCpuMs": 0.119,
+          "destroyCpuMs": 7.588
+        },
+        "prefab/10/true": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 1640,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.583,
+          "updateCpuMs": 8.037,
+          "warmCpuMs": 0.561,
+          "parentMotionCpuMs": 0.098,
+          "destroyCpuMs": 6.172
+        }
+      },
+      "250": {
+        "off/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.009,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.007
+        },
+        "off/1/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.067,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.052,
+          "parentMotionCpuMs": 0.018,
+          "destroyCpuMs": 0.042
+        },
+        "off/5/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.245,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.256,
+          "parentMotionCpuMs": 0.051,
+          "destroyCpuMs": 0.17
+        },
+        "off/10/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.499,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.531,
+          "parentMotionCpuMs": 0.097,
+          "destroyCpuMs": 0.404
+        },
+        "off/10/true": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.456,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.489,
+          "parentMotionCpuMs": 0.121,
+          "destroyCpuMs": 0.342
+        },
+        "legacy/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.022,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.013
+        },
+        "legacy/1/false": {
+          "callbacksAll": 4,
+          "callbacksFirst": 4,
+          "peakDynamicControls": 255,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 255,
+          "bindCpuMs": 0.152,
+          "updateCpuMs": 83.221,
+          "warmCpuMs": 0.112,
+          "parentMotionCpuMs": 0.015,
+          "destroyCpuMs": 1.247
+        },
+        "legacy/5/false": {
+          "callbacksAll": 20,
+          "callbacksFirst": 20,
+          "peakDynamicControls": 1275,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 1275,
+          "bindCpuMs": 0.453,
+          "updateCpuMs": 349.739,
+          "warmCpuMs": 0.31,
+          "parentMotionCpuMs": 0.062,
+          "destroyCpuMs": 5.912
+        },
+        "legacy/10/false": {
+          "callbacksAll": 40,
+          "callbacksFirst": 37,
+          "peakDynamicControls": 2550,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 2550,
+          "bindCpuMs": 0.699,
+          "updateCpuMs": 810.332,
+          "warmCpuMs": 0.595,
+          "parentMotionCpuMs": 0.158,
+          "destroyCpuMs": 12.702
+        },
+        "legacy/10/true": {
+          "callbacksAll": 40,
+          "callbacksFirst": 37,
+          "peakDynamicControls": 2550,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 2550,
+          "bindCpuMs": 0.636,
+          "updateCpuMs": 705.879,
+          "warmCpuMs": 0.568,
+          "parentMotionCpuMs": 0.111,
+          "destroyCpuMs": 11.923
+        },
+        "prefab/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.015,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.012
+        },
+        "prefab/1/false": {
+          "callbacksAll": 1,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 256,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 1,
+          "bindCpuMs": 0.109,
+          "updateCpuMs": 0.962,
+          "warmCpuMs": 0.079,
+          "parentMotionCpuMs": 0.017,
+          "destroyCpuMs": 0.846
+        },
+        "prefab/5/false": {
+          "callbacksAll": 5,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 1280,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 5,
+          "bindCpuMs": 0.317,
+          "updateCpuMs": 5.55,
+          "warmCpuMs": 0.335,
+          "parentMotionCpuMs": 0.054,
+          "destroyCpuMs": 4.608
+        },
+        "prefab/10/false": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 2560,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.67,
+          "updateCpuMs": 11.089,
+          "warmCpuMs": 0.572,
+          "parentMotionCpuMs": 0.107,
+          "destroyCpuMs": 9.558
+        },
+        "prefab/10/true": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 2560,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.649,
+          "updateCpuMs": 10.985,
+          "warmCpuMs": 0.546,
+          "parentMotionCpuMs": 0.098,
+          "destroyCpuMs": 9.522
+        }
+      },
+      "400": {
+        "off/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.003,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.01,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.007
+        },
+        "off/1/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.066,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.052,
+          "parentMotionCpuMs": 0.017,
+          "destroyCpuMs": 0.039
+        },
+        "off/5/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.247,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.248,
+          "parentMotionCpuMs": 0.051,
+          "destroyCpuMs": 0.169
+        },
+        "off/10/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.618,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.484,
+          "parentMotionCpuMs": 0.097,
+          "destroyCpuMs": 0.398
+        },
+        "off/10/true": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.507,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.462,
+          "parentMotionCpuMs": 0.094,
+          "destroyCpuMs": 0.359
+        },
+        "legacy/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.004,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.023,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.013
+        },
+        "legacy/1/false": {
+          "callbacksAll": 7,
+          "callbacksFirst": 7,
+          "peakDynamicControls": 407,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 407,
+          "bindCpuMs": 0.148,
+          "updateCpuMs": 131.179,
+          "warmCpuMs": 0.092,
+          "parentMotionCpuMs": 0.015,
+          "destroyCpuMs": 1.8
+        },
+        "legacy/5/false": {
+          "callbacksAll": 32,
+          "callbacksFirst": 32,
+          "peakDynamicControls": 2035,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 2035,
+          "bindCpuMs": 0.44,
+          "updateCpuMs": 602.439,
+          "warmCpuMs": 0.312,
+          "parentMotionCpuMs": 0.092,
+          "destroyCpuMs": 9.281
+        },
+        "legacy/10/false": {
+          "callbacksAll": 64,
+          "callbacksFirst": 59,
+          "peakDynamicControls": 4070,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 4070,
+          "bindCpuMs": 0.782,
+          "updateCpuMs": 1212.874,
+          "warmCpuMs": 0.664,
+          "parentMotionCpuMs": 0.149,
+          "destroyCpuMs": 20.908
+        },
+        "legacy/10/true": {
+          "callbacksAll": 64,
+          "callbacksFirst": 59,
+          "peakDynamicControls": 4070,
+          "peakCallsPerCallback": 64,
+          "createdCalls": 4070,
+          "bindCpuMs": 0.684,
+          "updateCpuMs": 1121.76,
+          "warmCpuMs": 0.613,
+          "parentMotionCpuMs": 0.135,
+          "destroyCpuMs": 20.166
+        },
+        "prefab/0/false": {
+          "callbacksAll": 0,
+          "callbacksFirst": 0,
+          "peakDynamicControls": 0,
+          "peakCallsPerCallback": 0,
+          "createdCalls": 0,
+          "bindCpuMs": 0.004,
+          "updateCpuMs": 0.0,
+          "warmCpuMs": 0.017,
+          "parentMotionCpuMs": 0.002,
+          "destroyCpuMs": 0.012
+        },
+        "prefab/1/false": {
+          "callbacksAll": 1,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 408,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 1,
+          "bindCpuMs": 0.099,
+          "updateCpuMs": 1.506,
+          "warmCpuMs": 0.081,
+          "parentMotionCpuMs": 0.018,
+          "destroyCpuMs": 1.358
+        },
+        "prefab/5/false": {
+          "callbacksAll": 5,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 2040,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 5,
+          "bindCpuMs": 0.362,
+          "updateCpuMs": 8.532,
+          "warmCpuMs": 0.316,
+          "parentMotionCpuMs": 0.055,
+          "destroyCpuMs": 6.902
+        },
+        "prefab/10/false": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 4080,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.623,
+          "updateCpuMs": 17.544,
+          "warmCpuMs": 0.594,
+          "parentMotionCpuMs": 0.101,
+          "destroyCpuMs": 16.39
+        },
+        "prefab/10/true": {
+          "callbacksAll": 10,
+          "callbacksFirst": 1,
+          "peakDynamicControls": 4080,
+          "peakCallsPerCallback": 1,
+          "createdCalls": 10,
+          "bindCpuMs": 0.844,
+          "updateCpuMs": 25.515,
+          "warmCpuMs": 0.668,
+          "parentMotionCpuMs": 0.12,
+          "destroyCpuMs": 14.987
+        }
+      }
+    }
+  },
+  "official": {
+    "import": "UNVERIFIED",
+    "buildVersion": null,
+    "storage": "UNVERIFIED",
+    "deviceGpuAndInput": "UNVERIFIED",
+    "fullBattlePeak": "UNVERIFIED"
+  }
+}

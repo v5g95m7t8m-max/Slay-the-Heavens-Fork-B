@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - Furinya
 created_date: '2026-10-31 10:47'
-updated_date: '2026-11-22 08:06'
+updated_date: '2026-11-22 08:23'
 labels:
   - art
   - technical-spike
@@ -76,4 +76,10 @@ Draft PR https://github.com/FurinyaWorks/Slay-the-Abyss/pull/647 已建立，源
 自动合并准入发现仓库要求特性分支本身线性，原647的基线merge提交不符合。为避免强推/改写历史，原PR与8ca分支全部保留，关闭647并由 https://github.com/FurinyaWorks/Slay-the-Abyss/pull/648 接续；新分支feat/lumine-native-fit-admission以e805a87d为唯一父，初始source tree与已审8ca逐字一致，无运行代码或测量变更。后续仅补PR链接，重新绑定精确HEAD独审及Full准入。
 
 PR648 Full共同失败定位为hosted检出Git pack 139374936字节，超过既有128MiB，非游戏GIL/官方容量。按既有LFS机制保存本实验11张PNG，保留全部原图字节、SHA256与画质认可；不动冻结媒体清单、预算或CI门槛。旧原始提交继续保留，深度二检出只取当前指针树，仍须新CI实测通过，不用估算冒充达标。
+
+2026-11-22 Owner纠正源图，当前评审切到《杀戮尖塔》一代铁甲战士标准原画。直接核对6张来源、尺寸和SHA，144×64独立AI盲测4/6。72张旧源稿退出本轮评审，三张历史精绘保留旧认可范围。复用本任务，状态及AC保留。
+
+Fork B experiment/card-art-precision-lab，主仓基线00229683d0d38660c98ced2f4a41e89d84fc5e4e，实测源码214f02b117764138d9133f0c962589a6daca361e，候选GIL ed09bb8b914f0dc7a5b7cd9a2fa0e247dd14e5d2a674871a88e60125f89d7f6c。默认关闭；原生静态0错误，模拟器读回零差异且ready。160档10不同卡在Fengari从24/26次更新首张/齐牌缩为1/10，新增动态1640控件。证据experiments/card-art-precision-lab/RESULTS.md。
+
+条件放行隔离验证。原作复刻与最低精度缺证，75张官方容量、实体安卓、完整战斗GPU/输入未验。商店/节点卡两项定向测试在干净基线重复失败。Fork B Actions API Forbidden，未执行Hosted Full；主仓未提交PR。
 <!-- SECTION:NOTES:END -->
