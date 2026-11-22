@@ -16,10 +16,25 @@ assert.equal(integration.path,'tests/integration-source-epoch.test.mjs');
 assert(exactSourceMatches(integration.before.source,integration.before),'exact protected StS integration source');
 
 function beforeArchiveStorageLedger(source){
- assert(exactSourceMatches(source,{
+ let current=source;
+ // #857 and #869 add provenance that was absent in the archived StS view.
+ if(exactSourceMatches(current,{
+  sha256:'5ec27c5274a512ccdf2dfb183f65bd15321c87883e3e4e633e6502f726429353',gitBlob:'dcd99bd13cf06653847b5ca8eb76748c229f17a4',
+ })){
+  current=current.replaceAll('\r\n','\n');
+  for(const [first,after] of [
+   ['native-event-illustrations','deck-browser-host-evidence'],
+   ['data/presentation/event-native-controls.json','docs/evidence/deck-pages-20261122/visual/develop-first-open.png'],
+  ]){
+   const start=current.indexOf(`    "${first}": {\n`),end=current.indexOf(`    "${after}": {\n`);
+   assert(start>=0&&end>start,'exact current asset ledger continuation: '+first);
+   current=current.slice(0,start)+current.slice(end);
+  }
+ }
+ assert(exactSourceMatches(current,{
   sha256:'1d33f53a8ae76990456e0829980be613201a8bde6502593013bb928768a9627c',gitBlob:'23e19be19acbca290bdad08d71f2e111b1143f1e',
  }),'fresh composed input-retirement asset ledger');
- const text=source.replaceAll('\r\n','\n');
+ const text=current.replaceAll('\r\n','\n');
  const start=text.indexOf('    "tests/fixtures/integration-ci-epochs.json.gz": {\n');
  const end=text.indexOf('    "docs/evidence/sts-selection-fade-20261121/after-selection.png": {\n');
  assert(start>=0&&end>start,'exact replay-storage ledger records');
