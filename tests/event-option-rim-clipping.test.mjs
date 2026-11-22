@@ -47,13 +47,18 @@ test('official event choices use one responsive rim and fill beneath intact copy
   assert.deepEqual(child(row,'hit').size,row.size);
   assert(!parts.some(part=>part.name.startsWith('v25Corner')));
   assert.equal(child(row,'border').visible,false);
-  assert(parts.indexOf(material)<parts.indexOf(child(row,'title')));
+  for(const name of ['title','description','hit'])assert(parts.indexOf(material)<parts.indexOf(child(row,name)),'material stays behind live '+name);
   assert.deepEqual(material.anchor,{min:[0,0],max:[1,1]});
   assert.deepEqual(child(material,'cloth').size,[-4,-4]);
-  for(const layer of material.children){
-   assert.equal(layer.children.length,6);
-   assert.equal(layer.children.filter(part=>part.image===100002).length,4);
-   assert(layer.children.every(part=>part.raycastTarget===false));
+  assert.deepEqual(children(material).map(layer=>layer.name),['rim','cloth']);
+  for(const layer of children(material)){
+   const layerParts=children(layer);
+   assert.deepEqual(layerParts.map(part=>part.name).sort(),
+    ['corner-1_-1','corner-1_1','corner1_-1','corner1_1','horizontal','vertical']);
+   for(const part of layerParts){
+    assert.equal(part.image,part.name.startsWith('corner')?theme.image.disc:theme.image.rect,layer.name+'/'+part.name);
+    assert.equal(part.raycastTarget,false);
+   }
   }
  }
 });
