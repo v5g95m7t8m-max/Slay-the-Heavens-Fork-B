@@ -24,3 +24,5 @@
 用 `production-status.json` 管理 75 个稳定 ID，以卡为单位推进。分批产出，不按张数降低盲评门槛。道具被认出来但动作没被认出来（如只认成一把剑、只认成盾和牌）不等于通过；尤其是组合技，优先画接触、承接或遮挡关系，不堆两张图标。失败记录留在每批 `REVIEW.md`，未通过的图不入样板目录。
 
 盲板命令（Python + Pillow）：`python tools/blind-board.py --seed batch-001-r1 --out /tmp/card-blind samples/*.png`。评审只看 PNG；答案与 SHA 写在独立 key，等两人各自作答再揭晓。先试小图后看同款完整牌面；实机测试另列。
+
+登记过审文件后跑 `python tools/check-checkpoint.py`（Python + Pillow）。`design-acceptance.json` 把通过条目绑定到确切的 SVG、透明 PNG 和评审记录；换稿必须重新评审、记录新文件，不可只改状态。此检查防止证据、文件和清单错配，不能替代独审、拟合或实机测试。

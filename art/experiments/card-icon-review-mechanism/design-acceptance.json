@@ -1,0 +1,45 @@
+{
+  "scope": "Design-pilot artifacts only. Digests bind the reviewed files, not a fit, device test, or release approval.",
+  "artifacts": {
+    "strike": {
+      "svg": "batches/01/strike.svg",
+      "svgSha256": "ddd285550f47c766e5f98290f6116a800514cc2f55c165aeb541d4cadf9f5cc9",
+      "png": "batches/01/strike.png",
+      "pngSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+      "evidence": "batches/01/REVIEW.md",
+      "evidenceSha256": "0d573f6dc16431a266a798f61290f86e260bd739787ccb34250e61ffc2cae921"
+    },
+    "defend": {
+      "svg": "samples/defend.svg",
+      "svgSha256": "c728a9e2d1f2807f428925755f2654411afaf5cb7e6ee5ff20d7a938fe48a99a",
+      "png": "samples/defend.png",
+      "pngSha256": "58a54247984cdfb4f728c88e007a90d7ad7c9006cf404eada57064d5ebd9c447",
+      "evidence": "review-receipt.json",
+      "evidenceSha256": "693c870079e774aa972dae165caf0b51d915fd0be336ddfa0fad14032f5c80c3"
+    },
+    "bash": {
+      "svg": "batches/01/bash.svg",
+      "svgSha256": "135c4945f0e3200e667e0c9fb99a6f54b04a876e92d8aab1d46755c07e1f4249",
+      "png": "batches/01/bash.png",
+      "pngSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+      "evidence": "batches/01/REVIEW.md",
+      "evidenceSha256": "0d573f6dc16431a266a798f61290f86e260bd739787ccb34250e61ffc2cae921"
+    },
+    "cleave": {
+      "svg": "samples/cleave.svg",
+      "svgSha256": "f3a7c6ad3389990f91211c3bcbbd8eabd8f09db251fc375c382f728f11208dd2",
+      "png": "samples/cleave.png",
+      "pngSha256": "c1acd91d0375022ec4cd6547a3df906456de439547d167fb75a63cd8e71ff873",
+      "evidence": "review-receipt.json",
+      "evidenceSha256": "693c870079e774aa972dae165caf0b51d915fd0be336ddfa0fad14032f5c80c3"
+    },
+    "barricade": {
+      "svg": "samples/barricade.svg",
+      "svgSha256": "d65536ca211902b01dc415f97eb407142369377b79084330b7560ef7af6875f0",
+      "png": "samples/barricade.png",
+      "pngSha256": "2ff1ed429c449830125620de4879715125aad08cda04194ee6a8def555db5349",
+      "evidence": "review-receipt.json",
+      "evidenceSha256": "693c870079e774aa972dae165caf0b51d915fd0be336ddfa0fad14032f5c80c3"
+    }
+  }
+}
