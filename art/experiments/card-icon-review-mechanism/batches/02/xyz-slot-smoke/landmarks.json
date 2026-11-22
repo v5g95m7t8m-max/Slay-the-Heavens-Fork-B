@@ -1,0 +1,18 @@
+{
+  "exact-fork": {
+    "strike": {
+      "row": 12,
+      "visibleTriangleVertex": 1,
+      "coordinate": "y",
+      "xyz": 45.685790628887624,
+      "zOnlyCounterfactual": 68.69646490035278
+    },
+    "bash": {
+      "row": 13,
+      "visibleTriangleVertex": 2,
+      "coordinate": "x",
+      "xyz": 82.9447030527382,
+      "zOnlyCounterfactual": 59.60137494986074
+    }
+  }
+}
