@@ -35,7 +35,24 @@ for(const [path,row] of Object.entries(packet.receipts))for(const [sha,retained]
 for(const [path,row] of Object.entries(packet.continuations))
  assert(matches(row.before.source,row.before),path+' exact calibration continuation predecessor');
 
+const runHudPotionFixture='tests/official-run-hud-reuse.test.mjs';
+function beforeRunHudPotionFixture(path,source){
+ if(path!==runHudPotionFixture||!matches(source,{
+  sha256:'d25b9916ef640c869b28dc2c4227b522be54937e6e3ed91e6074de88653e30cd',gitBlob:'0d2a72ed384947c0d47be6eaac6de6d3ee2c2b6e',
+ }))return source;
+ const current=lf(source);
+ // #872 appends a live potion assertion; only historical Run HUD reads omit it.
+ const boundary=current.indexOf("\ntest('battle and noncombat potion popups share compact panel and action tokens',");
+ assert(boundary>0,'exact Run HUD potion fixture suffix');
+ const prior=current.slice(0,boundary);
+ assert(matches(prior,{
+  sha256:'0ac73d7298d2ef127daf0afc2b386073d19d9f5c25720b7f6513bfcaad4aa333',gitBlob:'bce30e2816a09bc594a84bec31c504b77ffe5d1f',
+ }),'exact Run HUD potion fixture predecessor');
+ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
+
 export function beforeCalibrationReplay(path,source){
+ source=beforeRunHudPotionFixture(path,source);
  if(Object.hasOwn(retirement.continuations,path)){
   const {before,after}=retirement.continuations[path];
   if(matches(source,after))source=source.includes('\r\n')?before.source.replaceAll('\n','\r\n'):before.source;
