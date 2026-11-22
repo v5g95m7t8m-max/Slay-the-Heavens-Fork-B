@@ -12,10 +12,12 @@ import {writeScriptBatch} from '../../scripts/native-script-batch.mjs';
 import {nativeUiVariables} from '../../scripts/native-candidate-scripts.mjs';
 import {cardIds,hashPrecision,legacySlots,nativeTemplate,tiers} from './probes.mjs';
 import {patchRuntime,patchUi} from './candidate-patch.mjs';
+import {batchSizes,batchTemplate,encodeRow,patchPackedRuntime,patchPackedUi,patchPackedPresentation} from './packed.mjs';
 
-const [baseArg,outArg,budgetArg='160']=process.argv.slice(2);
+const [baseArg,outArg,budgetArg='160',profile='comparison']=process.argv.slice(2);
 const budget=Number(budgetArg), tool=process.env.MILIASTRA_MCP_ROOT;
 assert(baseArg&&outArg&&tool&&tiers.includes(budget),'Set MILIASTRA_MCP_ROOT and pass <candidate.json> <new output> <60|100|160|250|400>');
+assert(['comparison','packed75'].includes(profile),'invalid art candidate profile');
 assert(process.env.MILIASTRA_ALLOW_LIVE_WRITE==='0','Use an isolated copy');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const file=path=>({path,sha256:sha(readFileSync(path)),bytes:statSync(path).size});
@@ -47,8 +49,26 @@ function addTemplate(template, replace=false) {
 }
 addTemplate(deck,true);
 const [imageTemplateIndex,containerTemplateIndex]=readyArtTemplates().map((t,i)=>addTemplate({...t,name:'PrecisionShared'+i}));
-const packed={},slots={};
-for (const [i,id] of cardIds.entries()) {
+const packed={},slots={},packedTemplates={};
+let uniqueDrawings;
+if(profile==='packed75'){
+  for(const size of batchSizes){
+    const template=batchTemplate(size),startBytes=statSync(mapPath).size;
+    const templateIndex=addTemplate(template);
+    const readback=native.getClientUi({mapPath,template:template.name}).template;
+    assert.equal(readback.children.length,size);
+    assert.deepEqual(readback.children.map(c=>c.name),template.children.map(c=>c.name));
+    packedTemplates[size]=templateIndex;
+    templates.push({name:template.name,templateIndex,images:size,containers:1,rawGilDelta:statSync(mapPath).size-startBytes});
+  }
+  const warrior=JSON.parse(readFileSync('data/reference/warrior75.json')).cards.map(card=>card.id);
+  assert.equal(new Set(warrior).size,75);
+  const ids=[...cardIds,...warrior.filter(id=>!cardIds.includes(id))];
+  assert.equal(ids.length,75);
+  for(const [i,id] of ids.entries()) packed[id]={cardId:id,runtime:true,precisionPacked:hashPrecision(budget,i).map(encodeRow).join('')};
+  uniqueDrawings=new Set(Object.values(packed).map(d=>d.precisionPacked)).size;
+  assert.equal(uniqueDrawings,75);
+} else for (const [i,id] of cardIds.entries()) {
   const name='PrecisionArt'+i, rows=hashPrecision(budget,i);
   const template=nativeTemplate(name,rows);
   const startBytes=statSync(mapPath).size;
@@ -63,12 +83,19 @@ for (const [i,id] of cardIds.entries()) {
 const original=embeddedScripts({mapPath,includeSource:true},wire).scripts;
 const scripts=new Map(original.map(r=>[r.name,r.source]));
 const buildId=randomUUID();
-const updated={
+const lua=value=>'return '+toLua(value)+'\n';
+const updated=profile==='packed75'?{
+  abyss_ui:patchPackedUi(scripts.get('abyss_ui'),buildId),
+  abyss_card_art_runtime:patchPackedRuntime(scripts.get('abyss_card_art_runtime'),readFileSync(new URL('packed-runtime.lua',import.meta.url),'utf8')),
+  abyss_precision_binding:lua({imageTemplateIndex,containerTemplateIndex,packedTemplates}),
+  abyss_precision_packed:lua(packed),
+  abyss_character_presentation:patchPackedPresentation(scripts.get('abyss_character_presentation')),
+}:{
   abyss_ui:patchUi(scripts.get('abyss_ui'),buildId),
   abyss_card_art_runtime:patchRuntime(scripts.get('abyss_card_art_runtime')),
-  abyss_precision_binding:'return '+toLua({imageTemplateIndex,containerTemplateIndex})+'\n',
-  abyss_precision_prefabs:'return '+toLua(packed)+'\n',
-  abyss_precision_slots:'return '+toLua(slots)+'\n',
+  abyss_precision_binding:lua({imageTemplateIndex,containerTemplateIndex}),
+  abyss_precision_prefabs:lua(packed),
+  abyss_precision_slots:lua(slots),
 };
 const variables=[...nativeUiVariables(),{name:'precisionLabMode',type:'integer',value:0,public:true}];
 mapPath=writeScriptBatch(mapPath,Object.entries(updated).map(([name,source])=>({name,source,
@@ -86,9 +113,11 @@ copyFileSync(mapPath,candidatePath);
 assert.equal(file(base.candidate.path).sha256,base.candidate.sha256);
 const result={buildId,sourceCommit:base.sourceCommit,sourceDirty:base.sourceDirty,base:base.candidate,
   candidate:file(candidatePath),budget,clientTool:identity,hostCount:hosts.length+1,templates,
-  mode:{default:0,off:0,legacy:1,prefab:2},nativeSlotBytes:Buffer.byteLength(updated.abyss_precision_slots),
-  prefabBindingBytes:Buffer.byteLength(updated.abyss_precision_prefabs),
-  experimentBuildFiles:Object.fromEntries(['build.mjs','candidate-patch.mjs','probes.mjs'].map(name=>[name,sha(readFileSync(new URL(name,import.meta.url)))])),
+  profile,mode:profile==='packed75'?{default:0,off:0,packed:3}:{default:0,off:0,legacy:1,prefab:2},
+  nativeSlotBytes:Buffer.byteLength(updated.abyss_precision_slots??''),
+  prefabBindingBytes:Buffer.byteLength(updated.abyss_precision_prefabs??''),
+  packedAssetCount:uniqueDrawings,packedLuaBytes:Buffer.byteLength(updated.abyss_precision_packed??''),
+  experimentBuildFiles:Object.fromEntries(['build.mjs','candidate-patch.mjs','probes.mjs','packed.mjs','packed-runtime.lua','ownership.mjs'].map(name=>[name,sha(readFileSync(new URL(name,import.meta.url)))])),
   geometryJsonBytes:Buffer.byteLength(JSON.stringify(cardIds.map((_,i)=>hashPrecision(budget,i)))),
   moduleDigests:Object.fromEntries(actual.map(s=>[s.name,sha(s.source)])),
   changed:Object.keys(updated),staticCheck:'PASS',officialImport:'UNVERIFIED',device:'UNVERIFIED'};

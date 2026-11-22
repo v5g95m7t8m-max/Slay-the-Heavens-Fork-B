@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-function replaceOnce(source, anchor, value) {
+export function replaceOnce(source, anchor, value) {
   assert.equal(source.split(anchor).length, 2, 'Candidate source contract changed: '+anchor);
   return source.replace(anchor, value);
 }

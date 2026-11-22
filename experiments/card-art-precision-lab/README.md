@@ -29,3 +29,16 @@ ART_LAB_MCP_ENTRY=<模拟器dist/index.js> node experiments/card-art-precision-l
 `fit.py <新输出目录> --id <稳定卡号> --source <已授权的144×64源图> --approved-source-sha256 <源图摘要>` 提供矩形网格、误差驱动矩形及边缘加权混合图元的 60/100/160/250/400 档输出。显式源文件和散列必填。工具拒绝已登记的原作原始字节及旧 Compact 源。按预算保留 MAE、边缘 MAE、PSNR、SSIM、分档像素摘要和目标误差前沿。当前没有批准的生产源图，因此本轮拟合结果未用于质量决策或 GIL。负载探针可独立运行。
 
 导入时只用测试存档，官方窗口操作需该轮授权。官方客户端容量、真实 battle GPU 帧、安卓、触控及重复进出设备验收仍待测。
+
+
+## 共享预制组与真实卡面回放
+
+用同一个干净基底运行 `build.mjs`，在预算后加 `packed75`。该候选把 75 份稳定卡号的绘图数据装入同一 Lua 模块，复用 60／10／1 三套模板。模式 `3` 开启，默认为 `0`。前十份与早期压力探针同源。模板仍为本轮加载用的仪器纹样。
+
+```sh
+node experiments/card-art-precision-lab/build.mjs build/precision-base/*/candidate.json build/packed160 160 packed75
+node experiments/card-art-precision-lab/project.mjs build/packed160/candidate.json build/packed160-projection
+node experiments/card-art-precision-lab/replay.mjs build/packed160-projection/adapter-receipt.json   "/path/to/beyond-simulator-mcp/dist/worker.js" build/packed160-replay 3 distinct
+```
+
+同一投影用模式 `0` 对照。最后一项接受 `distinct` 或 `repeat`；`PRECISION_REPLAY_PNG=1` 额外用 0.5.2 的软件渲染器导出十卡截图。回放写入新的输出目录，通过 SDK mount 注入唯一的实验参数，SHA 校验 GIL 和投影且不改其中的 Lua。fixture 只指定种子、手牌、敌人和商店样本，照常走生产 Combat、CardDisplay、DeckUI 和节点视图。测量是 SDK 步进与模型开销。截图在计时外生成，图库缺失会列为警告。
