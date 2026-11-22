@@ -210,10 +210,14 @@ function M.refreshDeckEntry(child,self)
         end
 end
 
+local function sharedHudVisible(run,inMenu,deckOpen,blocked)
+    local ending=run and run.phase=='ending_proceed'
+    return not ending and not inMenu and not deckOpen and not blocked
+end
+
 function M.refreshUtilities(child,self,inCombat,refreshPotionEntry,refreshDeckEntry)
     return function(run,inMenu,deckOpen,potionOpen,blocked,returnAvailable)
-            local ending=run and run.phase=='ending_proceed'
-            local hudVisible=not ending and not inMenu and not deckOpen and not blocked
+            local hudVisible=sharedHudVisible(run,inMenu,deckOpen,blocked)
             local utilitiesVisible=hudVisible and not potionOpen
             local inventoryVisible=hudVisible and (not potionOpen or self.potionUI.localPanel==true)
             local rewardsBack=child("combatRewards")
