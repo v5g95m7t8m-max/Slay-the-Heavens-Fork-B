@@ -40,5 +40,8 @@ test('menu historical source continuation projects only exact complete new test 
  assert.equal(project(path,source+'\n'),source+'\n');
  assert.equal(project('tests/foreign.mjs',source),source);
  assert.equal(project(path,null),null);
- assert.equal(project(path,source.replaceAll('\n','\r\n')),prior.replaceAll('\n','\r\n'));
+ const toCrlf=value=>value.replace(/\r?\n/g,'\r\n');
+ assert.equal(project(path,toCrlf(source)),toCrlf(prior));
+ const malformed=toCrlf(source).replace('\r\n','\r\r\n');
+ assert.equal(project(path,malformed),malformed,'double CR must remain unrecognized');
 });
