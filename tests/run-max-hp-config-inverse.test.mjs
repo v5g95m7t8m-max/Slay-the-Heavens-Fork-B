@@ -186,11 +186,11 @@ test('current Run architecture admission uses its declared target and rereads ev
  const project=source=>sourceEpoch.preCombinedSource(path,source,{target:'develop',readSource:reader});
  const accepted=project(raw);assert.equal(hash(accepted),targetHash);assert.notEqual(accepted,raw);
  assert.notEqual(hash(accepted),expected.combined,'current develop target is not the ancient Run target');
- // The exact current trace includes the nested Actor/Stasis and MapRoom
- // checks, plus the original direct and continuation reads in their order.
+ // The exact trace also includes 14 action-button, 20 combat/event, and 9
+ // deck/potion freshness reads, in addition to the prior ordered closure.
  const admittedReads=[...reads];
- assert.equal(admittedReads.length,417,'complete fresh raw closure size');
- assert.equal(hash(JSON.stringify(admittedReads)),'05131aa3de86e8f88d0e82bca23e667bba10e3921cf029de891ec4e8b06c3a67',
+ assert.equal(admittedReads.length,460,'complete fresh raw closure size');
+ assert.equal(hash(JSON.stringify(admittedReads)),'6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51',
   'complete fresh raw closure in admission order on the current Develop sources');
  let retainedPosition=-1;
  const retainedReadPositions=priorReadOrder.map(owner=>{
