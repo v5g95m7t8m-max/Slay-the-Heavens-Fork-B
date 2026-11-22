@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>格挡反击</title>
+  <path fill="#F5E5C6" fill-rule="evenodd" d="M36 8L56 14 60 25 54 41 44 52 34 56 28 52 34 45 39 35 39 27 35 19 29 16ZM25 19L32 26 32 36 27 44 21 47 14 42 12 34 15 28ZM4 29L14 27 12 32 3 34Z M3 40L11 38 14 42 5 45Z"/>
+  <path fill="#BE9560" d="M40 17L50 20 53 27 49 38 42 45 45 35 45 26ZM8 50L18 47 23 49 14 53Z"/>
+</svg>

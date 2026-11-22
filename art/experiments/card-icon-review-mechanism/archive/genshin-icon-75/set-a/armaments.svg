@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>整备武装</title>
+  <path fill="#F5E5C6" fill-rule="evenodd" d="M26 12L40 17 44 26 40 42 32 50 26 55 20 51 12 44 8 27 11 18ZM26 18L16 22 14 28 18 41 26 48 35 39 38 27 35 22Z M43 17L51 7 59 17 56 20 53 16V29H49V16L46 20Z"/>
+  <path fill="#BE9560" d="M26 25L33 30 31 39 26 43 21 39 19 30ZM9 47L15 52 16 56 10 53Z"/>
+</svg>

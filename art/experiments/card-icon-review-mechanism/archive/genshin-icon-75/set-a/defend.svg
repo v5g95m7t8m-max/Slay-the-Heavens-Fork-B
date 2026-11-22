@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>防御</title>
+  <path fill="#F5E5C6" fill-rule="evenodd" d="M32 7L51 14 54 23 50 40 40 52 32 57 24 52 14 40 10 23 13 14ZM32 14L19 19 17 24 21 37 28 46 32 49 36 46 43 37 47 24 45 19Z M32 22L40 28 38 37 32 43 26 37 24 28ZM32 29L29 32 32 36 35 32Z"/>
+  <path fill="#BE9560" d="M9 15L12 11 9 20 5 24 6 18ZM53 38L58 33 56 42 49 49Z"/>
+</svg>

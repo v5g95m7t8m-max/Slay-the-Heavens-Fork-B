@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>普通攻击</title>
+  <path fill="#F5E5C6" fill-rule="evenodd" d="M52 7L57 7 57 13 29 43 22 42 21 36ZM15 35L30 49 26 53 20 47 12 56 7 55 8 50 17 42 11 37Z"/>
+  <path fill="#BE9560" d="M25 37L51 11 45 21 29 39ZM12 51L17 46 19 48 13 54Z"/>
+</svg>

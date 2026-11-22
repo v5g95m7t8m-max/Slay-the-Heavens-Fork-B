@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>连续出剑</title>
+  <path fill="#F5E5C6" fill-rule="evenodd" d="M48 7L53 7 53 13 30 36 24 36 24 31ZM19 28L32 41 28 45 23 40 12 51 7 50 8 45 18 35 15 32Z M41 37H54L57 40V54H44L41 51ZM45 41V50H53V41Z"/>
+  <path fill="#BE9560" d="M37 52L43 58 57 58 61 54 58 56H45Z M28 32L48 11 40 23 31 34Z"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+<g fill="#F5E5C6" fill-rule="evenodd">
+ <path d="M33 18l10-6 11 5 3 11-4 10-12 7-11-6 6-6-5-5zm8 1l-4 5 6 6-5 7 4 3 7-5 4-7-3-7z"/>
+ <path d="M5 45l5-7 25-12 9 1-5 7-29 15-6 1zM1 51l9-3 8-1-6 5z"/>
+ <path d="M51 45l5-6 6 4-1 9-6 4-5-5zm5 0l-2 4 2 2 3-3v-2z"/>
+</g>
+<path fill="#BE9560" d="M20 38l12-8 6-1-4 4-12 7zM50 8l5-5 4 5-4 5zM45 39l4-4-1 5-4 4z"/>
+</svg>

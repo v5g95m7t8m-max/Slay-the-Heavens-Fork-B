@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>蓄力</title>
+  <path fill="#F5E5C6" fill-rule="evenodd" d="M32 8L49 29H38V43H26V29H15ZM13 19L8 27 6 36 8 44 12 48 14 46 12 38 13 28 17 22Z M51 19L56 27 58 36 56 44 52 48 50 46 52 38 51 28 47 22Z M17 49L25 51H39L47 49 43 56H21Z"/>
+  <path fill="#BE9560" d="M29 32H35V43H29Z M29 58H35L32 62Z"/>
+</svg>
