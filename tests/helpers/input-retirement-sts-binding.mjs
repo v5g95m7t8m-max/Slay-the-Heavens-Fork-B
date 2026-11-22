@@ -52,7 +52,11 @@ export function inputRetirementStsFixtureSource(path,raw){
  let prior=beforeCurrentOfficialRuntimeFixture(path,native);
  if(path==='docs/legal/assets.json')prior=beforeArchiveStorageLedger(native);
  if(path===integration.path){
-  assert(exactSourceMatches(native,integration.after),'fresh composed StS integration source');
+  // #859's merged test adds live replay checks; keep the same archived StS view.
+  const merged=exactSourceMatches(native,{
+   sha256:'58159c0c30a0bbd658c1d47543c2350d8534198c43c4ba59b03318f14195178d',gitBlob:'d9fa7f66445a406502ae7966d9d3da0b4ec936b4',
+  });
+  assert(merged||exactSourceMatches(native,integration.after),'fresh composed StS integration source');
   prior=native.includes('\r\n')?integration.before.source.replaceAll('\n','\r\n'):integration.before.source;
  }
  return buffered?(prior===source?raw:Buffer.from(prior)):prior;
