@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <title>伺机而动</title>
+  <desc>Original shield and motion; a card lifts from the pile, signaled by a short arrow.</desc>
+  <path fill="#9F9489" d="M26 41c10-2 16-10 18-19l6 1c-1 12-9 25-22 29l-4-4z"/>
+  <path fill="#DDD3C7" d="M33 43c6-4 9-9 12-17l3-2c-2 10-8 16-15 19z"/>
+  <g transform="translate(42 3) rotate(-12 10 15)"><path fill="#A99D92" d="M2 12h15l3 3v17H2z m3 3v14h12V16z" fill-rule="evenodd"/><path fill="#F3ECE0" d="M6 1h13l3 3v21H6z m3 4v16h10V6l-1-1z" fill-rule="evenodd"/><path fill="#F3ECE0" d="M0 20V8l-3 3-2-2 6-6 6 6-2 2-3-3v12z"/></g>
+  <path fill="#F4ECE1" d="m4 32 16-7 11 2 5 6-3 9-6 11-9 6L8 48 5 40z"/>
+  <path fill="#AAA093" d="m9 35 12-6 8 1-6 7-4 13-1 7L8 48z"/>
+  <path fill="#726960" d="M24 27l7 1 5 5-7 4 1-4z"/>
+</svg>
