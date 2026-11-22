@@ -45,9 +45,25 @@ function beforeArchiveStorageLedger(source){
  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
 
+// Bridge only the reviewed Windows map test to the existing retirement receipt.
+export function beforeMapNodeVisualsLineEndings(path,source){
+ if(path!=='tests/map-node-visuals.test.mjs'||!exactSourceMatches(source,{
+  sha256:'17005e15d5036d841de485e62cf942f38d157329216d4c5e1c1ddb0661f3464a',gitBlob:'872cbc85761229b50769311d04e3a6a43aacbdf0',
+ }))return source;
+ const current=source.replaceAll('\r\n','\n');
+ const target="  const toCrlf = value => value.replace(/\\r?\\n/g, '\\r\\n');\n  const expected = source.includes('\\r\\n') ? toCrlf(previous) : previous;\n  assert.equal(authenticateDevelopBackflow(path, source, readOwner), expected);\n  assert.equal(authenticateDevelopBackflow(path, toCrlf(source), readOwner), toCrlf(previous));\n";
+ const original="  assert.equal(authenticateDevelopBackflow(path, source, readOwner), previous);\n  assert.equal(authenticateDevelopBackflow(path, source.replaceAll('\\n', '\\r\\n'), readOwner), previous.replaceAll('\\n', '\\r\\n'));\n";
+ assert.equal(current.split(target).length,2,'unique reviewed map line-ending hunk');
+ const prior=current.replace(target,()=>original);
+ assert(exactSourceMatches(prior,{
+  sha256:'f373b9803c6b7afe2a0c79298d4ebd711e0110fe0574cb480bfb690532fef65d',gitBlob:'4012d6c8045290d7613dcad794e06a45f8454423',
+ }),'exact input-retirement map fixture predecessor');
+ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
+
 export function inputRetirementStsFixtureSource(path,raw){
  const buffered=Buffer.isBuffer(raw),source=buffered?raw.toString('utf8'):raw;
- const fixture=beforeNativeFlowFixture(path,source,{requireCurrent:true});
+ const fixture=beforeNativeFlowFixture(path,beforeMapNodeVisualsLineEndings(path,source),{requireCurrent:true});
  const native=beforeMergedInputRetirement(path,fixture,{requireCurrent:true});
  // The exact native-flow chain already returns the composed StS runtime predecessor.
  // Accept it only after a current native-flow fixture actually projected.

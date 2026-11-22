@@ -1,4 +1,5 @@
 import {beforeMapRoomReplayCohort} from './develop-replay-merge-source.mjs';
+import {beforeMapNodeVisualsLineEndings} from './input-retirement-sts-binding.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
@@ -52,6 +53,7 @@ function beforeRunHudPotionFixture(path,source){
 }
 
 export function beforeCalibrationReplay(path,source){
+ source=beforeMapNodeVisualsLineEndings(path,source);
  source=beforeRunHudPotionFixture(path,source);
  if(Object.hasOwn(retirement.continuations,path)){
   const {before,after}=retirement.continuations[path];

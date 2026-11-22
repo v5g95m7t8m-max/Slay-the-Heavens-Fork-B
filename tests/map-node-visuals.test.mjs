@@ -25,8 +25,10 @@ test('map rendering continues the frozen Develop source and rejects stale or cha
   const previous = beforeDevelopBackflow(path, predecessor);
   assert.notEqual(previous, predecessor);
   assertDevelopBackflowCurrent(path, source);
-  assert.equal(authenticateDevelopBackflow(path, source, readOwner), previous);
-  assert.equal(authenticateDevelopBackflow(path, source.replaceAll('\n', '\r\n'), readOwner), previous.replaceAll('\n', '\r\n'));
+  const toCrlf = value => value.replace(/\r?\n/g, '\r\n');
+  const expected = source.includes('\r\n') ? toCrlf(previous) : previous;
+  assert.equal(authenticateDevelopBackflow(path, source, readOwner), expected);
+  assert.equal(authenticateDevelopBackflow(path, toCrlf(source), readOwner), toCrlf(previous));
   assert.throws(() => assertDevelopBackflowCurrent(path, predecessor), /fresh current production owner/);
   assert.throws(() => authenticateDevelopBackflow(path, source, () => predecessor), /changed during Develop backflow validation|combined linked owner identity: src\/lua\/abyss_map_ui\.lua during input retirement validation/);
   const changed = source + '\n-- drift';
