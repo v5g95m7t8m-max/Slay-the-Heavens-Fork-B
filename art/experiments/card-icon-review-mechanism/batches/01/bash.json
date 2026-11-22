@@ -1,0 +1,128 @@
+{
+  "state": "DRAFT_UNREVIEWED",
+  "mechanics": {
+    "id": "bash",
+    "type": "attack",
+    "cost": 2,
+    "target": "ENEMY",
+    "rawDisplayName": "痛击",
+    "presentation": {
+      "name": "破防斩",
+      "textTemplate": "对目标造成 {effects.0.value} 点伤害，再施加 {effects.1.value} 回合易伤。",
+      "upgradeTextTemplate": "对目标造成 {effects.0.value} 点伤害，再施加 {effects.1.value} 回合易伤。"
+    },
+    "effects": [
+      {
+        "op": "damage",
+        "value": 8
+      },
+      {
+        "op": "applyStatus",
+        "status": "vulnerable",
+        "value": 2
+      }
+    ],
+    "upgradedEffects": [
+      {
+        "op": "damage",
+        "value": 10
+      },
+      {
+        "op": "applyStatus",
+        "status": "vulnerable",
+        "value": 3
+      }
+    ]
+  },
+  "source": {
+    "cards": {
+      "url": "https://github.com/FurinyaWorks/Slay-the-Heavens/blob/release/v2.0.0/data/cards.json",
+      "gitBlob": "3c4abaf408ca51eef83a6e6c3cd759da47b86133"
+    },
+    "presentation": {
+      "url": "https://github.com/FurinyaWorks/Slay-the-Heavens/blob/release/v2.0.0/data/presentation/traveler.zh-CN.json",
+      "gitBlob": "e7474acd07bbf9a6f41b073a7ce42a193d7c97f3"
+    }
+  },
+  "design": {
+    "verb": "Drive one edge through a plate and leave the opening exposed.",
+    "firstRead": "Bright oblique sword meets the visibly separating seam of a faceted plate; target reads darker than contact.",
+    "ambiguities": [
+      "Generic rock-breaking or a blocked blow; require split plates and entering edge to read as opening a weakness.",
+      "Armor split is a metaphor for Vulnerable; the move neither dispels Block nor adds a second hit."
+    ]
+  },
+  "references": [
+    {
+      "id": "noelle-e",
+      "character": "Noelle",
+      "name": "Breastplate",
+      "slot": "E",
+      "imageSource": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Noel_01.png",
+      "nameSource": "https://github.com/theBowja/genshin-db/blob/8e5badd60b5d894284ccc927a56c9683529d2592/src/data/English/talents/noelle.json",
+      "gitBlob": "2d22ec92ecae89c6d333677268e8d1a74b3897f3",
+      "sha256": "bcf6817dcb16afef08fa0696bae566dfe119ac03c7bf6e9836a9c561aa3d1daa",
+      "role": "Readable quiet planes in coherent defensive geometry; different silhouette, show forced-open seam rather than intact symmetrical gem."
+    },
+    {
+      "id": "keqing-q",
+      "character": "Keqing",
+      "name": "Starward Sword",
+      "slot": "Q",
+      "imageSource": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Keqing_01.png",
+      "nameSource": "https://github.com/theBowja/genshin-db/blob/8e5badd60b5d894284ccc927a56c9683529d2592/src/data/English/talents/keqing.json",
+      "gitBlob": "5f78794d14ffb991c51f1b5d8e5ec549fb307072",
+      "sha256": "18dea7f27691225d77ae4939ce17ec56e626784bdbbfc0387f6f1848fcc4a7f7",
+      "role": "Wide tapered wedge drives the direction and intersects the geometry instead of adding detached impact glitter."
+    }
+  ],
+  "svg": {
+    "file": "bash.svg",
+    "sha256": "135c4945f0e3200e667e0c9fb99a6f54b04a876e92d8aab1d46755c07e1f4249",
+    "viewBox": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "paths": 3,
+    "technicalRenders": [
+      {
+        "size": [
+          32,
+          32
+        ],
+        "alphaExtrema": [
+          0,
+          255
+        ],
+        "alphaBounds": [
+          2,
+          5,
+          30,
+          27
+        ]
+      },
+      {
+        "size": [
+          56,
+          56
+        ],
+        "alphaExtrema": [
+          0,
+          255
+        ],
+        "alphaBounds": [
+          4,
+          8,
+          52,
+          48
+        ]
+      }
+    ],
+    "reviewArtWell": [
+      144,
+      64
+    ]
+  }
+}
