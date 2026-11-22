@@ -1,0 +1,132 @@
+{
+  "state": "DRAFT_UNREVIEWED",
+  "mechanics": {
+    "id": "strike",
+    "type": "attack",
+    "cost": 1,
+    "target": "ENEMY",
+    "rawDisplayName": "打击",
+    "presentation": {
+      "name": "普通攻击",
+      "textTemplate": "对目标造成 {effects.0.value} 点伤害。",
+      "upgradeTextTemplate": "对目标造成 {effects.0.value} 点伤害。"
+    },
+    "effects": [
+      {
+        "op": "damage",
+        "value": 6
+      }
+    ],
+    "upgradedEffects": [
+      {
+        "op": "damage",
+        "value": 9
+      }
+    ]
+  },
+  "source": {
+    "cards": {
+      "url": "https://github.com/FurinyaWorks/Slay-the-Heavens/blob/release/v2.0.0/data/cards.json",
+      "gitBlob": "3c4abaf408ca51eef83a6e6c3cd759da47b86133"
+    },
+    "presentation": {
+      "url": "https://github.com/FurinyaWorks/Slay-the-Heavens/blob/release/v2.0.0/data/presentation/traveler.zh-CN.json",
+      "gitBlob": "e7474acd07bbf9a6f41b073a7ce42a193d7c97f3"
+    }
+  },
+  "design": {
+    "verb": "One clean forward sword cut, with no second effect.",
+    "firstRead": "Intended: one handled blade slicing through a wide, following arc with a common visibly joined end. The lower-value arc has no independent blade/handle and withdraws to a low taper.",
+    "ambiguities": [
+      "Arc might read as an ornament or second curved weapon instead of a swing. Blind comparison against unchanged R1 must distinguish it.",
+      "Must not be confused with Anger’s actor/echo or Bash’s plate contact."
+    ]
+  },
+  "references": [
+    {
+      "id": "geo-normal",
+      "character": "Traveler (Geo)",
+      "name": "Foreign Rockblade",
+      "slot": "Normal attack",
+      "imageSource": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_A_01.png",
+      "nameSource": "https://github.com/theBowja/genshin-db/blob/8e5badd60b5d894284ccc927a56c9683529d2592/src/data/English/talents/travelergeo.json",
+      "gitBlob": "f8f836e44f1198ab8ee7c94c7948e13cc295c63c",
+      "sha256": "87758c139d77229a7a3a287c0422c589920f2dc89e56ad5be2472acce8719a69",
+      "role": "Tapered blade mass and recognizable hilt. Omit the repeating cross and geometric backing."
+    },
+    {
+      "id": "keqing-q",
+      "character": "Keqing",
+      "name": "Starward Sword",
+      "slot": "Q",
+      "imageSource": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Keqing_01.png",
+      "nameSource": "https://github.com/theBowja/genshin-db/blob/8e5badd60b5d894284ccc927a56c9683529d2592/src/data/English/talents/keqing.json",
+      "gitBlob": "5f78794d14ffb991c51f1b5d8e5ec549fb307072",
+      "sha256": "18dea7f27691225d77ae4939ce17ec56e626784bdbbfc0387f6f1848fcc4a7f7",
+      "role": "Oblique gesture and broad-to-sharp termination; retain only a single dominant stroke."
+    }
+  ],
+  "svg": {
+    "file": "strike.svg",
+    "sha256": "ddd285550f47c766e5f98290f6116a800514cc2f55c165aeb541d4cadf9f5cc9",
+    "viewBox": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "paths": 3,
+    "technicalRenders": [
+      {
+        "size": [
+          32,
+          32
+        ],
+        "alphaExtrema": [
+          0,
+          255
+        ],
+        "alphaBounds": [
+          4,
+          4,
+          29,
+          27
+        ],
+        "eightConnectedForegroundComponentPixelCountsAtAlpha64": [
+          201
+        ]
+      },
+      {
+        "size": [
+          56,
+          56
+        ],
+        "alphaExtrema": [
+          0,
+          255
+        ],
+        "alphaBounds": [
+          7,
+          7,
+          50,
+          48
+        ],
+        "eightConnectedForegroundComponentPixelCountsAtAlpha64": [
+          590
+        ]
+      }
+    ],
+    "reviewArtWell": [
+      144,
+      64
+    ]
+  },
+  "revision": {
+    "id": "R2",
+    "parentSvg": "../set-a/strike.svg",
+    "parentSvgSha256": "29fbcf562b79c2ffb6aefe48519285dd505d831ccd3674e95bf275951ff53f16",
+    "parentMetadataSha256": "3d2e12606690d3a4bd7be9f037e3de1b658c4f34c652e79ba57b83de5d463e8f",
+    "trigger": "Two non-author R1 readers saw a sword but primarily as a static item.",
+    "singleChange": "One quiet, broad-to-tapered sweep behind and intersecting the blade near its upper edge; both R1 paths are unchanged. No second blade, dot or detached motion line."
+  }
+}

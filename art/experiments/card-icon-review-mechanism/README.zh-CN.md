@@ -19,3 +19,8 @@
 
 ## 本分支范围
 本目录只包括机制 v0.1、19 张参考来源的链接与哈希、两组独审摘要、3 张原创透明源稿与同源 PNG。没有第三方参考原图、正式游戏资源绑定、Release 变更或 75 张批量放行。参照身份见 [reference-index.json](reference-index.json)，评审结果见 [review-receipt.json](review-receipt.json)，逐张源稿绑定见 [sample-bindings.json](sample-bindings.json)。后续须在独立小批次更新对应的来源和审查记录。
+
+## 生产时怎么用
+用 `production-status.json` 管理 75 个稳定 ID，以卡为单位推进。分批产出，不按张数降低盲评门槛。道具被认出来但动作没被认出来（如只认成一把剑、只认成盾和牌）不等于通过；尤其是组合技，优先画接触、承接或遮挡关系，不堆两张图标。失败记录留在每批 `REVIEW.md`，未通过的图不入样板目录。
+
+盲板命令（Python + Pillow）：`python tools/blind-board.py --seed batch-001-r1 --out /tmp/card-blind samples/*.png`。评审只看 PNG；答案与 SHA 写在独立 key，等两人各自作答再揭晓。先试小图后看同款完整牌面；实机测试另列。

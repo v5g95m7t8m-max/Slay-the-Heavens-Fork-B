@@ -1,0 +1,1219 @@
+{
+  "scope": "75 base cards; self-contained art experiment, no binding/launch approval. This index is not a copy of old drafts.",
+  "cards": [
+    {
+      "index": 1,
+      "id": "strike",
+      "name": "普通攻击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 6
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "DESIGN_PILOT_PASS",
+      "asset": "batches/01/strike.svg"
+    },
+    {
+      "index": 2,
+      "id": "defend",
+      "name": "防御",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 5
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "DESIGN_PILOT_PASS",
+      "asset": "samples/defend.svg"
+    },
+    {
+      "index": 3,
+      "id": "bash",
+      "name": "破防斩",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 8
+        },
+        {
+          "op": "applyStatus",
+          "status": "vulnerable",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "DESIGN_PILOT_PASS",
+      "asset": "batches/01/bash.svg"
+    },
+    {
+      "index": 4,
+      "id": "anger",
+      "name": "连续出剑",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 6
+        },
+        {
+          "op": "addCardToDiscard",
+          "card": "anger"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "KEEP_OWNER_APPROVED_ROUGH_ART",
+      "note": "新图标暂未替换上次认可的粗人形；这里不把它计为图标生产完成。"
+    },
+    {
+      "index": 5,
+      "id": "armaments",
+      "name": "整备武装",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 5
+        },
+        {
+          "op": "upgradeHand"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "HOLD_REWORK",
+      "note": "仍像手套或石块，嵌装不清"
+    },
+    {
+      "index": 6,
+      "id": "body_slam",
+      "name": "格挡反击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damageEqualToBlock"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 7,
+      "id": "clash",
+      "name": "全力进攻",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 14
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 8,
+      "id": "cleave",
+      "name": "星陨剑",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damageAll",
+          "value": 8
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "DESIGN_PILOT_PASS",
+      "asset": "samples/cleave.svg"
+    },
+    {
+      "index": 9,
+      "id": "clothesline",
+      "name": "压制斩",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 12
+        },
+        {
+          "op": "applyStatus",
+          "status": "weak",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 10,
+      "id": "flex",
+      "name": "蓄力",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "gainTemporaryStrength",
+          "status": "strength",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 11,
+      "id": "havoc",
+      "name": "临阵变招",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "playTop"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 12,
+      "id": "headbutt",
+      "name": "回身追击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 9
+        },
+        {
+          "op": "discardToDraw"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 13,
+      "id": "heavy_blade",
+      "name": "重剑斩",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 14
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 14,
+      "id": "iron_wave",
+      "name": "招架还击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 5
+        },
+        {
+          "op": "damage",
+          "value": 5
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 15,
+      "id": "perfected_strike",
+      "name": "剑势如虹",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 6
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 16,
+      "id": "pommel_strike",
+      "name": "试探一击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 9
+        },
+        {
+          "op": "draw",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 17,
+      "id": "shrug_it_off",
+      "name": "伺机而动",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 8
+        },
+        {
+          "op": "draw",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "HOLD_REWORK",
+      "note": "盾与牌均清楚，但抽牌动势不够明确"
+    },
+    {
+      "index": 18,
+      "id": "sword_boomerang",
+      "name": "回旋连斩",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damageRandom",
+          "value": 3,
+          "times": 3
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 19,
+      "id": "thunderclap",
+      "name": "横扫破防",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damageAll",
+          "value": 4
+        },
+        {
+          "op": "applyStatusAll",
+          "status": "vulnerable",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 20,
+      "id": "true_grit",
+      "name": "稳住阵脚",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 7
+        },
+        {
+          "op": "exhaustRandom",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "HOLD_REWORK",
+      "note": "碎裂已可读，仍不清楚是消耗一张牌"
+    },
+    {
+      "index": 21,
+      "id": "twin_strike",
+      "name": "重击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 5,
+          "times": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 22,
+      "id": "warcry",
+      "name": "调整战术",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "draw",
+          "value": 1
+        },
+        {
+          "op": "handToDraw"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 23,
+      "id": "wild_strike",
+      "name": "猛进斩",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 12
+        },
+        {
+          "op": "makeTempCardInDraw",
+          "value": 1,
+          "card": "wound"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 24,
+      "id": "battle_trance",
+      "name": "集中精神",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "draw",
+          "value": 3
+        },
+        {
+          "op": "noDrawThisTurn"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 25,
+      "id": "blood_for_blood",
+      "name": "负伤反击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 18
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 26,
+      "id": "bloodletting",
+      "name": "透支",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "loseHp",
+          "value": 3
+        },
+        {
+          "op": "energy",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 27,
+      "id": "burning_pact",
+      "name": "弃旧筹新",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "exhaustChoose",
+          "value": 1
+        },
+        {
+          "op": "draw",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 28,
+      "id": "carnage",
+      "name": "抓住战机",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 20
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 29,
+      "id": "combust",
+      "name": "强攻压阵",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 5,
+          "status": "combust"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 30,
+      "id": "dark_embrace",
+      "name": "临机应变",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "dark_embrace"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 31,
+      "id": "disarm",
+      "name": "压制攻势",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "applyStatus",
+          "status": "strength",
+          "value": -2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 32,
+      "id": "dropkick",
+      "name": "乘隙追击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 5
+        },
+        {
+          "op": "conditional",
+          "if": "target_vulnerable",
+          "then": [
+            {
+              "op": "energy",
+              "value": 1
+            },
+            {
+              "op": "draw",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 33,
+      "id": "dual_wield",
+      "name": "再演剑势",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "dualWield",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 34,
+      "id": "entrench",
+      "name": "加固防线",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "doubleBlock"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 35,
+      "id": "evolve",
+      "name": "逆境求变",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "evolve"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 36,
+      "id": "feel_no_pain",
+      "name": "百折不挠",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 3,
+          "status": "feel_no_pain"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 37,
+      "id": "fire_breathing",
+      "name": "逆势反攻",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 6,
+          "status": "fire_breathing"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 38,
+      "id": "flame_barrier",
+      "name": "反击架势",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 12
+        },
+        {
+          "op": "gainStatus",
+          "value": 4,
+          "status": "flame_barrier"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 39,
+      "id": "ghostly_armor",
+      "name": "及时招架",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 10
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 40,
+      "id": "hemokinesis",
+      "name": "舍身进攻",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "loseHp",
+          "value": 2
+        },
+        {
+          "op": "damage",
+          "value": 15
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 41,
+      "id": "infernal_blade",
+      "name": "临阵试招",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "generateAttack",
+          "value": 0
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 42,
+      "id": "inflame",
+      "name": "剑术精进",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "status": "strength",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 43,
+      "id": "intimidate",
+      "name": "威慑",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "applyStatusAll",
+          "value": 1,
+          "status": "weak"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 44,
+      "id": "metallicize",
+      "name": "持续防守",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 3,
+          "status": "metallicize"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 45,
+      "id": "power_through",
+      "name": "强行固守",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "makeTempCardInHand",
+          "value": 2,
+          "card": "wound"
+        },
+        {
+          "op": "block",
+          "value": 15
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 46,
+      "id": "pummel",
+      "name": "疾风连斩",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 2,
+          "times": 4
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 47,
+      "id": "rage",
+      "name": "攻守相济",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 3,
+          "status": "rage"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 48,
+      "id": "rampage",
+      "name": "越战越勇",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 8
+        },
+        {
+          "op": "increaseDamageThisCombat",
+          "value": 5
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 49,
+      "id": "reckless_charge",
+      "name": "疾步突进",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 7
+        },
+        {
+          "op": "makeTempCardInDraw",
+          "value": 1,
+          "card": "dazed"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 50,
+      "id": "rupture",
+      "name": "愈挫愈勇",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "rupture"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 51,
+      "id": "searing_blow",
+      "name": "千锤一剑",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 12
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 52,
+      "id": "second_wind",
+      "name": "弃繁守拙",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "secondWind",
+          "value": 5
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 53,
+      "id": "seeing_red",
+      "name": "重整旗鼓",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "energy",
+          "value": 2
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 54,
+      "id": "sentinel",
+      "name": "后援守势",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 5
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 55,
+      "id": "sever_soul",
+      "name": "弃守强攻",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "exhaustNonAttacks"
+        },
+        {
+          "op": "damage",
+          "value": 16
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 56,
+      "id": "shockwave",
+      "name": "震慑敌阵",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "applyStatusAll",
+          "status": "weak",
+          "targetGroup": "weak_then_vulnerable",
+          "value": 3
+        },
+        {
+          "op": "applyStatusAll",
+          "status": "vulnerable",
+          "targetGroup": "weak_then_vulnerable",
+          "value": 3
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 57,
+      "id": "spot_weakness",
+      "name": "洞察破绽",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "spotWeakness",
+          "value": 3
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 58,
+      "id": "uppercut",
+      "name": "挑剑破势",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 13
+        },
+        {
+          "op": "applyStatus",
+          "status": "weak",
+          "value": 1
+        },
+        {
+          "op": "applyStatus",
+          "status": "vulnerable",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 59,
+      "id": "whirlwind",
+      "name": "岩潮叠嶂",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damageAll",
+          "value": 5,
+          "times": "X"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 60,
+      "id": "barricade",
+      "name": "永世的磐岩",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "status": "barricade",
+          "value": 1
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "DESIGN_PILOT_PASS",
+      "asset": "samples/barricade.svg"
+    },
+    {
+      "index": 61,
+      "id": "berserk",
+      "name": "背水之战",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 2,
+          "status": "vulnerable"
+        },
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "berserk"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 62,
+      "id": "bludgeon",
+      "name": "全力一击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damage",
+          "value": 32
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 63,
+      "id": "brutality",
+      "name": "破釜沉舟",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "brutality"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 64,
+      "id": "corruption",
+      "name": "孤注一掷",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "corruption"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 65,
+      "id": "demon_form",
+      "name": "渐入佳境",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 2,
+          "status": "demon_form"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 66,
+      "id": "double_tap",
+      "name": "叠势连击",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "double_tap"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 67,
+      "id": "exhume",
+      "name": "重拾旧策",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "recoverExhaust"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 68,
+      "id": "feed",
+      "name": "乘胜壮行",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "feed",
+          "value": 10,
+          "maxHp": 3
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 69,
+      "id": "fiend_fire",
+      "name": "舍尽一击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "fiendFire",
+          "value": 7
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 70,
+      "id": "immolate",
+      "name": "摧阵一击",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "damageAll",
+          "value": 21
+        },
+        {
+          "op": "makeTempCardInDiscard",
+          "value": 1,
+          "card": "burn"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 71,
+      "id": "impervious",
+      "name": "坚守",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "block",
+          "value": 30
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 72,
+      "id": "juggernaut",
+      "name": "守中有攻",
+      "type": "power",
+      "mechanics": [
+        {
+          "op": "gainStatus",
+          "value": 5,
+          "status": "juggernaut"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 73,
+      "id": "limit_break",
+      "name": "剑意突破",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "doubleStrength"
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 74,
+      "id": "offering",
+      "name": "奋力一搏",
+      "type": "skill",
+      "mechanics": [
+        {
+          "op": "loseHp",
+          "value": 6
+        },
+        {
+          "op": "energy",
+          "value": 2
+        },
+        {
+          "op": "draw",
+          "value": 3
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    },
+    {
+      "index": 75,
+      "id": "reaper",
+      "name": "以战养战",
+      "type": "attack",
+      "mechanics": [
+        {
+          "op": "reaper",
+          "value": 4
+        }
+      ],
+      "runtime": "not-integrated",
+      "state": "QUEUED"
+    }
+  ]
+}
