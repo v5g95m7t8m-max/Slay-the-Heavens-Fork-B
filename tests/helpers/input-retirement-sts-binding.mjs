@@ -49,7 +49,12 @@ export function inputRetirementStsFixtureSource(path,raw){
  const buffered=Buffer.isBuffer(raw),source=buffered?raw.toString('utf8'):raw;
  const fixture=beforeNativeFlowFixture(path,source,{requireCurrent:true});
  const native=beforeMergedInputRetirement(path,fixture,{requireCurrent:true});
- let prior=beforeCurrentOfficialRuntimeFixture(path,native);
+ // The exact native-flow chain already returns the composed StS runtime predecessor.
+ // Accept it only after a current native-flow fixture actually projected.
+ const runtimeAlreadyProjected=path==='tests/official-assets-runtime.test.mjs'&&fixture!==source&&exactSourceMatches(native,{
+  sha256:'1ba0126359c0dbf655585c7248c5963b7d6d89572fb47c84403df7adf7c090ef',gitBlob:'65d01cdbd3b32ff56ee99e113d47e6ff8854034d',
+ });
+ let prior=runtimeAlreadyProjected?native:beforeCurrentOfficialRuntimeFixture(path,native);
  if(path==='docs/legal/assets.json')prior=beforeArchiveStorageLedger(native);
  if(path===integration.path){
   // #859's merged test adds live replay checks; keep the same archived StS view.
