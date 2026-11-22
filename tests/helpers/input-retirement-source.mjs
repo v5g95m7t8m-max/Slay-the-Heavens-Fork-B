@@ -181,9 +181,7 @@ export function beforeInputRetirementStsSuite(paths,read,trustSuccessors){
   names.add(path);
  }
  for(const [path,identity] of Object.entries(suite.deck.added)){
-  // Admit only the pinned live deck-browser successor or the exact older test.
-  assert(names.delete(path)&&matches(suitePredecessor(path,beforeDeckBrowserBackflow(path,read(path,'utf8')),files),identity),
-   'fresh deck inventory source: '+path);
+  assert(names.delete(path)&&matches(suitePredecessor(path,read(path,'utf8'),files),identity),'fresh deck inventory source: '+path);
  }
  return {paths:[...names].sort(),read:(path,encoding)=>{
   if(Object.hasOwn(suite.removed,path)){
