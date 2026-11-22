@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="256" height="256"><title>横向岩壁</title>
+<path fill="#F4ECE1" fill-rule="evenodd" d="M5 31l7-8 10 1 5-5 10 2 5-5 12 4 5 8-1 20-7 4-40-1-7-7z M18 25l-2 10 4 4-2 10 5-10-4-5 3-9z M41 20l-3 14 4 5-1 10 5-10-5-5 5-13z M8 34l8-3 1 4-9 3z M25 32l12-2 1 4-14 3z M47 29l11 1v4l-12-2z"/>
+<path fill="#F4ECE1" opacity=".52" d="M7 40l10-3 2 4-2 7-7-1z M24 40l14-4 3 4-1 8-17 1z M46 38l10-3-1 11-9 3z"/>
+<path fill="#F4ECE1" opacity=".75" d="M4 54 23 54 47 55 60 52 53 57 30 58 8 57z"/>
+</svg>

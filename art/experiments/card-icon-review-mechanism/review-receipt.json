@@ -1,0 +1,61 @@
+{
+  "reference_study": {
+    "uniqueOriginalPNGs": 19,
+    "characters": 13,
+    "deduplication": "SHA-256",
+    "groups": [
+      "reference-index.json"
+    ]
+  },
+  "oldControl": "Original 75 draft, not accepted",
+  "condition": "Nameless 144×64; grayscale source, same card art scale and constant matte",
+  "observations": [
+    {
+      "round": 1,
+      "reviewers": 2,
+      "defend": "Both read shield/contact",
+      "barricade": "Rock formation/peaks, possible flame/fingers; weak wall",
+      "cleave": "Possible standing crystal or fall; direction unclear"
+    },
+    {
+      "round": 2,
+      "reviewers": 2,
+      "defend": "Both read incoming block",
+      "barricade": "Grounded rock and possible wall; one still said rock lump",
+      "cleave": "One reader fall/impact, one erupting upward"
+    },
+    {
+      "round": 3,
+      "reviewers": 2,
+      "defend": "Both read single shield/contact",
+      "barricade": "Both read low wall/rampart",
+      "cleave": "Both first read down hit; one still saw equally plausible upward movement"
+    },
+    {
+      "round": 4,
+      "reviewers": 2,
+      "defend": "unchanged",
+      "barricade": "unchanged",
+      "cleave": "Both first read downslope impact; one saw possible rebound due to broken ground anchor"
+    },
+    {
+      "round": 5,
+      "reviewers": 2,
+      "freshToPriorDesign": true,
+      "key": "sample-bindings.json",
+      "A": [
+        "Low interlocked rampart, secondary rock pile",
+        "Stone wall/rampart on base, slightly mound-like"
+      ],
+      "B": [
+        "Cracked boulder strikes lower-left ground, debris spreads; central mark can resemble fist",
+        "Cracked rock moves down, hits flat surface; flame-like trail"
+      ],
+      "C": [
+        "Slanted shield surface intercepts incoming marks; stone material not certain",
+        "Shield-like stone deflecting on left; secondary floating stone read"
+      ]
+    }
+  ],
+  "verdict": "R5 first-read distinguishes all three core actions, enough for design samples. Secondary silhouette/material caveats retained. Prior independent style check passed wall+shield logic and flagged earlier ground legibility. Not approval for other 72, no fit or client check."
+}

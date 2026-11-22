@@ -1,0 +1,157 @@
+{
+  "scope": "External original game icon sources, links and provenance only. No third-party pixels or distribution license supplied.",
+  "icons": [
+    {
+      "character": "Traveler (Geo)",
+      "talent": "Foreign Rockblade",
+      "slot": "Normal attack",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_A_01.png",
+      "sha256": "87758c139d77229a7a3a287c0422c589920f2dc89e56ad5be2472acce8719a69",
+      "gitBlob": "f8f836e44f1198ab8ee7c94c7948e13cc295c63c"
+    },
+    {
+      "character": "Traveler (Geo)",
+      "talent": "Starfell Sword",
+      "slot": "E",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_PlayerRock_01.png",
+      "sha256": "c36fec9535fb34da23fa2da2ca6f00649f7246bd54b78620ff5802ea0b4dd5e7",
+      "gitBlob": "1358fec8b963dc75c9a9e9df750d7a12fa534146"
+    },
+    {
+      "character": "Traveler (Geo)",
+      "talent": "Wake of Earth",
+      "slot": "Q",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_PlayerRock_01.png",
+      "sha256": "187cca560bac9b04b5c3b3caa1ffc7c7c2ddc61ae8e79661a4404afd413ce0d6",
+      "gitBlob": "849ceb2c37d542d789471609658f8119938be5e5"
+    },
+    {
+      "character": "Noelle",
+      "talent": "Breastplate",
+      "slot": "E",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Noel_01.png",
+      "sha256": "bcf6817dcb16afef08fa0696bae566dfe119ac03c7bf6e9836a9c561aa3d1daa",
+      "gitBlob": "2d22ec92ecae89c6d333677268e8d1a74b3897f3"
+    },
+    {
+      "character": "Keqing",
+      "talent": "Stellar Restoration",
+      "slot": "E",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Keqing_01.png",
+      "sha256": "2d80e33ec42507bf6b7d276c798cc49323a2b87141de0dded5e8033cb157da25",
+      "gitBlob": "c0222cbc921d7c0533a71bd1669b1de816145414"
+    },
+    {
+      "character": "Keqing",
+      "talent": "Starward Sword",
+      "slot": "Q",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Keqing_01.png",
+      "sha256": "18dea7f27691225d77ae4939ce17ec56e626784bdbbfc0387f6f1848fcc4a7f7",
+      "gitBlob": "5f78794d14ffb991c51f1b5d8e5ec549fb307072"
+    },
+    {
+      "character": "Xingqiu",
+      "talent": "Guhua Sword: Fatal Rainscreen",
+      "slot": "E",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Xingqiu_01.png",
+      "sha256": "5902507ee73d62347d2a54f3d19f6f6b4a381ebb007e70ca32fa6099452cbf36",
+      "gitBlob": "4bbf4c94fd4745aaa62b943fe5ae1c9dac9198a8"
+    },
+    {
+      "character": "Xingqiu",
+      "talent": "Guhua Sword: Raincutter",
+      "slot": "Q",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Xingqiu_01.png",
+      "sha256": "f24efc4dc4711cd50a95afdbd04b632bb5b7a2cb81f7fa914574584b82dd1680",
+      "gitBlob": "9b52d1912dc1f0b54d001d8a59d1388a4786395f"
+    },
+    {
+      "character": "Kaedehara Kazuha",
+      "talent": "Chihayaburu",
+      "slot": "E",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Kazuha_01.png",
+      "sha256": "be4c0690c396049bd18d1dde4ffb77dfb274098f2676f9e7a62fa0b6f682e656",
+      "gitBlob": "e88279f2de7110bfb4c626949bc8819d9c2ad13a"
+    },
+    {
+      "character": "Zhongli",
+      "talent": "Dominus Lapidis",
+      "slot": "E",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Zhongli_01.png",
+      "sha256": "01096c00a43fe1ae4390f3a99cbeafdabe0d0039d5865ecb5a297351bafa216a",
+      "gitBlob": "d08eb8c0dfe17ab8cb2c4b5b68c08b85475079a6"
+    },
+    {
+      "character": "Amber",
+      "talent": "Explosive Puppet",
+      "slot": "E",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Ambor_01.png",
+      "sha256": "363050ba439bef8e2f1ea58e60c17c321e2a3663a4e73053a92827c5e8dde9bd",
+      "gitBlob": "2e8f7de09a8f2bbe3213f7024788e0487afb2c04"
+    },
+    {
+      "character": "Razor",
+      "talent": "Lightning Fang",
+      "slot": "Q",
+      "url": "https://github.com/CMHopeSunshine/GenshinWikiMap/blob/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Razor_01.png",
+      "sha256": "bd78ea90b8cfba4db874bb639d661300ecafa1f60fd1d5e6239c996c8650fa43",
+      "gitBlob": "9706ac59275c81f2d5c52fbc4f0ca917b3d5c382"
+    },
+    {
+      "character": "Hu Tao",
+      "talent": "Guide to Afterlife",
+      "slot": "E",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Hutao_01.png",
+      "sha256": "f1a1bc820f3a6be94a60358681795237646de8f2a5446fb96dddf4e6c8179d1a",
+      "gitBlob": "f4f1bd05b31669d053721f5819fc98140953b5c0"
+    },
+    {
+      "character": "Yelan",
+      "talent": "Lingering Lifeline",
+      "slot": "E",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Yelan_01.png",
+      "sha256": "a329f6ba605b4b507d1aef42b2f858ba8b3233084eed987daf5e88edcf76c840",
+      "gitBlob": "3a903fe7303b6c57be378a4ee678b0ac5fabeffc"
+    },
+    {
+      "character": "Hu Tao",
+      "talent": "Spirit Soother",
+      "slot": "Q",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Hutao_01.png",
+      "sha256": "4e36cbe4c284175e6ac355327071471d230cc9d27480e6791139fad6d417d6d7",
+      "gitBlob": "c011790d0f5757db6f3c63818f3d45fc06b5455d"
+    },
+    {
+      "character": "Yelan",
+      "talent": "Depth-Clarion Dice",
+      "slot": "Q",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Yelan_01.png",
+      "sha256": "d94c279026cb5a2005a0e53d0cf3a7e8becdb56ab27b2d4608e9d99827cf478a",
+      "gitBlob": "b8e352b685995f801834e8c47ce840c1b42a5c07"
+    },
+    {
+      "character": "Nahida",
+      "talent": "All Schemes to Know",
+      "slot": "E",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Nahida_01.png",
+      "sha256": "8b018afa41a7a70b92d9cee66e2d9c864bdef000cffc61669ad59d3c3c77ac61",
+      "gitBlob": "96fe681f4188059c35814e1ace0b64a799c7e73b"
+    },
+    {
+      "character": "Fischl",
+      "talent": "Nightrider",
+      "slot": "E",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_S_Fischl_01.png",
+      "sha256": "d2d0b12bbabfc1d654a972a89717c9eafe6244941459a47d4a040015673ebb90",
+      "gitBlob": "84bb4024219030773fb558184e00b7180a6617ff"
+    },
+    {
+      "character": "Cyno",
+      "talent": "Sacred Rite: Wolf's Swiftness",
+      "slot": "Q",
+      "url": "https://raw.githubusercontent.com/CMHopeSunshine/GenshinWikiMap/7fafe2e18011008d47e347f0f68216d05da0c1f1/resources/talent/Skill_E_Cyno_01.png",
+      "sha256": "741d8cdddc2ac0e49cb5b50ab63ac34970310cfe0baf78e4181758f38fe76412",
+      "gitBlob": "83b2596d86d54542f90e81ef8f3f96f3394f1bcc"
+    }
+  ]
+}

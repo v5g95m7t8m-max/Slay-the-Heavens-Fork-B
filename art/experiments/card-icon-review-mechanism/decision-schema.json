@@ -1,0 +1,6 @@
+{
+  "input": ["card_id", "effect", "primary_visual_verb", "likely_confusions", "reference_exact_image_and_role", "draft_asset_hash"],
+  "blind": ["seed", "source_hash_by_label", "reviewer", "verbatim_read", "confidence", "author_conflict"],
+  "style": ["reference_family", "kept_cue", "remaining_ambiguity", "reviewer_vote"],
+  "outputs": ["decision", "next_single_change", "card_frame_comparison", "fit_and_device_state"]
+}
