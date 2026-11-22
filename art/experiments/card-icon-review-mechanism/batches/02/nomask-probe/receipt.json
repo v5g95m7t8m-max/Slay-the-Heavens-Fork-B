@@ -1,0 +1,93 @@
+{
+  "strike": {
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "approvedGeometrySha256": "38a8db41e56beaa277dd94699d53356dfb7c8d0272f38d37ada5770cd4b13bb8",
+    "candidateGeometrySha256": "a1ff40e5398f683b950ae8fc75755ea84f65abd129ca2068e2a067db00dd82e1",
+    "nativeImages": 32,
+    "halfMaskImages": 0,
+    "axesXYImages": 31,
+    "replaced": [
+      {
+        "index": 5,
+        "fullyProjectedTriangles": 2,
+        "vectorXorArea": 1.0658141036401503e-14
+      },
+      {
+        "index": 22,
+        "fullyProjectedTriangles": 2,
+        "vectorXorArea": 3.552713678800501e-14
+      }
+    ],
+    "rawVsApproved": {
+      "alphaIoU": 1.0,
+      "alphaMAE": 0.0018446180555555555,
+      "rgbCompositeMAE": 0.024775752797722816,
+      "pixelsOver24": 0
+    },
+    "quantizedVsApproved": {
+      "alphaIoU": 0.9915966386554622,
+      "alphaMAE": 0.19921875,
+      "rgbCompositeMAE": 0.1536458283662796,
+      "pixelsOver24": 2
+    },
+    "nativeReconstructionVertexMaxPx": 1.5888218580782548e-14,
+    "quantizationVertexMaxPx": 0.042272177097438225,
+    "rawBounds": {
+      "exceeding": 0,
+      "maxOvershootPx": 0
+    },
+    "quantizedBounds": {
+      "exceeding": 0,
+      "maxOvershootPx": 0
+    },
+    "outsideRows": []
+  },
+  "bash": {
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "approvedGeometrySha256": "f05f135f8d1ff1814658066dd75490fecaad9169c7d603ce7bd858930df65554",
+    "candidateGeometrySha256": "68f26ebfc4e969766018d124a785ef8c58562e11b7ae2b78b7f4b6a72ea39491",
+    "nativeImages": 31,
+    "halfMaskImages": 0,
+    "axesXYImages": 31,
+    "replaced": [
+      {
+        "index": 10,
+        "fullyProjectedTriangles": 2,
+        "vectorXorArea": 6.139533326177116e-14
+      },
+      {
+        "index": 12,
+        "fullyProjectedTriangles": 2,
+        "vectorXorArea": 2.7478019859472624e-15
+      },
+      {
+        "index": 14,
+        "fullyProjectedTriangles": 2,
+        "vectorXorArea": 5.329070518200751e-15
+      }
+    ],
+    "rawVsApproved": {
+      "alphaIoU": 1.0,
+      "alphaMAE": 0.0,
+      "rgbCompositeMAE": 0.0,
+      "pixelsOver24": 0
+    },
+    "quantizedVsApproved": {
+      "alphaIoU": 0.9940417080436942,
+      "alphaMAE": 0.18641493055555555,
+      "rgbCompositeMAE": 0.13349971175193787,
+      "pixelsOver24": 11
+    },
+    "nativeReconstructionVertexMaxPx": 1.5888218580782548e-14,
+    "quantizationVertexMaxPx": 0.05050407429384758,
+    "rawBounds": {
+      "exceeding": 0,
+      "maxOvershootPx": 0
+    },
+    "quantizedBounds": {
+      "exceeding": 0,
+      "maxOvershootPx": 0
+    },
+    "outsideRows": []
+  }
+}
