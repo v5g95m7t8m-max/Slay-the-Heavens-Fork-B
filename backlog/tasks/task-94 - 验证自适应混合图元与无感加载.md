@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - Furinya
 created_date: '2026-10-31 10:47'
-updated_date: '2026-11-13 16:39'
+updated_date: '2026-11-22 08:06'
 labels:
   - art
   - technical-spike
@@ -44,6 +44,8 @@ ordinal: 134000
 2026-11-13 用户授权岩荧选角背景首次原生拟合，独立分支feat/lumine-native-fit，基线903bf2a31。复用V25 nativeShape与现有GIL/Simulator，400/800/1600/3200分割轮廓实验，23%面部局部预算。静态预制首次选中才实例化，public参数0回原背景；保留头像、按钮及其他角色/战斗。冷5/热10配对取证，独立复审与Draft PR，不合并发布。
 
 Owner进一步要求灵活取舍，图元数不作硬压缩门槛；最终看精细美术、资源与快速实显。附件2用于头发/服装/背景结构，附件1保留五官，原生图元层组合，不生成位图纹理。双源SHA与每档参数写入收据；优先评估1600是否以明显少于3200的成本保留质量，400/800不因低数量自动通过。
+
+本轮经 Owner 授权续验卡牌。在 Fork B 的 experiment/card-art-precision-lab 复跑 Compact 和精绘基线，使用相同 144×64 输入做 60/100/160/250/400 档比较，复用共享 CardDisplay 与隔离候选。官方验收和设备门槛保持原状态，不另建任务。
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes

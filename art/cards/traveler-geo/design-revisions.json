@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "projectBaseCommit": "00229683d0d38660c98ced2f4a41e89d84fc5e4e",
+  "activeReview": "sts1-ironclad-standard-20261122",
+  "references": {
+    "id": "sts1-ironclad-standard-20261122",
+    "status": "reference-only",
+    "edition": "Slay the Spire 1",
+    "character": "Ironclad",
+    "art": "standard, non-beta",
+    "sourceRepository": "https://github.com/nkhoit/spire-archive",
+    "sourceCommit": "4e6b0e040ccd00eb04fb1ab7fb0b298c222d2f29",
+    "usage": "Private visual inspection only. No runtime or public asset bytes.",
+    "cards": {
+      "strike": {
+        "sourceId": "strike_r",
+        "sourcePath": "public/images/sts1/cards/strike_r.png",
+        "sha256": "d4095ec5b7ed6f4be76dddfe4aeb5ad1c57ff21f148e8fbbd5c0a35d503abeae",
+        "bytes": 34432,
+        "size": [
+          500,
+          380
+        ],
+        "alphaBounds": [
+          1,
+          0,
+          498,
+          372
+        ],
+        "action": "单次挥砍",
+        "visibleFeatures": "画面近景是从右下手柄横贯至左侧的宽白色弯刃，红橙底和手柄分离。"
+      },
+      "defend": {
+        "sourceId": "defend_r",
+        "sourcePath": "public/images/sts1/cards/defend_r.png",
+        "sha256": "d994de285f469f2e6e2ebd08b84e4874214e3f84041af16da302ca448511b966",
+        "bytes": 43307,
+        "size": [
+          500,
+          380
+        ],
+        "alphaBounds": [
+          4,
+          0,
+          492,
+          363
+        ],
+        "action": "举盾拦截",
+        "visibleFeatures": "青蓝底，圆角岩灰盾框包住木纹，左侧三条浅黄攻击轨迹落在盾面。"
+      },
+      "bash": {
+        "sourceId": "bash",
+        "sourcePath": "public/images/sts1/cards/bash.png",
+        "sha256": "1415c117d281af8ada5cbd67b43b68c16035c1495af12018cda2adccf997018d",
+        "bytes": 34436,
+        "size": [
+          500,
+          380
+        ],
+        "alphaBounds": [
+          1,
+          0,
+          498,
+          372
+        ],
+        "action": "重击命中",
+        "visibleFeatures": "右上斜入的带刺钉锤压至石地，橙色碎裂光与接触点紧挨。"
+      },
+      "whirlwind": {
+        "sourceId": "whirlwind",
+        "sourcePath": "public/images/sts1/cards/whirlwind.png",
+        "sha256": "c08f94129858758935577731f181f58047ceb80030b3281fe915822b69f79a70",
+        "bytes": 35206,
+        "size": [
+          500,
+          380
+        ],
+        "alphaBounds": [
+          1,
+          0,
+          498,
+          372
+        ],
+        "action": "回旋范围攻击",
+        "visibleFeatures": "暗色人物被白黄宽弧横向绕过，红底突出旋转路线，人物位于弧线前后两层之间。"
+      },
+      "barricade": {
+        "sourceId": "barricade",
+        "sourcePath": "public/images/sts1/cards/barricade.png",
+        "sha256": "242dcf0f19e822692ca18e0f8a709ce7d2801f03b42c793f0dc77d786da6dd3b",
+        "bytes": 55665,
+        "size": [
+          500,
+          380
+        ],
+        "alphaBounds": [
+          0,
+          0,
+          500,
+          370
+        ],
+        "action": "叠起防线",
+        "visibleFeatures": "蓝黑背景上的多层木盾、金属边和剑柄构成宽而稳的堆叠，画面没有主动挥击的人物。"
+      },
+      "demon_form": {
+        "sourceId": "demon_form",
+        "sourcePath": "public/images/sts1/cards/demon_form.png",
+        "sha256": "ce84b1331c17dc519a637d574e7a3b4ce515836f3a9199f9bec6ab5bb8702100",
+        "bytes": 42536,
+        "size": [
+          500,
+          380
+        ],
+        "alphaBounds": [
+          0,
+          0,
+          500,
+          370
+        ],
+        "action": "展开恶魔姿态",
+        "visibleFeatures": "正面暖红人形举起双臂，双角、火焰与两翼形成对称轮廓，面部高亮。"
+      }
+    }
+  },
+  "archive": {
+    "id": "traveler-geo-source-batch-20261029",
+    "status": "superseded-for-current-art-review",
+    "scope": "catalog.candidates",
+    "count": 72,
+    "catalog": {
+      "path": "art/cards/traveler-geo/catalog.json",
+      "sha256": "d148515f184b46074e39135276241c1daac95f946900ea296bf481f02c70d558"
+    },
+    "review": {
+      "path": "art/cards/traveler-geo/source-design-review.json",
+      "sha256": "2737b299280841265f225e6238449b9a39d3e584376300ac6961273ef5dcc20c"
+    }
+  },
+  "historicalNative": {
+    "status": "historical-offline-review",
+    "scope": "catalog.cards",
+    "ids": [
+      "armaments",
+      "cleave",
+      "heavy_blade"
+    ],
+    "catalog": {
+      "path": "art/cards/traveler-geo/catalog.json",
+      "sha256": "d148515f184b46074e39135276241c1daac95f946900ea296bf481f02c70d558"
+    },
+    "runtimeStatus": "unbound"
+  },
+  "currentProductionArt": null
+}
