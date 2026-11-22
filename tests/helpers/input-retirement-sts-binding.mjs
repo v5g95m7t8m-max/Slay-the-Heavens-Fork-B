@@ -59,6 +59,6 @@ export function inputRetirementStsFixtureSource(path,raw){
 }
 
 export const inputRetirementStsWitness=Object.freeze({
- 'tests/helpers/copy-integration-source-closure.mjs':'4d0f15debaccc5aa6a56198e7e2b44f10f1c66ea6932a8da136a9a7a960f5bdd',
+ 'tests/helpers/copy-integration-source-closure.mjs':'848e21017bfe022dd0a5e8215ffa94aee50b328ac9d7055ef1fade4f3a170677',
  'tests/helpers/historical-sts-style-entry.mjs':'96c580efcf1c7ed4e1be8b1bc3a27d15212c8b485e5a345d5ec450ad364017ae',
 });
