@@ -86,7 +86,7 @@
       ],
       "runtime": "not-integrated",
       "state": "HOLD_REWORK",
-      "note": "仍像手套或石块，嵌装不清"
+      "note": "R3 两人未达成胸甲装配动作共识；见 batches/02/REVIEW.md。"
     },
     {
       "index": 6,
@@ -256,7 +256,8 @@
         }
       ],
       "runtime": "not-integrated",
-      "state": "QUEUED"
+      "state": "HOLD_REWORK",
+      "note": "R1 剑和抽牌关系未被读出；见 batches/02/REVIEW.md。"
     },
     {
       "index": 17,
@@ -275,7 +276,7 @@
       ],
       "runtime": "not-integrated",
       "state": "HOLD_REWORK",
-      "note": "盾与牌均清楚，但抽牌动势不够明确"
+      "note": "R3 盾与牌可辨，进出方向未达共识；见 batches/02/REVIEW.md。"
     },
     {
       "index": 18,
@@ -343,7 +344,8 @@
         }
       ],
       "runtime": "not-integrated",
-      "state": "QUEUED"
+      "state": "HOLD_REWORK",
+      "note": "R2 比 R1 落点清楚，仍可读为同一物体双尾迹；见 batches/02/REVIEW.md。"
     },
     {
       "index": 22,

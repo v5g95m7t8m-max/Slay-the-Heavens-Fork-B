@@ -1,0 +1,118 @@
+{
+  "16": {
+    "id": "bash",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 15,
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "plan": {
+      "method": "repo-alpha-rectangle",
+      "grid": [
+        13,
+        5
+      ]
+    },
+    "score": 11.742,
+    "error": 10.805,
+    "silhouetteIoU": 0.5536,
+    "bgCompositeOnly": "#551C24"
+  },
+  "24": {
+    "id": "bash",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 19,
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "plan": {
+      "method": "repo-alpha-rectangle",
+      "grid": [
+        16,
+        6
+      ]
+    },
+    "score": 10.067,
+    "error": 9.297,
+    "silhouetteIoU": 0.67,
+    "bgCompositeOnly": "#551C24"
+  },
+  "32": {
+    "id": "bash",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 31,
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 45,
+      "epsilon": 4.25
+    },
+    "score": 7.982,
+    "error": 7.767,
+    "silhouetteIoU": 0.8702,
+    "bgCompositeOnly": "#551C24"
+  },
+  "40": {
+    "id": "bash",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 39,
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 5,
+      "epsilon": 5.5
+    },
+    "score": 5.522,
+    "error": 5.243,
+    "silhouetteIoU": 0.8284,
+    "bgCompositeOnly": "#551C24"
+  },
+  "48": {
+    "id": "bash",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 45,
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 28,
+      "epsilon": 4.25
+    },
+    "score": 5.016,
+    "error": 4.815,
+    "silhouetteIoU": 0.8783,
+    "bgCompositeOnly": "#551C24"
+  },
+  "64": {
+    "id": "bash",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 63,
+    "sourceSha256": "7ad1f64191c5f22b6de34e3947e1aa2c67ebbb354e14469fe81b3708527dd506",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 5,
+      "epsilon": 1.6
+    },
+    "score": 3.188,
+    "error": 3.052,
+    "silhouetteIoU": 0.9181,
+    "bgCompositeOnly": "#551C24"
+  }
+}

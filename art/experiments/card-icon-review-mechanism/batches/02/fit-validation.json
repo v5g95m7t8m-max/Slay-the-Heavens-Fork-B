@@ -1,0 +1,105 @@
+{
+  "scope": "Offline native placement only; no runtime integration or device result",
+  "results": {
+    "strike": [
+      {
+        "budget": 16,
+        "images": 13,
+        "fallbackImages": 0,
+        "maxDimension": 24,
+        "silhouetteIoU": 0.5104,
+        "error": 10.241
+      },
+      {
+        "budget": 24,
+        "images": 23,
+        "fallbackImages": 0,
+        "maxDimension": 9,
+        "silhouetteIoU": 0.6192,
+        "error": 9.047
+      },
+      {
+        "budget": 32,
+        "images": 32,
+        "fallbackImages": 4,
+        "maxDimension": 63.0337,
+        "silhouetteIoU": 0.6905,
+        "error": 6.683
+      },
+      {
+        "budget": 40,
+        "images": 39,
+        "fallbackImages": 8,
+        "maxDimension": 74.2917,
+        "silhouetteIoU": 0.7329,
+        "error": 5.266
+      },
+      {
+        "budget": 48,
+        "images": 48,
+        "fallbackImages": 2,
+        "maxDimension": 38.6557,
+        "silhouetteIoU": 0.8974,
+        "error": 2.514
+      },
+      {
+        "budget": 64,
+        "images": 56,
+        "fallbackImages": 4,
+        "maxDimension": 38.6557,
+        "silhouetteIoU": 0.8974,
+        "error": 2.506
+      }
+    ],
+    "bash": [
+      {
+        "budget": 16,
+        "images": 15,
+        "fallbackImages": 0,
+        "maxDimension": 13,
+        "silhouetteIoU": 0.5536,
+        "error": 10.805
+      },
+      {
+        "budget": 24,
+        "images": 19,
+        "fallbackImages": 0,
+        "maxDimension": 11,
+        "silhouetteIoU": 0.67,
+        "error": 9.297
+      },
+      {
+        "budget": 32,
+        "images": 31,
+        "fallbackImages": 6,
+        "maxDimension": 60.1915,
+        "silhouetteIoU": 0.8702,
+        "error": 7.767
+      },
+      {
+        "budget": 40,
+        "images": 39,
+        "fallbackImages": 6,
+        "maxDimension": 60.1915,
+        "silhouetteIoU": 0.8284,
+        "error": 5.243
+      },
+      {
+        "budget": 48,
+        "images": 45,
+        "fallbackImages": 8,
+        "maxDimension": 60.1915,
+        "silhouetteIoU": 0.8783,
+        "error": 4.815
+      },
+      {
+        "budget": 64,
+        "images": 63,
+        "fallbackImages": 0,
+        "maxDimension": 29.2657,
+        "silhouetteIoU": 0.9181,
+        "error": 3.052
+      }
+    ]
+  }
+}

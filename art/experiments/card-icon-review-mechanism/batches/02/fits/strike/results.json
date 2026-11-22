@@ -1,0 +1,118 @@
+{
+  "16": {
+    "id": "strike",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 13,
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "plan": {
+      "method": "repo-alpha-rectangle",
+      "grid": [
+        12,
+        6
+      ]
+    },
+    "score": 11.07,
+    "error": 10.241,
+    "silhouetteIoU": 0.5104,
+    "bgCompositeOnly": "#551C24"
+  },
+  "24": {
+    "id": "strike",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 23,
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "plan": {
+      "method": "repo-alpha-rectangle",
+      "grid": [
+        17,
+        8
+      ]
+    },
+    "score": 9.72,
+    "error": 9.047,
+    "silhouetteIoU": 0.6192,
+    "bgCompositeOnly": "#551C24"
+  },
+  "32": {
+    "id": "strike",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 32,
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 28,
+      "epsilon": 4.25
+    },
+    "score": 7.017,
+    "error": 6.683,
+    "silhouetteIoU": 0.6905,
+    "bgCompositeOnly": "#551C24"
+  },
+  "40": {
+    "id": "strike",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 39,
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 28,
+      "epsilon": 3.1
+    },
+    "score": 5.56,
+    "error": 5.266,
+    "silhouetteIoU": 0.7329,
+    "bgCompositeOnly": "#551C24"
+  },
+  "48": {
+    "id": "strike",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 48,
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 28,
+      "epsilon": 1.05
+    },
+    "score": 2.626,
+    "error": 2.514,
+    "silhouetteIoU": 0.8974,
+    "bgCompositeOnly": "#551C24"
+  },
+  "64": {
+    "id": "strike",
+    "canvas": [
+      144,
+      64
+    ],
+    "nativeImages": 56,
+    "sourceSha256": "bfb9fcc0a71c88a8ac379876df5c023f2f01dc78b7a059214a6ab893293c7072",
+    "plan": {
+      "method": "alpha-clip-native-stacked",
+      "diff": 12,
+      "speckle": 5,
+      "epsilon": 1.05
+    },
+    "score": 2.618,
+    "error": 2.506,
+    "silhouetteIoU": 0.8974,
+    "bgCompositeOnly": "#551C24"
+  }
+}
