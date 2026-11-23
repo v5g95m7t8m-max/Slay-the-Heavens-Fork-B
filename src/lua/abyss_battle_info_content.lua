@@ -84,7 +84,8 @@ local function intentTip(face)
     local enum = face.enum
     local attack = attackTips[enum]
     if attack and face.damage and face.damage >= 0 then
-        local repeatText = face.times and face.times > 1 and (' ' .. number(face.times) .. ' 次') or ''
+        local repeatText = enum ~= 'ATTACK_DEBUFF' and face.times and face.times > 1
+            and (' ' .. number(face.times) .. ' 次') or ''
         return {name = enum == 'ATTACK_DEBUFF' and '策略' or '攻势',
             text = attack .. number(face.damage) .. ' 点伤害' .. repeatText .. '。'}
     end

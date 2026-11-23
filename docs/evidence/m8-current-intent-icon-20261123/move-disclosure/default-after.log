@@ -1,0 +1,9 @@
+✔ existing intent icon reads the shown actor snapshot, not the selected forecast (8768.033673ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9028.677402

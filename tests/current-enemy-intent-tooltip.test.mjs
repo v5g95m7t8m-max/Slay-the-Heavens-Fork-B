@@ -13,4 +13,6 @@ test('existing intent icon reads the shown actor snapshot, not the selected fore
   assert.match(result.stdout, /^CURRENT_ENEMY_INTENT_UI_PASS touch$/m);
   assert.match(result.stdout, /^CURRENT_ENEMY_INTENT_UI_PASS legacy_unequal$/m);
   assert.match(result.stdout, /^CURRENT_ENEMY_INTENT_UI_PASS source_multi$/m);
+  assert.match(result.stdout, /^CURRENT_ENEMY_INTENT_UI_PASS spawn_orbs$/m);
+  assert.match(result.stdout, /^CURRENT_ENEMY_INTENT_UI_PASS inferno$/m);
 });

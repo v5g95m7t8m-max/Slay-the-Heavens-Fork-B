@@ -97,3 +97,49 @@ do
     assert(info.visible and message:find('6 点伤害 3 次',1,true) and not message:find('18 点伤害',1,true))
     print('CURRENT_ENEMY_INTENT_UI_PASS source_multi')
 end
+
+-- The head reader mirrors Release disclosure without altering settled moves.
+do
+    local function same(a,b)
+        if type(a)~=type(b) then return false end
+        if type(a)~='table' then return a==b end
+        for k,v in pairs(a) do if not same(v,b[k]) then return false end end
+        for k in pairs(b) do if a[k]==nil then return false end end
+        return true
+    end
+    for _, case in ipairs({
+        {'automaton','spawn_orbs','UNKNOWN','', '这名敌人的意图不明（但不是攻击）。'},
+        {'hexaghost','inferno','ATTACK_DEBUFF','2x6','这名敌人将要对你施加负面效果并攻击造成 2 点伤害。'},
+    }) do
+        local id,move,enum,overhead,expected=table.unpack(case)
+        local h,u,p=H.setup({'defend'},{id},{touchScreen=function() return true end})
+        local battle=Combat.new(H.F.Data,{deck={'defend'},enemies={id},seed=42})
+        local actor=battle.enemies[1]
+        for i,v in ipairs(actor.intents) do if v.id==move then actor.intentIndex=i;break end end
+        assert(Combat.intent(battle,1).id==move and Intent.selectedDescriptor(battle,1).intent==enum)
+        h.run.combat=battle;h:resize(844,390);h:refresh()
+        local box=control(p,'enemy1')
+        local glyph,number=box:GetChild('intentIcon'),box:GetChild('intent')
+        assert(number.text==overhead and box:GetChild('intentHit').visible)
+        if enum=='UNKNOWN' then
+            assert(not glyph.visible and not box:GetChild('intentBadge').visible)
+            assert(Intent.intentView(battle,1).text:find('召唤 2 名青铜浮核',1,true))
+        else
+            assert(glyph.visible and number.visible and Intent.selectedDescriptor(battle,1).isMultiDamage)
+        end
+        local before,rng=Combat.copy(battle),{}
+        for _,key in ipairs({'eventRng','miscRng','treasureRng','cardRng'}) do rng[key]=Combat.copy(assert(h.run[key])) end
+        local target=u.target
+        local info,copy=inspect(h,u,p,box,true,78)
+        assert(info.visible and u.info.kind=='intent' and copy==expected,move..': '..copy)
+        assert(same(battle,before) and u.target==target)
+        for key,stream in pairs(rng) do assert(same(h.run[key],stream),key..' changed during read') end
+        if enum=='UNKNOWN' then
+            local settled=Combat.copy(battle);assert(Combat.endTurn(settled))
+            local orbs=0
+            for _,enemy in ipairs(settled.enemies) do if enemy.definitionId=='bronze_orb' then orbs=orbs+1 end end
+            assert(#settled.enemies==3 and orbs==2 and #battle.enemies==1)
+        end
+        print('CURRENT_ENEMY_INTENT_UI_PASS '..move)
+    end
+end

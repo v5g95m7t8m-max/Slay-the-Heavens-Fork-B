@@ -1,0 +1,4 @@
+ABYSS_RUN seed=1 source=explicit
+SPECIAL_HEAD move=spawn_orbs enum=UNKNOWN icon=false shown= text=召唤 2 名青铜浮核 read_only=true
+ABYSS_RUN seed=1 source=explicit
+SPECIAL_HEAD move=inferno enum=ATTACK_DEBUFF icon=true shown=2x6 text=攻击 6 次，每次 2 点伤害 | 升级抽牌堆和弃牌堆中的灼伤，并向弃牌堆加入3张灼伤+ read_only=true
