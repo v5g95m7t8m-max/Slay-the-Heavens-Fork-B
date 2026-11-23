@@ -1,0 +1,309 @@
+--- a/tests/ending-intent-view.test.mjs
++++ b/tests/ending-intent-view.test.mjs
+@@ -6,8 +6,8 @@
+  assert.equal(result.status,0,result.stdout+result.stderr);
+  assert.match(result.stdout,/ENDING_INTENT_VIEW_PASS 5/);
+ });
+-test('Act4 intent tooltip remains readable through generated strict native controls and pagination',()=>{
++test('Act4 intent tooltip remains readable through generated strict native controls with compact source copy',()=>{
+  const result=runLua('tests/lua/ending_intent_ui.lua');
+  assert.equal(result.status,0,result.stdout+result.stderr);
+- assert.match(result.stdout,/ENDING_INTENT_UI_PASS 3/);
++ assert.match(result.stdout,/ENDING_INTENT_UI_PASS 4/);
+ });
+--- a/tests/lua/bosses_intent_ui.lua
++++ b/tests/lua/bosses_intent_ui.lua
+@@ -19,12 +19,14 @@
+ has(inferno.text,'灼伤');has(inferno.text,'3张');has(inferno.text,'弃牌堆');assert(#inferno.rows==2)
+ assert(C.endTurn(hex));local sear=View.intentView(hex,1);has(sear.text,'+')
+ local pair=battle({'deca','donu'});force(pair.enemies[1],'square')
++pair.enemies[1].statuses.dexterity=99
++pair.enemies[1].statuses.frail=1
+ local defend=View.intentView(pair,1)
+-has(defend.text,'全体');has(defend.text,'16')
++has(defend.text,'敌方全体存活单位各获得 16 点格挡')
+ local circle=View.intentView(pair,2);has(circle.text,'全体');has(circle.text,'3')
++assert(C.endTurn(pair) and pair.enemies[1].block==16 and pair.enemies[2].block==16)
+ 
+--- Real generated battle controls must open the mixed split tooltip and keep
+--- both new actors targetable, with no nil single-child metadata assumption.
++-- The generated tooltip shows the source Unknown intent and the active Split Power.
+ local H=dofile('tests/lua/support/battle_action_fixture.lua')
+ local inspectDetails=dofile('tests/lua/support/status_detail_fixture.lua')
+ local host,ui,panel,_,tap,drain=H.setup({'strike','strike'},{'slime_boss'})
+@@ -35,8 +37,13 @@
+ dofile('tests/lua/support/intent_face_assertion.lua')(monsterControl(panel,'enemy1'),View.intentView(s,1),'分裂')
+ tap('enemy1',31)
+ local detail=inspectDetails(ui,panel)
+-has(detail,s.catalog.enemies.spike_slime_l.name)
+-has(detail,s.catalog.enemies.acid_slime_l.name)
++has(detail,'这名敌人的意图不明')
++has(detail,'生命值降至一半或以下时')
++assert(not detail:find(s.catalog.enemies.spike_slime_l.name,1,true))
++assert(not detail:find(s.catalog.enemies.acid_slime_l.name,1,true))
++local projected=View.intentView(s,1).text
++has(projected,s.catalog.enemies.spike_slime_l.name)
++has(projected,s.catalog.enemies.acid_slime_l.name)
+ tap('endTurn',32);drain()
+ dofile('tests/lua/support/monster_death_fixture.lua')(host,ui,parent.id)
+ assert(#s.enemies==3 and s.enemies[2]==parent and parent.hp==0)
+--- a/tests/lua/ending_intent_ui.lua
++++ b/tests/lua/ending_intent_ui.lua
+@@ -1,6 +1,8 @@
++local readPowers=dofile('tests/lua/support/power_tip_fixture.lua')
+ local monsterControl=dofile('tests/lua/support/monster_control_fixture.lua')
+ package.path='src/lua/?.lua;build/lua/?.lua;'..package.path
+ local F=dofile('tests/lua/support/game_ui_fixture.lua')
++local IntentView=require('abyss_battle_intent_view')
+ local UI,Run=require('abyss_battle_ui'),require('abyss_run')
+ local function fixture(ids)
+  local canvas=F.control({children=F.Layout});local root=F.Viewport.apply(canvas,1280,720):GetChild('battlePanel')
+@@ -9,23 +11,15 @@
+  run.combat=assert(F.Combat.new(F.Data,{seed=42,enemies=ids,deck={}}));ui.run=run
+  return ui,root,run.combat
+ end
+-local function allPages(ui,root)
+- local panel=root:GetChild('statusInfo');assert(panel.visible)
+- local text={}
+- for _=1,ui.info.pages do
+-  for i=1,F.Theme.layout.statusInfo.rows do
+-   local name=panel:GetChild('name'..i)
+-   if name.visible then text[#text+1]=name.text..' '..panel:GetChild('text'..i).text..' '..panel:GetChild('note'..i).text end
+-  end
+-  panel:GetChild('page').click()
+- end
+- return table.concat(text,' | ')
+-end
+ do
+  local ui,root,s=fixture({'corrupt_heart'});ui:render()
+  monsterControl(root,'enemy1'):GetChild('intentHit').click()
+- assert(ui.info and ui.info.kind=='intent'and ui.info.pages>1)
+- local text=allPages(ui,root)
++ assert(ui.info and ui.info.powerTips and not ui.info.kind)
++ local _,rows=readPowers(root)
++ assert(rows[1]=='<color=#F5D78A>策略</color>\n这名敌人将要对你施加一种强大的负面效果。')
++ -- The compact source tooltip does not enumerate hypothetical future statuses.
++ -- Keep the previous five-card destination contract on the ordered projection.
++ local text=IntentView.intentView(s,1).text
+  for _,id in ipairs({'dazed','slimed','wound','burn','void'})do assert(text:find(s.catalog.cards[id].name,1,true))end
+  assert(text:find('抽牌堆',1,true))
+ end
+@@ -36,7 +30,19 @@
+  ui:render();dofile('tests/lua/support/intent_face_assertion.lua')(monsterControl(root,'enemy1'),require('abyss_battle_intent_view').intentView(s,1))
+  assert(monsterControl(root,'enemy1'):GetChild('intent').text=='59','detached UI preview must preserve source back-attack identity')
+  monsterControl(root,'enemy1'):GetChild('intentHit').click()
+- local text=allPages(ui,root);assert(text:find('格挡',1,true)and text:find('58',1,true))
++ local _,rows=readPowers(root)
++ assert(rows[1]=='<color=#F5D78A>攻势</color>\n这名敌人将要格挡并攻击造成 59 点伤害。')
++ local projected=IntentView.intentView(s,1).text
++ assert(projected:find('格挡',1,true)and projected:find('58',1,true))
++end
++do
++ local ui,root,s=fixture({'deca','donu'})
++ ui:render()
++ local box=monsterControl(root,'enemy1')
++ assert(s.enemies[1].definitionId=='deca' and box:GetChild('intent').text=='10x2')
++ box:GetChild('intentHit').click()
++ local _,rows=readPowers(root)
++ assert(rows[1]=='<color=#F5D78A>策略</color>\n这名敌人将要对你施加负面效果并攻击造成 10 点伤害。')
+ end
+ do
+  local ui,root,s=fixture({'corrupt_heart'});local e=s.enemies[1]
+@@ -53,4 +59,4 @@
+  assert(Status.statusKind({id='strength',amount=-1,kind='buff'})=='debuff')
+  assert(Status.statusKind({id='dexterity',amount=-1,kind='buff'})=='debuff')
+ end
+-print('ENDING_INTENT_UI_PASS 3 strict generated-tree cases; offline controlled, no platform acceptance')
++print('ENDING_INTENT_UI_PASS 4 strict generated-tree cases; offline controlled, no platform acceptance')
+--- a/tests/lua/support/act2_intent_ui_cases.lua
++++ b/tests/lua/support/act2_intent_ui_cases.lua
+@@ -1,9 +1,11 @@
++local readPowers=dofile('tests/lua/support/power_tip_fixture.lua')
+ local monsterControl=dofile('tests/lua/support/monster_control_fixture.lua')
+ local H=dofile('tests/lua/support/battle_action_fixture.lua')
+ local C=H.F.Combat
+ local function details(ui,panel)
+  local info,parts=panel:GetChild('statusInfo'),{}
+  assert(info.visible and ui.info)
++ if ui.info.powerTips then return readPowers(panel) end
+  for page=1,ui.info.pages do
+   for i=1,H.F.Theme.layout.statusInfo.rows do
+    for _,field in ipairs({'name','text','note','tag'})do
+@@ -20,7 +22,7 @@
+  for k,v in pairs(a)do same(v,b[k])end
+  for k in pairs(b)do assert(a[k]~=nil)end
+ end
+-local function detail(id,move)
++local function detail(id,move,tipTitle,tipBody)
+  local members=id=='gremlin_leader' and {'mad_gremlin','sneaky_gremlin',id}
+     or id=='bronze_orb' and {'automaton',id} or {id}
+  local host,ui,panel,_,tap=H.setup({'defend'},members)
+@@ -32,74 +34,82 @@
+  local before=host.run.combat;host.run.combat=C.copy(before)
+  host:refresh();tap('enemy'..index,1)
+  same(host.run.combat,before)
+- return details(ui,panel),monsterControl(panel,'enemy'..index),require('abyss_battle_intent_view').intentView(host.run.combat,index)
++ local _,tips=details(ui,panel)
++ assert(tips[1]=='<color=#F5D78A>'..tipTitle..'</color>\n'..tipBody,tips[1])
++ local face=require('abyss_battle_intent_view').intentView(host.run.combat,index)
++ return face.text,monsterControl(panel,'enemy'..index),face
+ end
++local buff='这名敌人将要进行强化。'
++local defendBuff='这名敌人将要进行格挡并进行强化。'
++local unknown='这名敌人的意图不明（但不是攻击）。'
++local stunned='这名敌人在这个回合被击晕了。'
+ local cases={
+ function()
+-local heal=detail('mystic','heal')
++local heal=detail('mystic','heal','策略',buff)
+ assert(heal:find('全体',1,true) and heal:find('16',1,true) and not heal:find('未知',1,true),'Mystic group heal intent is missing')
+ 
+ end,
+ function()
+-local strength=detail('mystic','buff')
++local strength=detail('mystic','buff','策略',buff)
+ assert(strength:find('全体',1,true) and strength:find('力量',1,true) and strength:find('2',1,true),'Mystic group strength intent is missing')
+ 
+ end,
+ function()
+-local cleanse=detail('champ','anger')
++local cleanse=detail('champ','anger','策略',buff)
+ assert(cleanse:find('移除',1,true) and cleanse:find('负面',1,true) and cleanse:find('6',1,true) and not cleanse:find('未知',1,true),'Champ cleanse intent is missing')
+ 
+ end,
+ function()
+-local vampire,box=detail('shelled_parasite','life_suck')
++local vampire,box=detail('shelled_parasite','life_suck','攻势','这名敌人将要进行强化并攻击造成 10 点伤害。')
+ assert(box:GetChild('intent').text=='10' and vampire:find('实际',1,true) and vampire:find('回复',1,true),'life-drain damage and healing must both be explained')
+ 
+ end,
+ function()
+-local wake=detail('lagavulin','lagavulin_stunned')
++local wake=detail('lagavulin','lagavulin_stunned','击晕',stunned)
+ assert(wake:find('惊醒',1,true))
+ 
+ end,
+ function()
+-local stun,stunBox,stunFace=detail('automaton','stunned')
++local stun,stunBox,stunFace=detail('automaton','stunned','击晕',stunned)
+ assert(not stun:find('惊醒',1,true) and stun:find('不行动',1,true))
+ dofile('tests/lua/support/intent_face_assertion.lua')(stunBox,stunFace,'昏眩')
+ assert(stunFace.kind=='unknown' and stunFace.sourceEnum=='STUN' and not stunBox:GetChild('intentIcon').visible,'source STUN uses particles instead of a world base glyph')
+ 
+ end,
+ function()
+-local rally=detail('gremlin_leader','rally')
++local rally=detail('gremlin_leader','rally','不明',unknown)
+ assert(rally:find('最多 2',1,true) and not rally:find('未知',1,true))
+ 
+ end,
+ function()
+-local encourage=detail('gremlin_leader','encourage')
++local encourage=detail('gremlin_leader','encourage','守势',defendBuff)
+ assert(encourage:find('3',1,true) and encourage:find('6',1,true) and encourage:find('队友',1,true))
+ 
+ end,
+ function()
+-local spawn=detail('collector','spawn')
++local spawn=detail('collector','spawn','不明',unknown)
+ assert(spawn:find('2',1,true) and spawn:find('随从',1,true))
+ 
+ end,
+ function()
+-local revive=detail('collector','revive')
++local revive=detail('collector','revive','不明',unknown)
+ assert(revive:find('复活',1,true) and revive:find('存活',1,true))
+ 
+ end,
+ function()
+-local orbs=detail('automaton','spawn_orbs')
++local orbs=detail('automaton','spawn_orbs','不明',unknown)
+ assert(orbs:find('2',1,true) and orbs:find('浮核',1,true),'Automaton summons must be explained')
+ 
+ end,
+ function()
+-local support=detail('bronze_orb','support')
++local support=detail('bronze_orb','support','守势','这名敌人将要在这个回合进行格挡。')
+ assert(support:find('青铜机枢',1,true) and support:find('12',1,true),'orb block must name the actual recipient')
+ 
+ end,
+ function()
+-local stasis=detail('bronze_orb','stasis')
+-assert(stasis:find('扣押',1,true) and stasis:find('击败',1,true),'Stasis custody and return must be explained')
++local stasis=detail('bronze_orb','stasis','策略','这名敌人将要对你施加一种强大的负面效果。')
++assert(stasis:find('扣押',1,true) and stasis:find('弃牌堆',1,true) and not stasis:find('击败',1,true),
++    'pending Stasis previews custody and leaves return to the active Power')
+ 
+ end,
+ function()
+--- a/tests/lua/support/intent_face_assertion.lua
++++ b/tests/lua/support/intent_face_assertion.lua
+@@ -1,23 +1,25 @@
+--- Preserve the source primary; TASK-4.4 M08 adds only DEFEND_BUFF's pending buff.
++-- Preserve the primary intent and show the distinct effect alongside it.
+ local Theme=require('abyss_theme')
+ return function(box,face,label)
+     if label then assert(face.label==label,'intent wording changed') end
+     assert(not box:GetChild('intentLabel').visible,'obsolete face label must stay hidden')
+     local badge=box:GetChild('intentBadge')
+-    local secondary=face.sourceEnum=='DEFEND_BUFF' and face.worldVisible==true
+-    assert(badge.visible==secondary,'only source DEFEND_BUFF receives the pending buff badge')
++    local visible=face.sourceEnum and face.worldVisible==true or not face.sourceEnum
++    local secondary=visible and face.badge~=nil
++    assert(badge.visible==secondary,'the secondary effect must match the visible intent')
+     assert(not box:GetChild('intentExtra').visible,'unrelated tooltip rows must stay off the world face')
+-    local visible=face.sourceEnum and face.worldVisible==true or not face.sourceEnum
+     local icon=box:GetChild('intentIcon')
++    local kind=face.worldKind or face.kind
+     assert(icon.visible==visible,'original world intent visibility changed')
+     if visible then
+-        assert(icon.imageId==Theme.icon.intent[face.worldKind or face.kind],'original world intent image changed')
++        assert(icon.imageId==Theme.icon.intent[kind],'original world intent image changed')
+     end
+     if secondary then
+-        assert(badge.imageId==Theme.icon.intent.buff,'DEFEND_BUFF secondary must identify the pending buff')
++        assert(badge.imageId==Theme.icon.intent[face.badge],'secondary must identify its pending effect')
+         assert(badge.sizeDeltaX==Theme.layout.intent.badge and badge.sizeDeltaY==Theme.layout.intent.badge)
+-        assert(math.abs(badge.y-icon.y)<.001 and badge.x-badge.sizeDeltaX/2>=icon.x+icon.sizeDeltaX/2+Theme.space.xs-.001,
+-            'secondary buff must clear the source primary')
++        local side=kind=='attack' and -1 or 1
++        assert(math.abs(badge.y-icon.y)<.001 and (badge.x-icon.x)*side>=(badge.sizeDeltaX+icon.sizeDeltaX)/2+Theme.space.xs-.001,
++            'secondary must clear the primary and its damage')
+     end
+     if face.sourceEnum and face.sourceEnum:sub(1,6)=='ATTACK' then
+         assert(face.worldKind=='attack' and face.sourceTexture:match('^INTENT_ATK_[1-7]$'),
+--- /dev/null
++++ b/tests/lua/support/power_tip_fixture.lua
+@@ -0,0 +1,13 @@
++-- Read visible copy from the actual compact native controls.
++local Theme = require('abyss_theme')
++return function(panel)
++    local info = panel:GetChild('statusInfo')
++    local tips = info:GetChild('powerTips')
++    assert(info.visible and tips.visible and not info:GetChild('plate').visible, 'expected compact reader')
++    local rows = {}
++    for i = 1, Theme.layout.powerTips.rows do
++        local tip = tips:GetChild('tip' .. i)
++        if tip.visible then rows[#rows + 1] = tip:GetChild('copy').text end
++    end
++    return table.concat(rows, '\n'), rows
++end
+--- a/tests/lua/support/status_detail_fixture.lua
++++ b/tests/lua/support/status_detail_fixture.lua
+@@ -1,9 +1,16 @@
++local readPowers=dofile('tests/lua/support/power_tip_fixture.lua')
+ -- Inspect the actual generated detail card, not cached notice or projected model text.
+ local Theme = require("abyss_theme")
+ return function(ui, panel)
+     local info, text = panel:GetChild("statusInfo"), {}
+     local opened = ui.info
+     assert(info.visible and opened, "ordinary unit inspection must use the detail card")
++    if opened.powerTips then
++        local copy = readPowers(panel)
++        panel:GetChild('statusDismiss').click()
++        assert(not info.visible and not ui.info, "blank space closes the compact reader")
++        return copy
++    end
+     local pages = opened.pages
+     assert(type(pages) == "number" and pages >= 1 and pages % 1 == 0, "detail page count must be valid")
+     for page = 1, pages do

@@ -1,0 +1,13 @@
+✔ Act2 enemy intentions describe healing, cleanse and life-drain without changing combat (19155.313906ms)
+✔ both intent slices retain every original assertion and cover all fourteen cases once (181.161365ms)
+✔ new Boss intents and mixed split actors work in generated battle controls (3370.454092ms)
+✔ Act4 intent details retain source actions without mutating combat or RNG (1623.242552ms)
+✔ Act4 intent tooltip remains readable through generated strict native controls with compact source copy (3831.114772ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28762.139073
