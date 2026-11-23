@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Body Slam / 格挡反击 · R7 strip-only control</title>
+  <g fill="#F8F2E2">
+    <path fill-rule="evenodd" d="M9 21Q22 23 30 17Q37 13 42 8Q49 15 59 17Q57 38 45 49Q41 53 33 56Q26 49 24 41Q13 43 5 39Q17 37 24 32L26 26Q15 28 9 21Z M33 24Q30 33 31 42Q33 45 35 47Q48 39 51 23Q45 22 42 17Q39 21 33 24Z"/>
+    <path d="M39 25L44 23L47 26Q45 35 36 41Q36 35 39 25Z" opacity=".73"/>
+  </g>
+</svg>

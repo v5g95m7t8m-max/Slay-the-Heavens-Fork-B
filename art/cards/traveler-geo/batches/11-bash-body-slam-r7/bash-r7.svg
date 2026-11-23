@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Bash / 破防斩 · R7</title>
+  <g fill="#F8F2E2">
+    <path d="M10 22Q19 22 27 17Q33 20 40 20L33 27L27 25Q22 29 17 29Q17 34 18 37L16 39.5L19 42L14 45Q8 36 10 22Z"/>
+    <path d="M53 6Q54 21 42 34Q36 41 27 49Q25 53 26 56Q19 52 16 47L24 44L22 39L32 35L31 31Q46 22 53 6Z"/>
+    <path d="M29 52Q42 43 47 37Q43 48 31 57Z" opacity=".69"/>
+  </g>
+</svg>

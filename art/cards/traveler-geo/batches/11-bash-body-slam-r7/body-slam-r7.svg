@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Body Slam / 格挡反击 · R7</title>
+  <g fill="#F8F2E2">
+    <path fill-rule="evenodd" d="M5 28Q20 26 32 16L42 8Q49 14 59 15Q59 35 48 47Q42 53 34 57Q25 50 25 36Q13 35 5 28Z M33 25Q31 35 33 42L36 47Q48 41 52 22Q46 21 42 17Q39 22 33 25Z"/>
+    <path d="M39 25L44 23L47 26Q45 35 36 41Q36 35 39 25Z" opacity=".73"/>
+  </g>
+</svg>
