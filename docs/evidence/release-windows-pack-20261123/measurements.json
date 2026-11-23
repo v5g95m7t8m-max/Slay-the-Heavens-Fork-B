@@ -1,0 +1,52 @@
+{
+  "release": {
+    "comparisonTreeCommit": "64b74fc26e26e1dc43ab571187c008f12911f371",
+    "observedCheckout": "263d4c6a2b1537c7fbf85f0baa03f878a6504a54",
+    "job": 137418357139,
+    "bytes": 144881002
+  },
+  "develop": {
+    "comparisonTreeCommit": "73c21489efaab409d4c0c46bee517d410d3427fc",
+    "job": 137301632813,
+    "bytes": 132120698
+  },
+  "capBytes": 134217728,
+  "archiveBlobs": [
+    {
+      "path": "tests/fixtures/pr323-historical-fixtures.json.gz",
+      "sha": "16ce40fae511b39072f695159a60f8bc6a818bb7",
+      "size": 5112323
+    },
+    {
+      "path": "tests/helpers/sts-style-prior-runtime.json.gz",
+      "sha": "d790bd83f77ef44eb682aca5c08617b0b06f9c2c",
+      "size": 4216851
+    },
+    {
+      "path": "tests/helpers/integrated-ci-source.json.gz",
+      "sha": "7507dd9dadee24535388a3cf3493313564612a1c",
+      "size": 3222350
+    },
+    {
+      "path": "tests/fixtures/integration-ci-epochs.json.gz",
+      "sha": "03b23f9c08167f93b9fe02e1f7855d2fe5056c67",
+      "size": 2436891
+    },
+    {
+      "path": "tests/helpers/closeout-source-epoch.json.gz",
+      "sha": "593584fcb830fe26d63dac58a68533ba8ed4a80f",
+      "size": 2240696
+    },
+    {
+      "path": "tests/helpers/component-ui-source-epoch.json.gz",
+      "sha": "e75bbd58d0a386837be52d84d8f42424f34e71bb",
+      "size": 1538232
+    }
+  ],
+  "oneIsolatedLinuxPackByCompression": {
+    "1": 18580650,
+    "6": 18577971,
+    "9": 18577969
+  },
+  "limits": "Not a hosted per-object allocation or whole-checkout reproduction; the exact six-object pack does not account for common objects or GitHub server delta choices."
+}
