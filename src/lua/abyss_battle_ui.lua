@@ -194,6 +194,7 @@ function M.new(root, data, presentation, clickEvent, platform, options)
         statusDetail = statusDetail, statusKind = statusKind, intentView = intentView, potionText = potionText,
         temporaryOps = temporaryOps, stanceNames = stanceNames, orbNames = orbNames,
         kindNames = kindNames, intentColors = intentColors,
+        displayedIntent = function(battle, actor) return host.monsterIntentParticles:tooltip(battle,actor) end,
     }, host.lines)
     host.paginate = InfoView.paginator(host.lines)
     host.renderInfo = InfoView.new(self, services.child, services.enemyPosition, services.describeInfo, host.paginate, services.tint, services.ink, services.picture)

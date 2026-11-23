@@ -187,7 +187,7 @@ function M.install(owner, ownership, host, dependencies)
         intentPosition(value,x+L.intent.size/2+S.xs+width/2,y,intentGeometryOwner)
         dependencies.ink(value,intentTone(alpha))
     end
-    local function renderEnemyIntent(box,face,portrait,geometry,allowed,alpha)
+    local function renderEnemyIntent(box,face,portrait,geometry,allowed,alpha,battle,actor)
         local x,y,size=intentGeometry(portrait,geometry)
         renderIntentIcon(box,face,x,y,size,allowed,alpha)
         renderIntentBadge(box,face,x,y,size,allowed,alpha,intentGeometryOwner,intentPicture,dependencies.tint)
@@ -196,6 +196,7 @@ function M.install(owner, ownership, host, dependencies)
         local sx,sy=Theme.canvas.base[1]/1920,Theme.canvas.base[2]/1080
         local hit=box:GetChild('intentHit');intentVisible(hit,allowed~=false,intentGeometryOwner)
         intentPosition(hit,x,y,intentGeometryOwner);intentSize(hit,64*sx,64*sy,intentGeometryOwner)
+        host.monsterIntentParticles:rememberPreview(battle,actor,face,allowed)
     end
     local function enemyIntentAllowed(actor,battle)
         return not require('abyss_boss_relics').hidesIntents(owner.run) and Actors.isPresent(actor) and not owner.feedback.dying[actor.id]
@@ -246,7 +247,7 @@ function M.install(owner, ownership, host, dependencies)
         paintEnemyArt(host,box,enemy,x,y,portrait,tone,dim)
         renderDamagePreview(box, enemy, portrait, width, loss)
         renderEnemyIntent(box, enemyIntentFace(frame, enemy, entry.index), portrait,geometry,
-            enemyIntentAllowed(enemy,frame.battle),host.monsterIntentParticles:alpha(enemy.id))
+            enemyIntentAllowed(enemy,frame.battle),host.monsterIntentParticles:alpha(enemy.id),frame.battle,enemy)
         host.monsterIntentParticles:paint(box,enemy.id,geometry,enemyIntentAllowed(enemy,frame.battle))
     end
     local function updateEnemyIntents(dt)
@@ -263,7 +264,7 @@ function M.install(owner, ownership, host, dependencies)
             local dying,escaping=owner.feedback.dying[entry.id],owner.feedback.escaping[entry.id]
             host.monsterIntentParticles:update(entry.id,dt,face,g,dying,escaping)
             renderEnemyIntent(box,face,g.portrait,g,enemyIntentAllowed(actor,battle),
-                host.monsterIntentParticles:alpha(entry.id))
+                host.monsterIntentParticles:alpha(entry.id),battle,actor)
             host.monsterIntentParticles:paint(box,entry.id,g,enemyIntentAllowed(actor,battle) and face.sourceEnum~='NONE')
             else
                 assert(not Actors.isPresent(actor),'active monster intent surface missing: '..entry.id)

@@ -1,0 +1,9 @@
+ABYSS_RUN seed=1 source=explicit
+CURRENT_ENEMY_INTENT_UI_PASS mouse
+ABYSS_RUN seed=1 source=explicit
+CURRENT_ENEMY_INTENT_UI_PASS touch
+ABYSS_RUN seed=1 source=explicit
+CURRENT_ENEMY_INTENT_UI_PASS legacy_unequal
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING painful_stabs using labelled unknown placeholder
+CURRENT_ENEMY_INTENT_UI_PASS source_multi

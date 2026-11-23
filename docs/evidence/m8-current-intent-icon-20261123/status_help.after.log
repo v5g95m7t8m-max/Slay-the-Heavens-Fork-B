@@ -1,0 +1,17 @@
+ABYSS_RUN seed=1 source=explicit
+ok status help 1 - debuff intent is an upcoming action, not an existing status or a stack count
+ABYSS_RUN seed=1 source=explicit
+ok status help 2 - actual Vulnerable names its owner, name, stack and effect in visible text frames
+ABYSS_RUN seed=1 source=explicit
+ok status help 3 - hover opens a read-only tooltip and exits without changing combat or target
+ABYSS_RUN seed=1 source=explicit
+ok status help 4 - long press opens status help and its release cannot play a selected card
+ABYSS_RUN seed=1 source=explicit
+ok status help 5 - card keyword hover explains the keyword without granting its status
+ABYSS_RUN seed=1 source=explicit
+ok status help 6 - a pending hold cannot follow a replacement enemy in the same slot
+ABYSS_RUN seed=1 source=explicit
+ok status help 7 - leaving combat for the deck cancels pending help
+ABYSS_RUN seed=1 source=explicit
+ok status help 8 - a different finger cannot release another finger's help token
+LUA_STATUS_HELP_PASS 8

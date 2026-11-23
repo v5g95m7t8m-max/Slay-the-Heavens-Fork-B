@@ -1,0 +1,21 @@
+✔ missing boss relics execute real acquisition, combat and selection boundaries (13397.197662ms)
+✔ Runic Dome hides all intent projections while core enemy damage is unchanged (3273.879982ms)
+✔ existing intent icon reads the shown actor snapshot, not the selected forecast (6774.739569ms)
+Lua fixture tests/lua/intent_artifact_preview.lua: 8131 ms
+Lua fixture tests/lua/intent_artifact_debuff_gates.lua: 11797 ms
+Lua fixture tests/lua/intent_artifact_debuff_gates_slice_2.lua: 6136 ms
+Lua fixture tests/lua/intent_artifact_ordered_interactions.lua: 9191 ms
+Lua fixture tests/lua/intent_artifact_playback.lua: 15413 ms
+Lua fixture tests/lua/intent_artifact_charges.lua: 10379 ms
+Lua fixture tests/lua/intent_artifact_cancellation.lua: 2679 ms
+✔ generated GameUI intent previews respect ordered Artifact gates without mutating combat (64406.602412ms)
+✔ actual generated actor outputs original UNKNOWN and STUN effect lifetimes without gameplay updates (3336.041363ms)
+✔ source descriptors cover every pinned move without evaluating future effects or spending Artifact (771.567595ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 64601.573346
