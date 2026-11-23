@@ -5,6 +5,60 @@ local SHOP_PAGE, RELIC_PAGE, PICK_PAGE = #layout.shop.columns, #layout.shop.reli
 local OPTIONS = #layout.event.options.rows
 local M = {}
 
+local function visibleAction(ctx, box, name)
+    local entry = ctx.self.actions[name]
+    local ok, view = ctx.current()
+    if not ok or ctx.self.view.phase ~= view.phase or ctx.self.view.node.complete ~= view.node.complete then
+        ctx.retireAction(entry) return nil
+    end
+    local parent = box
+    while parent do
+        if not parent.visible then ctx.retireAction(entry) return nil end
+        parent = parent.parent
+    end
+    if entry and not ctx.observeAction(entry) then return nil end
+    return entry
+end
+-- The chest has no framed chrome, but a physical click still belongs to
+-- the room action present at Down, not the one rebound after an overlay.
+local function bindChestInput(ctx, box, hit, name)
+    if not (ctx.cursor and ctx.cursor.CursorDown and ctx.cursor.CursorUp) then return end
+    local input = {active={}}
+    ctx.buttonInputs[box] = input
+    local noTouch = {}
+    local function touchKey(event) return event and event.touchId or noTouch end
+    ctx.listen(hit,ctx.cursor.CursorDown,function(event)
+        input.observed, input.released = true, nil
+        local action
+        if not Pointer.blocked(ctx.options) then action = visibleAction(ctx, box, name) end
+        input.active[touchKey(event)] = {touch=event and event.touchId, action=action and action.enabled and action or nil}
+    end)
+    ctx.listen(hit,ctx.cursor.CursorUp,function(event)
+        input.observed = true
+        local key = touchKey(event)
+        local gesture = input.active[key]
+        input.active[key] = nil
+        if not gesture then
+            -- An unrelated release must not turn into an anonymous chest click.
+            -- A subsequent Click with the original explicit ID remains valid.
+            if input.released then input.released.requireTouch = true end
+            return
+        end
+        input.released = nil
+        if Pointer.blocked(ctx.options) then return end
+        if gesture.action and gesture.action == visibleAction(ctx, box, name) then input.released = gesture end
+    end)
+    for _,kind in ipairs({'CursorExit','CursorEndDrag'}) do
+        if ctx.cursor[kind] then
+            ctx.listen(hit,ctx.cursor[kind],function(event)
+                input.active[touchKey(event)] = nil
+                if input.released and input.released.touch == (event and event.touchId) then input.released = nil end
+            end)
+        end
+    end
+    return input
+end
+
 -- Installs the input responsibility on one node UI instance.
 function M.install(ctx)
     local function buildInputTargets()
@@ -123,7 +177,7 @@ function M.install(ctx)
                     -- Click follows Up. Keep its original action until consumption, not
                     -- the action currently rebound to this hit area after a render.
                     if not gesture or touch ~= nil and touch ~= gesture.touch
-                        or touch == nil and next(input.active) ~= nil then return false end
+                        or touch == nil and (gesture.requireTouch or next(input.active) ~= nil) then return false end
                     input.released = nil
                     if not gesture.action or gesture.action ~= ctx.self.actions[name] then return false end
                 end
@@ -152,22 +206,8 @@ function M.install(ctx)
                         input.active[touchKey(event)] = nil
                         if input.released and input.released.touch == (event and event.touchId) then input.released = nil end
                     end
-                    local function visibleAction()
-                        local entry = ctx.self.actions[name]
-                        local ok, view = ctx.current()
-                        if not ok or ctx.self.view.phase ~= view.phase or ctx.self.view.node.complete ~= view.node.complete then
-                            ctx.retireAction(entry) return nil
-                        end
-                        local parent = box
-                        while parent do
-                            if not parent.visible then ctx.retireAction(entry) return nil end
-                            parent = parent.parent
-                        end
-                        if entry and not ctx.observeAction(entry) then return nil end
-                        return entry
-                    end
                     local function available()
-                        local entry, look = visibleAction(), ctx.buttonLooks[box]
+                        local entry, look = visibleAction(ctx, box, name), ctx.buttonLooks[box]
                         -- Guarded mandatory-picker cards have no framed-button look.
                         -- Keep the legacy feedback path for all other controls unchanged.
                         local plainPicker = not look and entry and entry.retire and name:match("^pickerView/card%d+$") ~= nil
@@ -192,7 +232,7 @@ function M.install(ctx)
                     end)
                     ctx.listen(hit, ctx.cursor.CursorDown, function(event)
                         input.observed, input.released = true, nil
-                        local gesture = {touch=event and event.touchId, action=visibleAction()}
+                        local gesture = {touch=event and event.touchId, action=visibleAction(ctx, box, name)}
                         input.active[touchKey(event)] = gesture
                         if not available() or ctx.buttonPress then
                             if gesture.action and gesture.action.observe then gesture.action = nil end
@@ -227,7 +267,7 @@ function M.install(ctx)
 
             end
         end
-        bindFramedInput()
+        if name == "treasureView/chest" then input = bindChestInput(ctx, box, hit, name) else bindFramedInput() end
         local function bindRoomGestures()
             if ctx.self.swipeEnabled and ctx.rows[name] then
                 local row = ctx.rows[name]

@@ -1,0 +1,13 @@
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+SHARED_RELIC_NODE_GREEN camp released + covered Click; modal preserved Run and route; fresh action works; stale click ignored
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+...e-8tKRZB/docs/evidence/m8-relic-chest-20261123/probe.lua:101: stale press must never mutate Run or route
+stack traceback:
+	[JS]: in function 'assert'
+	...e-8tKRZB/docs/evidence/m8-relic-chest-20261123/probe.lua:101: in main chunk
+	[JS]: in function 'dofile'
+	(command line):22: in main chunk

@@ -13,7 +13,7 @@ try {
 buildLuaData('data',dir+'/abyss_data.lua');buildUI(dir,undefined,{officialAssets:true,refinedReleaseMonsterArt:true,nativePageLifecycle:true});
 const preload=readdirSync(dir).filter(n=>n.endsWith('.lua')).map(n=>`package.preload[${luaString(n.slice(0,-4))}]=assert(loadfile(${luaString(dir+'/'+n)}))`).join('\n');
 const source="package.path='./src/lua/?.lua'\n"+preload+"\ndofile("+luaString(witness)+")";
-const r=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',source],{encoding:'utf8',timeout:30000,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''}});
+const r=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',source],{encoding:'utf8',timeout:90000,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''}});
 process.stdout.write(r.stdout??'');process.stderr.write(r.stderr??'');if(r.error)throw r.error;process.exitCode=r.status??1;
 
 } finally { rmSync(dir,{recursive:true,force:true}); }

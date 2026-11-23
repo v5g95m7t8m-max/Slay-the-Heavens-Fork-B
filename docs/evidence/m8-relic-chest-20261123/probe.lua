@@ -32,9 +32,23 @@ end
 local function advance(h)
  for _=1,120 do h:update(1/60) end
 end
-for _,case in ipairs({{'camp',true},{'treasure',true},{'treasure',false}})do
- local kind,stale=case[1],case[2]
- local h,r=F.fixture(nil,nil,nil,cursor,nil,nil,{touchScreen=function()return true end});assert(F.start(h))
+for _,case in ipairs({
+ {'camp','released',cursor,true},
+ {'treasure','released',cursor,true},
+ {'treasure','released',cursor,false},
+ {'treasure','held',{CursorDown='down',CursorUp='up'},false},
+ {'treasure','released',{CursorDown='down',CursorUp='up'},false},
+ {'treasure','cancel',cursor,false},
+ {'treasure','covered-down-up',cursor,false},
+ {'treasure','orphan-up',{CursorDown='down',CursorUp='up'},false},
+ {'treasure','orphan-up-after-release',cursor,false},
+ {'treasure','fresh-idless',cursor,false},
+ {'treasure','click-only',{},false},
+ {'treasure','click-only',cursor,false},
+})do
+ local kind,mode,events,coveredClick=table.unpack(case)
+ local stale=mode=='released' or mode=='held'
+ local h,r=F.fixture(nil,nil,nil,events,nil,nil,{touchScreen=function()return true end});assert(F.start(h))
  h:resize(844,390);h.run.hp=35
  local path=routes.to(h.map,function(n)return n.type==kind end)
  for i=1,#path-1 do assert(Map.choose(h.map,path[i])) end
@@ -52,7 +66,10 @@ for _,case in ipairs({{'camp',true},{'treasure',true},{'treasure',false}})do
  local relicEntry=get(r,'relicBar/slot1/hit')
  local panel=get(r,'relicPanel')
  assert(node.active and relicEntry.raycastTarget~=false)
- if stale then emit(roomAction,'down',41);emit(roomAction,'up',41)end
+ if stale then
+  emit(roomAction,'down',41)
+  if mode=='released' then emit(roomAction,'up',41) end
+ end
  assert(relicEntry.click({touchId=42}))
  assert(panel.visible and h.relicUI.visible and h.deckUI.detailOnly=='relics')
  local function text(path)return get(panel,path).text end
@@ -67,36 +84,47 @@ for _,case in ipairs({{'camp',true},{'treasure',true},{'treasure',false}})do
   if i<#h.run.relics then assert(get(panel,'next/hit').click({touchId=42+i})) end
  end
  local defaultOpened=h.nodeUI.opened
- if stale then emit(roomAction,'click',41) end
+ if coveredClick then emit(roomAction,'click',41) end
+ if mode=='covered-down-up' then emit(roomAction,'down',41);emit(roomAction,'up',41) end
  assert(same(before,h.run) and same(mapBefore,h.map) and h.nodeUI.opened==defaultOpened, 'covered overlay click mutated run, route or room')
  assert(get(panel,'close/hit').click({touchId=44}))
  assert(not panel.visible and h.run==run and h.run.nodeFlow==flow and node.active)
+ if mode=='held' or mode=='orphan-up' then emit(roomAction,'up',41) end
+ if mode=='covered-down-up' or mode=='orphan-up' then emit(roomAction,'click',41) end
+ if mode=='orphan-up-after-release' then
+  emit(roomAction,'down',41);emit(roomAction,'up',41);emit(roomAction,'up',44);emit(roomAction,'click',nil)
+ end
  if stale then emit(roomAction,'click',41) end
- if kind=='treasure' and stale then
-  assert(not defaultOpened and h.nodeUI.opened and not before.nodeFlow.chest.opened and h.run.nodeFlow.chest.opened)
-  assert(same(mapBefore,h.map) and same(before.relics,h.run.relics) and h.run.hp==before.hp and h.run.gold==before.gold)
-  assert(h.run.treasureRng.counter==before.treasureRng.counter+1)
-  local oldQ,newQ=before.relicPool.queues.common,h.run.relicPool.queues.common
-  assert(oldQ[1]=='Tiny Chest' and #oldQ==#newQ+1)
-  for i,v in ipairs(newQ)do assert(v==oldQ[i+1])end
-  assert(h.run.nodeFlow.reward.gold==53 and h.run.nodeFlow.reward.relicId=='tiny_chest')
-  local unopen=C.copy(h.run)
-  unopen.treasureRng,unopen.relicPool=before.treasureRng,before.relicPool
-  unopen.nodeFlow.chest,unopen.nodeFlow.reward=before.nodeFlow.chest,before.nodeFlow.reward
-  assert(same(before,unopen),'opening had another untracked Run effect')
-  print('SHARED_RELIC_NODE_RED treasure 6 detail entries; covered Click ignored; delayed Click after close commits chest reveal, RNG '..before.treasureRng.counter..'->'..h.run.treasureRng.counter..'; one common queue item consumed; 53 gold and tiny_chest generated but not granted; owned inventory, HP, gold, map unchanged')
-  goto continue
+ if mode=='cancel' then
+  emit(roomAction,'down',41);emit(roomAction,'endDrag',41);emit(roomAction,'up',41);emit(roomAction,'click',41)
  end
  assert(same(before,h.run) and same(mapBefore,h.map),'stale press must never mutate Run or route')
  assert(h.nodeUI.opened==defaultOpened,'non-treasure stale action unexpectedly changed room UI')
  do
- emit(roomAction,'down',45);emit(roomAction,'up',45);emit(roomAction,'click',45);advance(h)
+ local touch=45
+ if mode=='fresh-idless' then touch=nil end
+ if mode~='click-only' then
+  emit(roomAction,'down',touch);emit(roomAction,'up',touch)
+  if touch then
+   emit(roomAction,'click',46)
+   assert(same(before,h.run),'wrong touch mutated Run')
+  end
+ end
+ if mode=='orphan-up-after-release' then emit(roomAction,'up',44) end
+ emit(roomAction,'click',touch);advance(h)
  if kind=='camp'then assert(h.run.hp>hp,'fresh Rest did not heal')
- else assert(h.nodeUI.opened and h.run.hp==hp and same(h.run.relics,before.relics) and h.run.treasureRng.counter==before.treasureRng.counter+1 and h.run.nodeFlow.reward.relicId=='tiny_chest','fresh open did not reveal exactly once without claiming')end
+ else
+  assert(h.nodeUI.opened and h.run.nodeFlow.chest.opened and h.run.hp==hp and h.run.gold==before.gold
+   and same(h.run.relics,before.relics) and same(mapBefore,h.map)
+   and h.run.treasureRng.counter==before.treasureRng.counter+1 and h.run.nodeFlow.reward.relicId=='tiny_chest'
+   and h.run.nodeFlow.reward.gold==53,'fresh open did not reveal exactly once without claiming')
+  local oldQ,newQ=before.relicPool.queues.common,h.run.relicPool.queues.common
+  assert(oldQ[1]=='Tiny Chest' and #oldQ==#newQ+1)
+  for i,v in ipairs(newQ)do assert(v==oldQ[i+1])end
+ end
  local nextState=C.copy(h.run)
  if roomAction.visible then emit(roomAction,'click',45) end
  assert(same(nextState,h.run),'duplicate click changed run')
- print('SHARED_RELIC_NODE_GREEN '..kind..' 6 detail entries; modal preserved run and route; fresh action works'..(stale and '; stale click ignored' or ''))
+ print('SHARED_RELIC_NODE_GREEN '..kind..' '..mode..(coveredClick and ' + covered Click' or '')..'; modal preserved Run and route; fresh action works'..(stale and '; stale click ignored' or ''))
  end
- ::continue::
 end
