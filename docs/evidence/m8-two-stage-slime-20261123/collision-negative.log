@@ -1,0 +1,24 @@
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=slime_boss_1 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=slime_boss_1 target=- amount=0
+ABYSS_FEEDBACK death source=- target=slime_boss_1 amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=spike_slime_l_2 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=spike_slime_l_2 target=- amount=0
+ABYSS_FEEDBACK death source=- target=spike_slime_l_2 amount=0
+ABYSS_FEEDBACK intent source=acid_slime_l_3 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=acid_slime_l_3 target=- amount=0
+ABYSS_FEEDBACK death source=- target=acid_slime_l_3 amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+two-stage-slime-proof.lua:48: split children hitboxes overlap: -82.666666666667 <= 30.666666666667
+stack traceback:
+	[JS]: in function 'assert'
+	two-stage-slime-proof.lua:48: in local 'run'
+	two-stage-slime-proof.lua:62: in main chunk
+	[JS]: in function 'dofile'
+	(command line):1: in main chunk

@@ -1,0 +1,47 @@
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=slime_boss_1 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=slime_boss_1 target=- amount=0
+ABYSS_FEEDBACK death source=- target=slime_boss_1 amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=spike_slime_l_2 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=spike_slime_l_2 target=- amount=0
+ABYSS_FEEDBACK death source=- target=spike_slime_l_2 amount=0
+ABYSS_FEEDBACK intent source=acid_slime_l_3 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=acid_slime_l_3 target=- amount=0
+ABYSS_FEEDBACK death source=- target=acid_slime_l_3 amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK play source=- target=1 amount=0
+ABYSS_FEEDBACK damage source=player target=spike_slime_m_4 amount=6
+SLIME_BOUNDS 1280x720 spike_slime_m -82.67 30.67 HP=29
+SLIME_BOUNDS 1280x720 spike_slime_m 96.00 209.33 HP=35
+SLIME_BOUNDS 1280x720 acid_slime_m 254.00 367.33 HP=35
+SLIME_BOUNDS 1280x720 acid_slime_m 432.67 546.00 HP=35
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=slime_boss_1 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=slime_boss_1 target=- amount=0
+ABYSS_FEEDBACK death source=- target=slime_boss_1 amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=spike_slime_l_2 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=spike_slime_l_2 target=- amount=0
+ABYSS_FEEDBACK death source=- target=spike_slime_l_2 amount=0
+ABYSS_FEEDBACK intent source=acid_slime_l_3 target=- amount=0
+ABYSS_FEEDBACK enemy_split source=acid_slime_l_3 target=- amount=0
+ABYSS_FEEDBACK death source=- target=acid_slime_l_3 amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK play source=- target=7 amount=0
+ABYSS_FEEDBACK damage source=player target=acid_slime_m_7 amount=6
+SLIME_BOUNDS 960x720 spike_slime_m -82.67 30.67 HP=35
+SLIME_BOUNDS 960x720 spike_slime_m 96.00 209.33 HP=35
+SLIME_BOUNDS 960x720 acid_slime_m 254.00 367.33 HP=35
+SLIME_BOUNDS 960x720 acid_slime_m 432.67 546.00 HP=29
+TWO_STAGE_SLIME_PROOF_PASS
