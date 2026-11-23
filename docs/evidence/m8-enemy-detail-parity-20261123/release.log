@@ -1,0 +1,20 @@
+ABYSS_RUN seed=1 source=explicit
+COPY path=hit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=PC path=hit control=true listeners=1 intent=jaw_worm_1 infoKind=nil actorMatch=true visible=true oldPlate=false powerTips=true statesUnchanged=true first=<color=#F5D78A>攻势</color> / 这名敌人将要 / 攻击造成 11 点伤害。
+ABYSS_RUN seed=1 source=explicit
+COPY path=intentHit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=PC path=intentHit control=true listeners=1 intent=jaw_worm_1 infoKind=nil actorMatch=true visible=true oldPlate=false powerTips=true statesUnchanged=true first=<color=#F5D78A>攻势</color> / 这名敌人将要 / 攻击造成 11 点伤害。
+ABYSS_RUN seed=1 source=explicit
+COPY path=hpHit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=PC path=hpHit control=true listeners=1 intent=jaw_worm_1 infoKind=nil actorMatch=true visible=true oldPlate=false powerTips=true statesUnchanged=true first=<color=#F5D78A>攻势</color> / 这名敌人将要 / 攻击造成 11 点伤害。
+PARITY mode=PC expected=true observed=true
+ABYSS_RUN seed=1 source=explicit
+COPY path=hit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=touch path=hit control=true listeners=3 intent=jaw_worm_1 infoKind=nil actorMatch=true visible=true oldPlate=false powerTips=true statesUnchanged=true first=<color=#F5D78A>攻势</color> / 这名敌人将要 / 攻击造成 11 点伤害。
+ABYSS_RUN seed=1 source=explicit
+COPY path=intentHit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=touch path=intentHit control=true listeners=3 intent=jaw_worm_1 infoKind=nil actorMatch=true visible=true oldPlate=false powerTips=true statesUnchanged=true first=<color=#F5D78A>攻势</color> / 这名敌人将要 / 攻击造成 11 点伤害。
+ABYSS_RUN seed=1 source=explicit
+COPY path=hpHit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=touch path=hpHit control=true listeners=3 intent=jaw_worm_1 infoKind=nil actorMatch=true visible=true oldPlate=false powerTips=true statesUnchanged=true first=<color=#F5D78A>攻势</color> / 这名敌人将要 / 攻击造成 11 点伤害。
+PARITY mode=touch expected=true observed=true

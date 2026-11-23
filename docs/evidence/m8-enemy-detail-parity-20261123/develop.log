@@ -1,0 +1,20 @@
+ABYSS_RUN seed=1 source=explicit
+COPY path=hit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=PC path=hit control=true listeners=0 intent=jaw_worm_1 infoKind=nil actorMatch=nil visible=false oldPlate=true powerTips=false statesUnchanged=true first=
+ABYSS_RUN seed=1 source=explicit
+COPY path=intentHit title=石颚兽 section1= name1=攻击 11 text1=造成 11 点伤害 targetBefore=1 targetAfter=1
+PROBE mode=PC path=intentHit control=true listeners=1 intent=jaw_worm_1 infoKind=intent actorMatch=false visible=true oldPlate=true powerTips=false statesUnchanged=true first=
+ABYSS_RUN seed=1 source=explicit
+COPY path=hpHit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=PC path=hpHit control=false listeners=0 intent=jaw_worm_1 infoKind=nil actorMatch=nil visible=false oldPlate=true powerTips=false statesUnchanged=true first=
+PARITY mode=PC expected=true observed=false
+ABYSS_RUN seed=1 source=explicit
+COPY path=hit title=石颚兽 section1=意图 · 尚未执行 name1=攻击 11 text1=造成 11 点伤害 targetBefore=1 targetAfter=1
+PROBE mode=touch path=hit control=true listeners=3 intent=jaw_worm_1 infoKind=nil actorMatch=false visible=true oldPlate=true powerTips=false statesUnchanged=true first=
+ABYSS_RUN seed=1 source=explicit
+COPY path=intentHit title=石颚兽 section1= name1=攻击 11 text1=造成 11 点伤害 targetBefore=1 targetAfter=1
+PROBE mode=touch path=intentHit control=true listeners=3 intent=jaw_worm_1 infoKind=intent actorMatch=false visible=true oldPlate=true powerTips=false statesUnchanged=true first=
+ABYSS_RUN seed=1 source=explicit
+COPY path=hpHit title= section1= name1= text1= targetBefore=1 targetAfter=1
+PROBE mode=touch path=hpHit control=false listeners=0 intent=jaw_worm_1 infoKind=nil actorMatch=nil visible=false oldPlate=true powerTips=false statesUnchanged=true first=
+PARITY mode=touch expected=true observed=false
