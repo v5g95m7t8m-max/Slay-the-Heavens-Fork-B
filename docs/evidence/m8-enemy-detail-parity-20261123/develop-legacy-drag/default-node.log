@@ -1,0 +1,10 @@
+✔ approved unit details retain complete information and command priority (17402.975196ms)
+✔ the shared capacity guard measures visible glyphs and preserves explicit empty lines (0.249215ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17566.574479

@@ -1,0 +1,75 @@
+diff --git a/tests/lua/approved_enemy_details.lua b/tests/lua/approved_enemy_details.lua
+--- a/tests/lua/approved_enemy_details.lua
++++ b/tests/lua/approved_enemy_details.lua
+@@ -363,36 +363,56 @@
+     assert(battle.enemies[2].hp == hp - 20 and not ui.info and #host.run.potions == 0)
+ end)
+ 
+-test('physical card and potion drags take priority over tooltip input', function()
++test('Develop legacy physical card and potion drags take priority over enemy readers', function()
+     local host, ui, panel, event, _, drain = H.setup({'strike'}, {'jaw_worm'},
+         {touchScreen = function() return true end})
+     local battle = host.run.combat
+     local box = monsterControl(panel, 'enemy1')
+     local hp, energy = battle.enemies[1].hp, battle.energy
++    local function noReader()
++        assert(not ui.info and not panel:GetChild('statusInfo').visible, 'moving drag owns input before enemy readers')
++    end
+     for _, input in ipairs({'card1', 'potion1'}) do
+-        if input == 'potion1' then assert(H.Run.obtainPotion(host.run, 'fire_potion')); host:refresh() end
++        local potion = input == 'potion1'
++        if potion then
++            assert(H.Run.obtainPotion(host.run, 'fire_potion'))
++            assert(H.Run.obtainPotion(host.run, 'fire_potion'))
++            host:refresh()
++        end
++        local before = Combat.copy(battle)
++        local inventory = host.run.potions
++        local bottles = H.Run.potionCount(host.run)
++        local function movingToken() return potion and ui.potionAim or not potion and ui.gesture end
+         event(input, 'down', 94)
+         event(input, 'drag', 94, box.x, box.y)
+-        if input == 'potion1' and Theme.presentationProfile == 'official-assets-first' then
+-            -- This profile already cancels belt drags. Its supported potion
+-            -- targeting is exercised by the point-selection case above.
+-            event(input, 'up', 94, box.x, box.y)
+-            event(input, 'click', 94, box.x, box.y)
+-            assert(not ui.potionAim and not ui.potionMenu and not ui.info)
+-            assert(#host.run.potions == 1 and battle.enemies[1].hp == hp)
+-            return
+-        end
+-        assert(ui.gesture and ui.gesture.moving or ui.potionAim and ui.potionAim.moving)
++        local token = movingToken()
++        assert(token and token.moving and token.touch == 94, 'Develop must enter its existing moving drag')
+         for _, name in ipairs(surfaces) do
+             local hit = box:GetChild(name)
+             if hit.listeners.enter then hit.listeners.enter() end
+             tapControl(hit, 95)
+-            assert(not ui.info and not panel:GetChild('statusInfo').visible)
++            noReader()
++            assert(movingToken() == token and token.moving, 'reader retired the active moving drag: ' .. name)
++            assert(host.run.phase == 'combat' and host.run.combat == battle)
++            assert(host.run.potions == inventory and H.Run.potionCount(host.run) == bottles)
++            same(battle, before)
+         end
+         event('dragLayer', 'up', 94, box.x, box.y)
+         drain()
+-        hp = hp - (input == 'card1' and 6 or 20)
+-        assert(battle.enemies[1].hp == hp and battle.energy == energy - 1 and #host.run.potions == 0)
++        hp = hp - (potion and 20 or 6)
++        assert(battle.enemies[1].hp == hp and battle.energy == energy - 1)
++        assert(H.Run.potionCount(host.run) == (potion and 1 or 0))
++        if potion then assert(not host.run.potions[1] and host.run.potions[2] == 'fire_potion') end
++        noReader()
++
++        local settled, settledInventory = Combat.copy(battle), host.run.potions
++        event('dragLayer', 'up', 94, box.x, box.y)
++        event(input, 'click', 94, box.x, box.y)
++        drain()
++        assert(host.run.phase == 'combat' and host.run.combat == battle)
++        assert(host.run.potions == settledInventory and not ui.potionMenu and not movingToken())
++        noReader()
++        same(battle, settled)
+     end
+ end, true)
+ 

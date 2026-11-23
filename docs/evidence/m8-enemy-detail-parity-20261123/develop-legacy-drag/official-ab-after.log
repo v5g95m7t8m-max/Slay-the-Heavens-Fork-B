@@ -1,0 +1,12 @@
+ABYSS_FEEDBACK play source=- target=2 amount=0
+ABYSS_FEEDBACK damage source=player target=jaw_worm_2 amount=6
+ABYSS_FEEDBACK damage source=player target=jaw_worm_2 amount=20
+ABYSS_FEEDBACK potion source=- target=2 amount=0
+ok approved details 10 - intent and HP preserve card and potion aim while the portrait commits each once
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK play source=- target=1 amount=0
+ABYSS_FEEDBACK damage source=player target=jaw_worm_1 amount=6
+ABYSS_FEEDBACK damage source=player target=jaw_worm_1 amount=20
+ABYSS_FEEDBACK potion source=- target=1 amount=0
+ok approved details 11 - Develop legacy physical card and potion drags take priority over enemy readers
+APPROVED_ENEMY_DETAILS_PASS 11
