@@ -1,0 +1,8 @@
+TASK_4_18 first PASS choice=1 inventory=burning_blood,anchor,vajra > burning_blood,anchor,nloths_gift result=恩洛斯转过身去，交易结束了。 / 获得遗物：恩洛斯的礼物。 RNG unchanged
+TASK_4_18 second PASS choice=2 inventory=burning_blood,anchor,vajra > anchor,vajra,nloths_gift result=恩洛斯转过身去，交易结束了。 / 获得遗物：恩洛斯的礼物。 RNG unchanged
+task-4.18-witness.lua:42: ［选择裂岩杵］ 已经持有礼物：获得圆环，不失去所示遗物。
+stack traceback:
+	[JS]: in function 'assert'
+	task-4.18-witness.lua:42: in main chunk
+	[JS]: in function 'dofile'
+	(command line):1: in main chunk

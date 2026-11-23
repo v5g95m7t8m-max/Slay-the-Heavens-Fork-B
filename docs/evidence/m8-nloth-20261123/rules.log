@@ -1,0 +1,12 @@
+PASS shared special 1 FaceTrader caches damage at construction and touch gains gold before NORMAL damage
+PASS shared special 2 FaceTrader uses exact unowned five-face list in source order and singleton shuffle Circlet fallback
+PASS shared special 3 FaceTrader unsupported selected face rolls back shuffle without filtering or rerolling
+PASS shared special 4 Nloth constructor shuffles all relics once and immutable offer identity survives reorder
+PASS shared special 5 Nloth already-owned Gift yields Circlet without sacrificing selected relic
+PASS shared special 6 Nloth stale offer refuses and failed equip rolls back removal before one successful retry
+PASS shared special 7 KnowingSkull has independent 6 then 7 reward prices and unchanging 6 leave cost
+PASS shared special 8 KnowingSkull damage precedes gold even when fatal, and Tungsten changes damage not requested price
+PASS shared special 9 KnowingSkull Sozu skips potion RNG; full inventory still generates and loses potion
+PASS shared special 10 KnowingSkull repeated cards shuffle the shared full35 pool with a persistent room shuffle owner
+PASS shared special 11 KnowingSkull late card-hook failure rolls back HP price shared pool shuffle and UID then retries
+FACE_NLOTH_SKULL 11 passed
