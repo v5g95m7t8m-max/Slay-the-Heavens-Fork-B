@@ -1,0 +1,12 @@
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+SHARED_RELIC_NODE_GREEN camp 6 detail entries; modal preserved run and route; fresh action works; stale click ignored
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+SHARED_RELIC_NODE_RED treasure 6 detail entries; covered Click ignored; delayed Click after close commits chest reveal, RNG 2->3; one common queue item consumed; 53 gold and tiny_chest generated but not granted; owned inventory, HP, gold, map unchanged
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+SHARED_RELIC_NODE_GREEN treasure 6 detail entries; modal preserved run and route; fresh action works
