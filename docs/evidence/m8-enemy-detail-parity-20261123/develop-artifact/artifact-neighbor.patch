@@ -1,0 +1,102 @@
+diff --git a/tests/lua/intent_artifact_preview.lua b/tests/lua/intent_artifact_preview.lua
+--- a/tests/lua/intent_artifact_preview.lua
++++ b/tests/lua/intent_artifact_preview.lua
+@@ -11,10 +11,16 @@
+     local copy = Combat.copy(s)
+     assert(Combat.endTurn(copy))
+     eq(copy.player.statuses.weak, 2147483646); eq(copy.player.statuses.artifact, 0)
+-    local compact, detail = refresh(h, p, tap)
+-    eq(compact, "4"); assert(detail:find("使你获得 1 回合虚弱", 1, true))
++    local compact, forecast, rendered = refresh(h, p, tap)
++    eq(compact, "4")
++    assert(forecast:find("使你获得 1 回合虚弱（当前会被抵挡）", 1, true))
++    eq(rendered, "<color=#F5D78A>策略</color>\n这名敌人将要对你施加负面效果并攻击造成 4 点伤害。",
++        "actual native intent is the current source, not the ordered forecast or a player power")
++    assert(not rendered:find("虚弱", 1, true) and not rendered:find("人工制品", 1, true))
+     assert(u:showStatus(0))
+-    eq(p:GetChild("statusInfo"):GetChild("name2").text, "虚弱 2147483647")
++    local info = p:GetChild("statusInfo")
++    eq(info:GetChild("name1").text, "人工制品 1")
++    eq(info:GetChild("name2").text, "虚弱 2147483647")
+     local recoveries = counters.recoveries
+     tap("hero", 12); tap("endTurn", 13); drain()
+     eq(counters.recoveries, recoveries, "the complete boundary playback must not need recovery")
+diff --git a/tests/lua/support/intent_artifact_fixture.lua b/tests/lua/support/intent_artifact_fixture.lua
+--- a/tests/lua/support/intent_artifact_fixture.lua
++++ b/tests/lua/support/intent_artifact_fixture.lua
+@@ -96,9 +96,9 @@
+     assert(box.alive~=false,"native intent control must remain live")
+     -- Preserve the original ordered-effect preview contract; the world face is
+     -- createIntent/applyPowers state, covered separately by playback assertions.
+-    local forecast=IntentView.intentView(h.run.combat,1).value
++    local forecast=IntentView.intentView(h.run.combat,1)
+     same(h.run.combat,before)
+-    return forecast, detail
++    return forecast.value, forecast.text, detail
+ end
+ local function rejects(h, reason)
+     local before = Combat.copy(h.run.combat)
+diff --git a/tests/lua/intent_artifact_ordered_interactions.lua b/tests/lua/intent_artifact_ordered_interactions.lua
+--- a/tests/lua/intent_artifact_ordered_interactions.lua
++++ b/tests/lua/intent_artifact_ordered_interactions.lua
+@@ -7,9 +7,9 @@
+     local h, _, p, tap = setup({{op="applyStatus", status="vulnerable", value=1},
+         {op="damage", value=10}, {op="applyStatus", status="vulnerable", value=1}, {op="damage", value=10}})
+     Combat.addStatus(h.run.combat.player, "artifact", 1)
+-    local compact, detail = refresh(h, p, tap)
++    local compact, forecast = refresh(h, p, tap)
+     eq(compact, "10")
+-    assert(detail:find("10 点伤害", 1, true)); assert(detail:find("15 点伤害", 1, true))
++    assert(forecast:find("10 点伤害", 1, true)); assert(forecast:find("15 点伤害", 1, true))
+     local copy, hits = resolve(h.run.combat), {}
+     for _, event in ipairs(copy.events) do if event.kind == "damage" then hits[#hits+1] = event.detail.amount end end
+     eq(hits[1], 10); eq(hits[2], 15); eq(copy.player.statuses.vulnerable, 1)
+@@ -39,9 +39,9 @@
+         local h, _, p, tap = setup(effects, row.tail.op == "block" and "defend" or "attack")
+         Combat.addStatus(h.run.combat.enemies[1], row.status, 5)
+         Combat.addStatus(h.run.combat.enemies[1], "artifact", 1)
+-        local compact, detail=refresh(h, p, tap)
++        local compact, forecast=refresh(h, p, tap)
+         eq(compact, row.tail.op=="block" and "" or row.want)
+-        if row.tail.op=="block" then assert(detail:find("获得 "..row.want.." 点格挡",1,true)) end
++        if row.tail.op=="block" then assert(forecast:find("获得 "..row.want.." 点格挡",1,true)) end
+     end
+ end)
+ 
+@@ -60,8 +60,8 @@
+         {op="gainStatus", status="weak", value=1}, {op="damage", value=10},
+         {op="gainStatus", status="dexterity", value=3}, {op="gainStatus", status="frail", value=1},
+         {op="block", value=10}})
+-    local compact, detail = refresh(h, p, tap)
+-    eq(compact, "6"); assert(detail:find("获得 9 点格挡", 1, true))
++    local compact, forecast = refresh(h, p, tap)
++    eq(compact, "6"); assert(forecast:find("获得 9 点格挡", 1, true))
+     eq(resolve(h.run.combat).enemies[1].block, 9)
+ end)
+ 
+diff --git a/tests/lua/intent_artifact_debuff_gates.lua b/tests/lua/intent_artifact_debuff_gates.lua
+--- a/tests/lua/intent_artifact_debuff_gates.lua
++++ b/tests/lua/intent_artifact_debuff_gates.lua
+@@ -36,8 +36,20 @@
+             {op="applyStatus", status="weak", value=1}}, "debuff")
+         Combat.addStatus(h.run.combat.player, "weak", 2147483647)
+         Combat.addStatus(h.run.combat.player, "artifact", charges)
+-        if charges == 1 then rejects(h, "status stack overflow")
+-        else refresh(h, p, tap); eq(resolve(h.run.combat).player.statuses.artifact, 0) end
++        local s = h.run.combat
++        local ok, settled = pcall(resolve, s)
++        if charges == 1 then
++            rejects(h, "status stack overflow")
++            eq(ok, false, "execution must overflow after the sole charge is spent")
++            assert(tostring(settled):find("status stack overflow", 1, true))
++        else
++            refresh(h, p, tap)
++            eq(ok, true, "both charges must gate before stack arithmetic")
++            eq(settled.player.statuses.artifact, 0)
++            eq(settled.player.statuses.weak, 2147483647)
++        end
++        eq(s.player.statuses.artifact, charges)
++        eq(s.player.statuses.weak, 2147483647)
+     end
+ end)
+ 

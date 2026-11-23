@@ -1,0 +1,55 @@
+Lua fixture tests/lua/intent_artifact_preview.lua: 6297 ms
+✖ generated GameUI intent previews respect ordered Artifact gates without mutating combat (6766.135756ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6930.128338
+
+✖ failing tests:
+
+test at tests/intent-artifact-preview.test.mjs:7:1
+✖ generated GameUI intent previews respect ordered Artifact gates without mutating combat (6766.135756ms)
+  AssertionError [ERR_ASSERTION]: tests/lua/support/intent_artifact_fixture.lua:141: Intent Artifact failures: 1
+  stack traceback:
+  	[JS]: in function 'assert'
+  	tests/lua/support/intent_artifact_fixture.lua:141: in field 'finish'
+  	tests/lua/intent_artifact_preview.lua:66: in main chunk
+  	[JS]: in function 'dofile'
+  	(command line):1: in main chunk
+  ABYSS_RUN seed=1 source=explicit
+  FAIL stock Fat Gremlin refresh and real end-turn agree at Weak upper bound with Artifact: tests/lua/intent_artifact_preview.lua:15: assertion failed!
+  ABYSS_RUN seed=1 source=explicit
+  ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+  ABYSS_FEEDBACK intent source=fat_gremlin_1 target=- amount=0
+  ABYSS_FEEDBACK damage source=fat_gremlin_1 target=player amount=4
+  ABYSS_FEEDBACK status source=player target=player amount=-1
+  ABYSS_FEEDBACK status source=player target=player amount=-1
+  ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+  ABYSS_FEEDBACK player_turn source=- target=- amount=0
+  PASS ordinary stock values retain status details, card preview and command behavior
+  ABYSS_RUN seed=1 source=explicit
+  ABYSS_RUN seed=1 source=explicit
+  PASS neighboring boundary and stock non-applying intent remain valid
+  ABYSS_RUN seed=1 source=explicit
+  PASS unblocked true overflow remains visible and leaves the live state untouched
+  LUA_INTENT_ARTIFACT_PREVIEW 3 passed; 1 failed
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (repo:tests/intent-artifact-preview.test.mjs:24:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

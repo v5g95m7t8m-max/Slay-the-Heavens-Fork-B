@@ -1,0 +1,16 @@
+Lua fixture tests/lua/intent_artifact_preview.lua: 6543 ms
+Lua fixture tests/lua/intent_artifact_debuff_gates.lua: 10622 ms
+Lua fixture tests/lua/intent_artifact_debuff_gates_slice_2.lua: 6430 ms
+Lua fixture tests/lua/intent_artifact_ordered_interactions.lua: 9705 ms
+Lua fixture tests/lua/intent_artifact_playback.lua: 15752 ms
+Lua fixture tests/lua/intent_artifact_charges.lua: 10177 ms
+Lua fixture tests/lua/intent_artifact_cancellation.lua: 2738 ms
+✔ generated GameUI intent previews respect ordered Artifact gates without mutating combat (62744.750517ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63002.567998

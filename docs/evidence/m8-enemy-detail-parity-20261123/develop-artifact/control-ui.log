@@ -1,0 +1,27 @@
+ABYSS_RUN seed=1 source=explicit
+FAIL stock Fat Gremlin refresh and real end-turn agree at Weak upper bound with Artifact: tests/lua/support/intent_artifact_fixture.lua:16: actual native intent is the current source, not the ordered forecast or a player power: expected <color=#F5D78A>策略</color>
+这名敌人将要对你施加负面效果并攻击造成 4 点伤害。, got <color=#F5D78A>策略</color>
+攻击造成 4 点伤害；使你获得 1 回合虚弱（当前会被抵挡）
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=fat_gremlin_1 target=- amount=0
+ABYSS_FEEDBACK damage source=fat_gremlin_1 target=player amount=4
+ABYSS_FEEDBACK status source=player target=player amount=-1
+ABYSS_FEEDBACK status source=player target=player amount=-1
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+PASS ordinary stock values retain status details, card preview and command behavior
+ABYSS_RUN seed=1 source=explicit
+ABYSS_RUN seed=1 source=explicit
+PASS neighboring boundary and stock non-applying intent remain valid
+ABYSS_RUN seed=1 source=explicit
+PASS unblocked true overflow remains visible and leaves the live state untouched
+LUA_INTENT_ARTIFACT_PREVIEW 3 passed; 1 failed
+tests/lua/support/intent_artifact_fixture.lua:141: Intent Artifact failures: 1
+stack traceback:
+	[JS]: in function 'assert'
+	tests/lua/support/intent_artifact_fixture.lua:141: in field 'finish'
+	tests/lua/intent_artifact_preview.lua:72: in main chunk
+	[JS]: in function 'dofile'
+	(command line):1: in main chunk
+

@@ -1,0 +1,17 @@
+ABYSS_RUN seed=1 source=explicit
+FAIL repeated applications spend separate Artifact charges and expose overflow when exhausted: tests/lua/support/intent_artifact_fixture.lua:16: read-only intent details must reject: expected false, got true
+ABYSS_RUN seed=1 source=explicit
+ABYSS_RUN seed=1 source=explicit
+ABYSS_RUN seed=1 source=explicit
+PASS Artifact does not suppress invalid power amounts before core validation
+LUA_INTENT_ARTIFACT_DEBUFF_CASES 2,3
+LUA_INTENT_ARTIFACT_DEBUFF_GATES 1 passed; 1 failed
+tests/lua/support/intent_artifact_fixture.lua:141: Intent Artifact failures: 1
+stack traceback:
+	[JS]: in function 'assert'
+	tests/lua/support/intent_artifact_fixture.lua:141: in field 'finish'
+	tests/lua/intent_artifact_debuff_gates.lua:67: in main chunk
+	tests/lua/intent_artifact_debuff_gates_slice_2.lua:1: in main chunk
+	[JS]: in function 'dofile'
+	(command line):1: in main chunk
+
