@@ -239,17 +239,45 @@ do
 
     assert(G.Run.obtainPotion(host.run, "fire_potion"))
     host:refresh()
-    event("potion1", "down", 19)
-    event("potion1", "drag", 19, 150, 100)
-    assert(ui.potionAim and ui.potionAim.moving)
-    tap(portrait, 9)
-    for _, name in ipairs({"intentHit", "hpHit"}) do
-        tap(monster:GetChild(name), 9)
-        tap(monster:GetChild(name), 19)
+    if Theme.presentationProfile == "official-assets-first" then
+        local hp = battle.enemies[1].hp
+        event("potion1", "down", 19)
+        event("potion1", "drag", 19, 150, 100)
+        event("potion1", "up", 19, 150, 100)
+        event("potion1", "click", 19, 150, 100)
+        assert(not ui.potionAim and not ui.potionMenu, "a bottle swipe is not a fresh click")
+        assert(host.run.potions[1] == "fire_potion" and battle.enemies[1].hp == hp)
+
+        namedTap("potion1", 20)
+        assert(ui.potionMenu and not ui.potionAim)
+        tap(panel:GetChild("potionHelp"):GetChild("potionPopup"):GetChild("use"), 21)
+        local aim = assert(ui.potionAim)
+        assert(not aim.moving and not ui.potionMenu, "Use arms click-only targeting")
+        tap(portrait, 22)
+        for _, name in ipairs({"intentHit", "hpHit"}) do
+            local reader = monster:GetChild(name)
+            reader.listeners.up({touchId = 19})
+            reader.listeners.click({touchId = 19})
+            assert(not detail.visible and ui.potionAim == aim,
+                "a retired swipe cannot open a reader or consume a newly staged aim")
+        end
+        assert(not detail.visible and ui.potionAim == aim and host.run.potions[1] == "fire_potion")
+        namedTap("playArea", 23)
+        assert(not ui.potionAim and not detail.visible and host.run.potions[1] == "fire_potion"
+            and battle.enemies[1].hp == hp, "a fresh blank-field click cancels without using the potion")
+    else
+        event("potion1", "down", 19)
+        event("potion1", "drag", 19, 150, 100)
+        assert(ui.potionAim and ui.potionAim.moving)
+        tap(portrait, 9)
+        for _, name in ipairs({"intentHit", "hpHit"}) do
+            tap(monster:GetChild(name), 9)
+            tap(monster:GetChild(name), 19)
+        end
+        assert(not detail.visible and ui.potionAim.moving and host.run.potions[1] == "fire_potion")
+        event("dragLayer", "up", 19, -590, -310)
+        assert(not ui.potionAim and host.run.potions[1] == "fire_potion")
     end
-    assert(not detail.visible and ui.potionAim.moving and host.run.potions[1] == "fire_potion")
-    event("dragLayer", "up", 19, -590, -310)
-    assert(not ui.potionAim and host.run.potions[1] == "fire_potion")
 
     tap(portrait, 7)
     local turn = battle.turn

@@ -380,7 +380,8 @@ export function beforeShopEntryInventory(paths,kind,read=readFileSync){
  if(kind==='lua')paths=beforeAddedTest(paths,['tests/lua/traveler_power_tooltip.lua','35363665f69113883246aa33984d4ab17eba727a87476256a617dc0f42dd45f7',
   '76e7c52c6330e921faff4738f7d125100ba349f0ca041347552ba9de22a5ee87',
   '681970da72659363cd5c15e32e2bb741d8cadb42ec7f2f4fcf6993a95345d7ab',
-  'f73f84b1cf354f044a417ce0746ed5ba5bea1383438793407ee00e179af83a66'],read);
+  'f73f84b1cf354f044a417ce0746ed5ba5bea1383438793407ee00e179af83a66',
+  'a640f2a82d585e74bdb8bb7f5216571d85489b3815a9c8dc17561524fbb36c41'],read);
  return beforeAddedTest(paths,shopEntryTests[kind],read);
 }
 const releaseAddedJs=[

@@ -442,21 +442,28 @@ h:update(.101);assert(u.feedback.current.kind=='play','default theme timing chan
 `, 'OFFICIAL_SINGLE_DAMAGE_TIMING_PASS');
 });
 
-test('official targeting keeps arrows and live HP without detached combat simulation',t=>{
+test('official card drag and staged potion targeting use live HP without detached combat simulation',t=>{
  runOfficial(t,`
 local Damage=require('abyss_battle_damage_view')
 Damage.preview=function()error('official card aim simulated the whole battle')end
 Damage.potionPreview=function()error('official potion aim simulated the whole battle')end
-local h,u,p,event,_,drain=H.setup({'strike','defend'},{'cultist'})
+local h,u,p,event,tap,drain=H.setup({'strike','defend'},{'cultist'})
 h.run.potions={'fire_potion'};h:refresh()
 local enemy=assert(require('abyss_monster_surfaces').get(p):find(h.run.combat.enemies[1].id))
 local hp=h.run.combat.enemies[1].hp
 event('potion1','down',7);event('potion1','drag',7,enemy.x,enemy.y)
-assert(u.potionAim and u.potionAim.moving)
-assert(p:GetChild('dragLayer'):GetChild('aim1').visible)
+event('dragLayer','up',7,enemy.x,enemy.y)
+event('potion1','click',7,enemy.x,enemy.y)
+assert(not u.potionAim and not u.potionMenu,'a bottle drag must not arm or open the menu')
 assert(not enemy:GetChild('damagePreview').visible)
-assert(h.run.combat.enemies[1].hp==hp)
-event('dragLayer','up',7,enemy.x,enemy.y);drain()
+assert(h.run.combat.enemies[1].hp==hp and h.run.potions[1]=='fire_potion')
+tap('potion1',70)
+assert(u.potionMenu and not u.potionAim)
+local use=p:GetChild('potionHelp'):GetChild('potionPopup'):GetChild('use')
+use.listeners.down({touchId=71});use.listeners.up({touchId=71});use.click({touchId=71})
+assert(u.potionAim and not u.potionAim.moving and not u.potionMenu)
+assert(h.run.combat.enemies[1].hp==hp and h.run.potions[1]=='fire_potion')
+tap('enemy1',72);drain()
 assert(h.run.combat.enemies[1].hp==hp-20 and h.run.potions[1]==nil)
 event('card1','down',8);event('card1','drag',8,enemy.x,enemy.y)
 assert(u.gesture and u.gesture.moving)
@@ -862,7 +869,7 @@ unchanged(win.run,before,'late battle pointer acted after return to map')
 `, 'OFFICIAL_RUNTIME_FLOW_PASS');
 });
 
-test('official three-bottle HUD renders metadata while popup, drag and use validate fresh core state',t=>{
+test('official three-bottle HUD renders metadata while staged use validates fresh core state',t=>{
  runOfficial(t,`
 local Run=require('abyss_run');local Candidate=require('abyss_run_potion_candidate')
 local deck={};for i=1,10 do deck[i]='strike'end
@@ -907,12 +914,22 @@ count=#calls
 assert(popup:GetChild('use').click());drain()
 for i=count+1,#calls do assert(calls[i]==3,'selected potion Use staged another inventory slot')end
 assert(not h.run.potions[3] and battle.player.block==12)
--- In-place pending choice after Down is rejected by the actual drag validator.
+-- Bottle drag retires the input without preparing an action, even if the
+-- battle changes while the bottle is held.
 event('potion1','down',8);battle.pendingChoice={}
 count=#calls;event('potion1','drag',8,enemy.x,enemy.y)
-assert(#calls>count and not u.potionAim,'potion drag trusted stale metadata')
+event('potion1','up',8,enemy.x,enemy.y);event('potion1','click',8,enemy.x,enemy.y)
+assert(#calls==count and not u.potionAim and not u.potionMenu,'potion drag staged an action')
 assert(h.run.potions[1]=='fire_potion')
-battle.pendingChoice=nil;event('potion1','up',8)
+battle.pendingChoice=nil
+-- An actual popup Use must reject newly invalid live state, not cached
+-- eligibility from the earlier bottle click.
+tap('potion1',9);assert(u.potionMenu and popup:GetChild('use').interactable)
+local hp=battle.enemies[1].hp
+count=#calls;battle.pendingChoice={}
+assert(popup:GetChild('use').click()==false,'stale popup staged a newly invalid targeted potion')
+assert(#calls>count and not u.potionAim and h.run.potions[1]=='fire_potion' and battle.enemies[1].hp==hp)
+battle.pendingChoice=nil
 Candidate.prepare=prepare
 -- Unknown stored IDs remain occupied physical slots, never fabricated vacancies.
 h.run.potions[3]='not_a_potion';u:render()
