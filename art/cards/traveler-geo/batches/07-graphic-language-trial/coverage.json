@@ -1,0 +1,1217 @@
+{
+  "oldDraftCount": 75,
+  "latestStyleApprovedCount": 0,
+  "scope": "Original card glyph language R3, approval is separate from legibility, 75 old drafts are not completion.",
+  "pilot": [
+    "strike",
+    "defend",
+    "cleave"
+  ],
+  "cards": [
+    {
+      "id": "strike",
+      "name": "普通攻击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 6
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "r3-pilot-in-review"
+    },
+    {
+      "id": "defend",
+      "name": "防御",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 5
+        }
+      ],
+      "description": "为自己增加 {effects.0.value} 点格挡。",
+      "olderDraftExists": true,
+      "currentStage": "r3-pilot-in-review"
+    },
+    {
+      "id": "bash",
+      "name": "破防斩",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 8
+        },
+        {
+          "op": "applyStatus",
+          "status": "vulnerable",
+          "value": 2
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害，再施加 {effects.1.value} 回合易伤。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "anger",
+      "name": "连续出剑",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 6
+        },
+        {
+          "op": "addCardToDiscard",
+          "card": "anger"
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害，再将本牌的一张复制放入弃牌堆。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "armaments",
+      "name": "整备武装",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 5
+        },
+        {
+          "op": "upgradeHand"
+        }
+      ],
+      "description": "获得 {effects.0.value} 点格挡，升级手中一张牌（本场战斗）。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "body_slam",
+      "name": "格挡反击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damageEqualToBlock"
+        }
+      ],
+      "description": "对目标造成与自己当前格挡等量的伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "clash",
+      "name": "全力进攻",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 14
+        }
+      ],
+      "description": "只有手牌全为攻击牌时才能打出。对目标造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "cleave",
+      "name": "星陨剑",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damageAll",
+          "value": 8
+        }
+      ],
+      "description": "对每个敌人造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "r3-pilot-in-review"
+    },
+    {
+      "id": "clothesline",
+      "name": "压制斩",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 12
+        },
+        {
+          "op": "applyStatus",
+          "status": "weak",
+          "value": 2
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害，再施加 {effects.1.value} 回合虚弱。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "flex",
+      "name": "蓄力",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "gainTemporaryStrength",
+          "status": "strength",
+          "value": 2
+        }
+      ],
+      "description": "增加 {effects.0.value} 层力量；本回合结束时移除这部分力量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "havoc",
+      "name": "临阵变招",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "playTop"
+        }
+      ],
+      "description": "打出抽牌堆顶的牌，并将其消耗。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "headbutt",
+      "name": "回身追击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 9
+        },
+        {
+          "op": "discardToDraw"
+        }
+      ],
+      "description": "造成 {effects.0.value} 点伤害，将弃牌堆中一张牌置于抽牌堆顶。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "heavy_blade",
+      "name": "重剑斩",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 14
+        }
+      ],
+      "description": "造成 {effects.0.value} 点伤害。力量对本牌生效 {strengthMultiplier} 次。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "iron_wave",
+      "name": "招架还击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "block",
+          "value": 5
+        },
+        {
+          "op": "damage",
+          "value": 5
+        }
+      ],
+      "description": "先增加 {effects.0.value} 点格挡，再对目标造成 {effects.1.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "perfected_strike",
+      "name": "剑势如虹",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 6
+        }
+      ],
+      "description": "造成{effects.0.value}点伤害。手牌、抽牌堆和弃牌堆中每张带打击标签的牌提升{strikeBonus}点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "pommel_strike",
+      "name": "试探一击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 9
+        },
+        {
+          "op": "draw",
+          "value": 1
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害，再抽 {effects.1.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "shrug_it_off",
+      "name": "伺机而动",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 8
+        },
+        {
+          "op": "draw",
+          "value": 1
+        }
+      ],
+      "description": "增加 {effects.0.value} 点格挡，再抽 {effects.1.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "sword_boomerang",
+      "name": "回旋连斩",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damageRandom",
+          "value": 3,
+          "times": 3
+        }
+      ],
+      "description": "对随机敌人造成 {effects.0.value} 点伤害，共 {effects.0.times} 次。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "thunderclap",
+      "name": "横扫破防",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damageAll",
+          "value": 4
+        },
+        {
+          "op": "applyStatusAll",
+          "status": "vulnerable",
+          "value": 1
+        }
+      ],
+      "description": "对每个敌人造成 {effects.0.value} 点伤害，并各施加 {effects.1.value} 回合易伤。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "true_grit",
+      "name": "稳住阵脚",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 7
+        },
+        {
+          "op": "exhaustRandom",
+          "value": 1
+        }
+      ],
+      "description": "增加 {effects.0.value} 点格挡，再随机消耗 {effects.1.value} 张手牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "twin_strike",
+      "name": "重击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 5,
+          "times": 2
+        }
+      ],
+      "description": "对目标连续攻击 {effects.0.times} 次，每次造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "warcry",
+      "name": "调整战术",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "draw",
+          "value": 1
+        },
+        {
+          "op": "handToDraw"
+        }
+      ],
+      "description": "消耗。抽 {effects.0.value} 张牌，将一张手牌置于抽牌堆顶。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "wild_strike",
+      "name": "猛进斩",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 12
+        },
+        {
+          "op": "makeTempCardInDraw",
+          "value": 1,
+          "card": "wound"
+        }
+      ],
+      "description": "造成 {effects.0.value} 点伤害，将 {effects.1.value} 张伤口洗入抽牌堆。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "battle_trance",
+      "name": "集中精神",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "draw",
+          "value": 3
+        },
+        {
+          "op": "noDrawThisTurn"
+        }
+      ],
+      "description": "抽 {effects.0.value} 张牌；此后本回合不能再抽牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "blood_for_blood",
+      "name": "负伤反击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 18
+        }
+      ],
+      "description": "本场战斗每失去 一 次生命，本牌费用 减少一。造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "bloodletting",
+      "name": "透支",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "loseHp",
+          "value": 3
+        },
+        {
+          "op": "energy",
+          "value": 2
+        }
+      ],
+      "description": "失去 {effects.0.value} 点生命，换取 {effects.1.value} 点能量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "burning_pact",
+      "name": "弃旧筹新",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "exhaustChoose",
+          "value": 1
+        },
+        {
+          "op": "draw",
+          "value": 2
+        }
+      ],
+      "description": "消耗手中一张牌，抽 {effects.1.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "carnage",
+      "name": "抓住战机",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 20
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害。回合结束时若仍在手中，消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "combust",
+      "name": "强攻压阵",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 5,
+          "status": "combust"
+        }
+      ],
+      "description": "回合结束时失去一点生命，并对所有敌人造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "dark_embrace",
+      "name": "临机应变",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "dark_embrace"
+        }
+      ],
+      "description": "每当一张牌被消耗，抽 {effects.0.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "disarm",
+      "name": "压制攻势",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "applyStatus",
+          "status": "strength",
+          "value": -2
+        }
+      ],
+      "description": "目标的力量 {effects.0.value}，攻击伤害随之降低。打出后消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "dropkick",
+      "name": "乘隙追击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 5
+        },
+        {
+          "op": "conditional",
+          "if": "target_vulnerable",
+          "then": [
+            {
+              "op": "energy",
+              "value": 1
+            },
+            {
+              "op": "draw",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害。若目标处于易伤，增加 {effects.1.then.0.value} 点能量并抽 {effects.1.then.1.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "dual_wield",
+      "name": "再演剑势",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "dualWield",
+          "value": 1
+        }
+      ],
+      "description": "选一张攻击牌或能力牌，将其 {effects.0.value} 张复制加入手中。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "entrench",
+      "name": "加固防线",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "doubleBlock"
+        }
+      ],
+      "description": "将自己当前的格挡翻倍。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "evolve",
+      "name": "逆境求变",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "evolve"
+        }
+      ],
+      "description": "每当你抽到状态牌，抽 {effects.0.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "feel_no_pain",
+      "name": "百折不挠",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 3,
+          "status": "feel_no_pain"
+        }
+      ],
+      "description": "每当一张牌被消耗，获得 {effects.0.value} 点格挡。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "fire_breathing",
+      "name": "逆势反攻",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 6,
+          "status": "fire_breathing"
+        }
+      ],
+      "description": "每当你抽到状态牌或诅咒牌，对所有敌人造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "flame_barrier",
+      "name": "反击架势",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 12
+        },
+        {
+          "op": "gainStatus",
+          "value": 4,
+          "status": "flame_barrier"
+        }
+      ],
+      "description": "获得 {effects.0.value} 点格挡。本回合受到攻击时反弹 {effects.1.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "ghostly_armor",
+      "name": "及时招架",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 10
+        }
+      ],
+      "description": "为自己增加 {effects.0.value} 点格挡。回合结束时若仍在手中，消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "hemokinesis",
+      "name": "舍身进攻",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "loseHp",
+          "value": 2
+        },
+        {
+          "op": "damage",
+          "value": 15
+        }
+      ],
+      "description": "失去 {effects.0.value} 点生命，再对目标造成 {effects.1.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "infernal_blade",
+      "name": "临阵试招",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "generateAttack",
+          "value": 0
+        }
+      ],
+      "description": "消耗。将一张随机攻击牌加入手中，本回合其费用为零。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "inflame",
+      "name": "剑术精进",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "status": "strength",
+          "value": 2
+        }
+      ],
+      "description": "为自己增加 {effects.0.value} 层力量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "intimidate",
+      "name": "威慑",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "applyStatusAll",
+          "value": 1,
+          "status": "weak"
+        }
+      ],
+      "description": "消耗。对所有敌人施加 {effects.0.value} 回合虚弱。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "metallicize",
+      "name": "持续防守",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 3,
+          "status": "metallicize"
+        }
+      ],
+      "description": "每回合结束时获得 {effects.0.value} 点格挡。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "power_through",
+      "name": "强行固守",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "makeTempCardInHand",
+          "value": 2,
+          "card": "wound"
+        },
+        {
+          "op": "block",
+          "value": 15
+        }
+      ],
+      "description": "将 {effects.0.value} 张伤口加入手中，获得 {effects.1.value} 点格挡。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "pummel",
+      "name": "疾风连斩",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 2,
+          "times": 4
+        }
+      ],
+      "description": "消耗。造成 {effects.0.value} 点伤害，共 {effects.0.times} 次。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "rage",
+      "name": "攻守相济",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 3,
+          "status": "rage"
+        }
+      ],
+      "description": "本回合每打出一张攻击牌，获得 {effects.0.value} 点格挡。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "rampage",
+      "name": "越战越勇",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 8
+        },
+        {
+          "op": "increaseDamageThisCombat",
+          "value": 5
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害；随后本牌在本场战斗中的伤害增加 {effects.1.value} 点。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "reckless_charge",
+      "name": "疾步突进",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 7
+        },
+        {
+          "op": "makeTempCardInDraw",
+          "value": 1,
+          "card": "dazed"
+        }
+      ],
+      "description": "造成 {effects.0.value} 点伤害，将 {effects.1.value} 张眩晕洗入抽牌堆。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "rupture",
+      "name": "愈挫愈勇",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "rupture"
+        }
+      ],
+      "description": "每当你因卡牌失去生命，获得 {effects.0.value} 层力量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "searing_blow",
+      "name": "千锤一剑",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 12
+        }
+      ],
+      "description": "造成 {effects.0.value} 点伤害。可被升级任意次数。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "second_wind",
+      "name": "弃繁守拙",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "secondWind",
+          "value": 5
+        }
+      ],
+      "description": "消耗手中所有非攻击牌，每张获得 {effects.0.value} 点格挡。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "seeing_red",
+      "name": "重整旗鼓",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "energy",
+          "value": 2
+        }
+      ],
+      "description": "增加 {effects.0.value} 点能量。打出后消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "sentinel",
+      "name": "后援守势",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 5
+        }
+      ],
+      "description": "获得 {effects.0.value} 点格挡。若本牌被消耗，获得 {exhaustEnergy} 点能量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "sever_soul",
+      "name": "弃守强攻",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "exhaustNonAttacks"
+        },
+        {
+          "op": "damage",
+          "value": 16
+        }
+      ],
+      "description": "消耗手中所有非攻击牌，造成 {effects.1.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "shockwave",
+      "name": "震慑敌阵",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "applyStatusAll",
+          "status": "weak",
+          "targetGroup": "weak_then_vulnerable",
+          "value": 3
+        },
+        {
+          "op": "applyStatusAll",
+          "status": "vulnerable",
+          "targetGroup": "weak_then_vulnerable",
+          "value": 3
+        }
+      ],
+      "description": "为每个敌人施加 {effects.0.value} 回合虚弱和 {effects.1.value} 回合易伤。打出后消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "spot_weakness",
+      "name": "洞察破绽",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "spotWeakness",
+          "value": 3
+        }
+      ],
+      "description": "若敌人意图攻击，获得 {effects.0.value} 层力量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "uppercut",
+      "name": "挑剑破势",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 13
+        },
+        {
+          "op": "applyStatus",
+          "status": "weak",
+          "value": 1
+        },
+        {
+          "op": "applyStatus",
+          "status": "vulnerable",
+          "value": 1
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害，再施加 {effects.1.value} 回合虚弱和 {effects.2.value} 回合易伤。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "whirlwind",
+      "name": "岩潮叠嶂",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damageAll",
+          "value": 5,
+          "times": "X"
+        }
+      ],
+      "description": "消耗所有剩余能量，每点对所有敌人造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "barricade",
+      "name": "永世的磐岩",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "status": "barricade",
+          "value": 1
+        }
+      ],
+      "description": "自己的回合开始时，保留已有格挡。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "berserk",
+      "name": "背水之战",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 2,
+          "status": "vulnerable"
+        },
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "berserk"
+        }
+      ],
+      "description": "获得 {effects.0.value} 回合易伤。每回合开始时获得 {effects.1.value} 点能量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "bludgeon",
+      "name": "全力一击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damage",
+          "value": 32
+        }
+      ],
+      "description": "对目标造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "brutality",
+      "name": "破釜沉舟",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "brutality"
+        }
+      ],
+      "description": "每回合开始时失去一点生命，额外抽 {effects.0.value} 张牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "corruption",
+      "name": "孤注一掷",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "corruption"
+        }
+      ],
+      "description": "技能牌无需能量。打出后消耗。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "demon_form",
+      "name": "渐入佳境",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 2,
+          "status": "demon_form"
+        }
+      ],
+      "description": "每回合开始时获得 {effects.0.value} 层力量。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "double_tap",
+      "name": "叠势连击",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 1,
+          "status": "double_tap"
+        }
+      ],
+      "description": "本回合你打出的下 {effects.0.value} 张攻击牌生效两次。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "exhume",
+      "name": "重拾旧策",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "recoverExhaust"
+        }
+      ],
+      "description": "消耗。将消耗堆中一张牌放回手中。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "feed",
+      "name": "乘胜壮行",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "feed",
+          "value": 10,
+          "maxHp": 3
+        }
+      ],
+      "description": "消耗。造成 {effects.0.value} 点伤害。若致命，最大生命 +{effects.0.maxHp}。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "fiend_fire",
+      "name": "舍尽一击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "fiendFire",
+          "value": 7
+        }
+      ],
+      "description": "消耗。消耗手中所有牌，每张造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "immolate",
+      "name": "摧阵一击",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "damageAll",
+          "value": 21
+        },
+        {
+          "op": "makeTempCardInDiscard",
+          "value": 1,
+          "card": "burn"
+        }
+      ],
+      "description": "对所有敌人造成 {effects.0.value} 点伤害，将 {effects.1.value} 张灼烧加入弃牌堆。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "impervious",
+      "name": "坚守",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "block",
+          "value": 30
+        }
+      ],
+      "description": "为自己增加 {effects.0.value} 点格挡。打出后消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "juggernaut",
+      "name": "守中有攻",
+      "type": "power",
+      "effects": [
+        {
+          "op": "gainStatus",
+          "value": 5,
+          "status": "juggernaut"
+        }
+      ],
+      "description": "每当你获得格挡，对随机敌人造成 {effects.0.value} 点伤害。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "limit_break",
+      "name": "剑意突破",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "doubleStrength"
+        }
+      ],
+      "description": "消耗。力量翻倍。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "offering",
+      "name": "奋力一搏",
+      "type": "skill",
+      "effects": [
+        {
+          "op": "loseHp",
+          "value": 6
+        },
+        {
+          "op": "energy",
+          "value": 2
+        },
+        {
+          "op": "draw",
+          "value": 3
+        }
+      ],
+      "description": "失去 {effects.0.value} 点生命，增加 {effects.1.value} 点能量，再抽 {effects.2.value} 张牌。打出后消耗本牌。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    },
+    {
+      "id": "reaper",
+      "name": "以战养战",
+      "type": "attack",
+      "effects": [
+        {
+          "op": "reaper",
+          "value": 4
+        }
+      ],
+      "description": "消耗。对所有敌人造成 {effects.0.value} 点伤害，回复等量生命。",
+      "olderDraftExists": true,
+      "currentStage": "held-for-style-gate"
+    }
+  ]
+}
