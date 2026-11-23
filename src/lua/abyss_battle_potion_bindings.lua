@@ -96,8 +96,14 @@ function M.install(owner, ownership, host, dependencies)
             touch=event and event.touchId,input=input,helpOnly=helpOnly}
         g.sx,g.sy=dependencies.point(event)
         local offset=helpOnly and L.battlePotions.helpOffset or {0,0}
-        g.origin={L.battlePotions.origin[1]+L.battlePotions.step[1]*(slot-1)+offset[1],
-            L.battlePotions.origin[2]+L.battlePotions.step[2]*(slot-1)+offset[2]}
+        if Theme.presentationProfile=='official-assets-first' and not helpOnly then
+            -- Match the rendered battle bottle row, not the base layout.
+            local hud=Theme.officialAssets.battleHud
+            g.origin={hud.potionX+hud.potionStep*(slot-1),hud.y}
+        else
+            g.origin={L.battlePotions.origin[1]+L.battlePotions.step[1]*(slot-1)+offset[1],
+                L.battlePotions.origin[2]+L.battlePotions.step[2]*(slot-1)+offset[2]}
+        end
         return g
     end
     local function beginPotionPress(slot,control,input,event,helpOnly)

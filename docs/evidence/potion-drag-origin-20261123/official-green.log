@@ -1,0 +1,16 @@
+ABYSS_RUN seed=1 source=explicit
+slot 1: rendered=-297.734375,338.5 actual=-297.734375,338.5
+ABYSS_FEEDBACK damage source=player target=cultist_1 amount=20
+ABYSS_RUN seed=1 source=explicit
+slot 2: rendered=-248.734375,338.5 actual=-248.734375,338.5
+ABYSS_FEEDBACK damage source=player target=cultist_1 amount=20
+ABYSS_RUN seed=1 source=explicit
+slot 3: rendered=-199.734375,338.5 actual=-199.734375,338.5
+ABYSS_FEEDBACK damage source=player target=cultist_1 amount=20
+ABYSS_RUN seed=1 source=explicit
+slot 4: rendered=-150.734375,338.5 actual=-150.734375,338.5
+ABYSS_FEEDBACK damage source=player target=cultist_1 amount=20
+ABYSS_RUN seed=1 source=explicit
+slot 5: rendered=-101.734375,338.5 actual=-101.734375,338.5
+ABYSS_FEEDBACK damage source=player target=cultist_1 amount=20
+official-assets-first ORIGIN_PASS 5
