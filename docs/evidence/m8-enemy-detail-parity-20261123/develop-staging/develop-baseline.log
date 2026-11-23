@@ -1,0 +1,8 @@
+ABYSS_RUN seed=1 source=explicit
+checkout-parent/0/tests/lua/approved_enemy_details.lua:75: attempt to call a nil value (field 'enter')
+stack traceback:
+	checkout-parent/0/tests/lua/approved_enemy_details.lua:75: in local 'fn'
+	checkout-parent/0/tests/lua/approved_enemy_details.lua:20: in local 'test'
+	checkout-parent/0/tests/lua/approved_enemy_details.lua:68: in main chunk
+	[JS]: in function 'dofile'
+	(command line):1: in main chunk

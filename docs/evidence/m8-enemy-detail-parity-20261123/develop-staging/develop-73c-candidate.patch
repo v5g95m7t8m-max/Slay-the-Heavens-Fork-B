@@ -1,0 +1,2412 @@
+--- a/data/presentation/ui_theme.json
++++ b/data/presentation/ui_theme.json
+@@ -1591,6 +1591,15 @@
+       "perRow": 5,
+       "rows": 2
+     },
++    "actorDetail": {
++      "width": 392,
++      "font": 18,
++      "pitch": 27,
++      "tagWidth": 104,
++      "fill": "#20292D",
++      "border": "#71848B",
++      "title": "#F5D78A"
++    },
+     "powerTips": {
+       "rows": 48,
+       "width": 248,
+@@ -3638,7 +3647,7 @@
+       },
+       "v25TurnNotice": { "position": [0, 43], "size": [1280, 100], "duration": 1.7, "enterEnd": 0.2, "exitStart": 0.65, "travel": 40, "titleSize": 37, "subtitleSize": 16, "titleInk": "#ECD193", "subtitleInk": "#C0B9A4", "shadeInk": "#03080CCD", "shadowInk": "#000000CC", "swordInk": { "edge": "#334947", "left": "#8DACA4", "right": "#AFC3B2", "guard": "#829A88", "handle": "#80958B" } },
+       "player": { "position": [-324, -37], "portrait": 210 },
+-      "enemyRow": { "floorY": 330, "nativeFloorY": 501, "nativeStatusColumns": 2 },
++      "enemyRow": { "floorY": 330, "nativeFloorY": 501, "nativePowerFloorY": -156.5,  "nativeStatusColumns": 2 },
+       "hpBar": { "size": [154, 11] },
+       "battleUnit": { "heroFoot": 0, "heroNameGap": 0, "heroNameLine": 0, "heroHealthGap": 5, "heroHealthWidth": 154 },
+       "energy": { "position": [-511, -233], "size": 86, "numberSize": 29, "rimColour": "#514247", "shellColour": "#24262A", "faceColour": "#FFE35DC0", "lightColour": "#FFF7A680", "elementColour": "#FFE35D30" },
+--- a/scripts/ui-layout.mjs
++++ b/scripts/ui-layout.mjs
+@@ -68,7 +68,8 @@
+     { ...picture('impact', 0, 0, portrait, portrait, im.diamond, c.geo), visible: false },
+     { ...picture('shield', 0, 0, portrait, portrait, theme.icon.block, c.block), visible: false },
+     { ...text('floating', 0, portrait / 2, bw + s.xxl, l.nativeText.lineHeight * 2, '', f.number, c.goldBright), visible: false },
+-    ...(!player ? [picture('intentIcon', -s.xl, l.intent.offsetY, l.intent.size, l.intent.size, theme.icon.intent.unknown, c.textDim),
++    ...(!player ? [{ ...hit(bw, bh), name: 'hpHit', visible: false },
++      picture('intentIcon', -s.xl, l.intent.offsetY, l.intent.size, l.intent.size, theme.icon.intent.unknown, c.textDim),
+       // Keep the existing secondary path, with full-sized horizontal peers.
+       { ...picture('intentBadge', 0, l.intent.offsetY, l.intent.size, l.intent.size, theme.icon.intent.debuff, c.debuff), visible: false },
+       { ...picture('intentExtra', 0, l.intent.offsetY, l.intent.size, l.intent.size, theme.icon.intent.buff, c.buff), visible: false },
+@@ -83,6 +84,7 @@
+ 
+ export function enemyUnitTemplate(name = 'AbyssMonsterActor') {
+   const actor = unit(name, [0, 0], l.enemyRow.crowdPortrait);
++  actor.blockCursor = true;
+   // Original intent effects draw behind the icon, then above it but below damage text.
+   for (const [name, before] of [['intentVfxBehind', 'intentIcon'], ['intentVfxAfter', 'intent']]) {
+     actor.children.splice(actor.children.findIndex(child => child.name === before), 0,
+@@ -119,7 +121,8 @@
+       { ...panel(`body${i + 1}`, x, y, si.size, si.size, c.panelSunken), visible: false });
+     icons.push({ ...picture(`icon${i + 1}`, x, y, si.size, si.size, theme.icon.status.strength, c.text), visible: false });
+     badges.push({ ...picture(`badge${i + 1}`, x, y, si.size, si.size, im.disc, c.panelSunken), visible: false });
+-    counts.push({ ...text(`count${i + 1}`, x + si.size / 2, y - si.size / 2 + si.gap, si.size, l.nativeText.lineHeight, '', f.small, c.text), visible: false });
++    counts.push({ ...text(`count${i + 1}`, x + si.size / 2, y - si.size / 2 + si.gap,
++      Math.max(si.size, l.nativeText.lineHeight), l.nativeText.lineHeight, '', f.small, c.text), visible: false });
+     targets.push({ ...hit(si.minimumTouch, si.minimumTouch), name: `hit${i + 1}`, position: [0, 0], visible: false });
+   }
+   return { name: 'statusRow', kind: 'container', position: [0, top - (si.rows - 1) * pitch / 2], size: [bw, height],
+@@ -171,12 +174,14 @@
+ 
+ function powerTips() {
+   const tip = l.powerTips;
++  const copyHeight = 2 * l.nativeText.lineHeight;
++  const height = copyHeight + 2 * tip.padding;
+   return { name: 'powerTips', kind: 'container', size: [...theme.canvas.base], visible: false,
+     children: Array.from({ length: tip.rows }, (_, i) => ({
+-      name: `tip${i + 1}`, kind: 'container', size: [tip.width, l.nativeText.lineHeight], visible: false, children: [
+-        panel('edge', 0, 0, tip.width, l.nativeText.lineHeight, tip.border),
+-        panel('face', 0, 0, tip.width, l.nativeText.lineHeight, tip.fill),
+-        aligned(text('copy', 0, 0, tip.width, l.nativeText.lineHeight, '', tip.font, c.text)),
++      name: `tip${i + 1}`, kind: 'container', size: [tip.width, height], visible: false, children: [
++        panel('edge', 0, 0, tip.width, height, tip.border),
++        panel('face', 0, 0, tip.width - 2, height - 2, tip.fill),
++        aligned(text('copy', 0, 0, tip.width - 2 * tip.padding, copyHeight, '', tip.font, c.text)),
+       ],
+     })) };
+ }
+--- a/src/lua/abyss_battle_action_bindings.lua
++++ b/src/lua/abyss_battle_action_bindings.lua
+@@ -59,14 +59,15 @@
+     end
+     local function bind(name, fn)
+         local control, input = dependencies.child(name), {}
+-        local function dismissPowerTip()
+-            return name == "playArea" and owner.powerTip and owner.powerTip.touch and owner:closePowerTip()
++        local function dismissActor()
++            if name ~= "playArea" or not owner.info or owner.info.kind then return false end
++            return owner:dismissActorDetails()
+         end
+         if name == "playArea" then control = control:GetChild("hit") end
+         ownership.actionInputs[#ownership.actionInputs + 1] = input
+         control:AddCursorEventListener(host.clickEvent, function(event)
+             if Pointer.blocked(host.platform)then return false end
+-            if dismissPowerTip() or dependencies.swallowed(event) then return end
++            if dismissActor() or dependencies.swallowed(event) then return end
+             if name == "playArea" and ownership.fieldPointerObserved or name ~= "playArea" and ownership.actionPointerObserved then
+                 local released = input.released
+                 if not released or released.touch ~= (event and event.touchId) then return end
+@@ -78,7 +79,7 @@
+         if owner.dragEnabled then
+             control:AddCursorEventListener(host.cursor.CursorDown, function(event)
+                 if name == "playArea" then ownership.fieldPointerObserved = true else ownership.actionPointerObserved = true end
+-                local dismissed = dismissPowerTip() or dependencies.down(event)
++                local dismissed = dismissActor() or dependencies.down(event)
+                 input.held, input.released = nil, nil
+                 if dismissed then return end
+                 local g = actionToken(name, event)
+--- a/src/lua/abyss_battle_card_gestures.lua
++++ b/src/lua/abyss_battle_card_gestures.lua
+@@ -101,42 +101,44 @@
+         end
+         if not owner.gesture then owner.suppressClick = false end
+     end
+-    local function prepareDown(event)
+-        -- The popup owns dismissal as well as Use/Discard. A lower native
+-        -- callback must not close it before its own action receives this Down.
++    local function dismissForPointer(keepActor)
++        if not (keepActor and owner.info and not owner.info.kind) then return dependencies.closeInfo() end
++    end
++    local function pointerOwned(event, readOnly)
+         if owner.potionMenu then return true end
+-        if owner.potionAim and owner.potionAim.moving and owner.potionAim.touch~=(event and event.touchId) then return true end
+-        retireInterruptedPress(event)
++        local aim = owner.potionAim
++        if readOnly then return owner.gesture or owner.carry or aim and aim.moving end
++        return aim and aim.moving and aim.touch ~= (event and event.touchId)
++    end
++    local function retireStalePotionAim(event)
++        if not owner.active or owner.busy or not owner.potionAim or dependencies.aimReady(owner.potionAim) then return false end
++        dependencies.cancelPotionAim("药水瞄准已失效，已取消；请重新选择药水。")
++        owner.swallow = {touch = event and event.touchId}
++        owner:render()
++        return true
++    end
++    local function prepareDown(event, keepActor, readOnly)
++        if pointerOwned(event, readOnly) then return true end
++        if not readOnly then retireInterruptedPress(event) end
+         ownership.pointerObserved = true
+-        owner.help=nil
++        owner.help = nil
+         reclaimPointer(event)
+         owner.swallow = nil
+         if owner.gesture then return false end
+-        -- Retire a changed potion context before the target captures a token.
+-        -- This press only cancels; a refreshed actor must need a new Down.
+-        if owner.active and not owner.busy and owner.potionAim and not dependencies.aimReady(owner.potionAim) then
+-            dependencies.cancelPotionAim("药水瞄准已失效，已取消；请重新选择药水。")
+-            owner.swallow = {touch = event and event.touchId}
+-            owner:render()
+-            return true
+-        end
+-        local closed,automaticCard=dependencies.closeInfo()
+-        if not closed or automaticCard then return false end
++        -- A stale target press cancels the aim and requires a fresh Down.
++        if not readOnly and retireStalePotionAim(event) then return true end
++        local closed,passThrough=dismissForPointer(keepActor)
++        if not closed or passThrough then return false end
+         owner.swallow = {touch = event and event.touchId}
+         owner:render()
+         return true
+     end
+-    local function down(event, keepPowerTip)
+-        if not keepPowerTip then owner:closePowerTip() end
+-        return prepareDown(event)
+-    end
+-    local function swallowed(event)
+-        owner:closePowerTip()
++    local function swallowed(event, keepActor)
+         if owner.potionMenu then return true end
+         local swallow = owner.swallow
+         if swallow and swallow.touch == (event and event.touchId) then owner.swallow = nil return true end
+-        local closed,automaticCard=dependencies.closeInfo()
+-        if not closed or automaticCard then return false end -- automatic card hover preserves this click
++        local closed,passThrough=dismissForPointer(keepActor)
++        if not closed or passThrough then return false end -- a passive preview preserves this click
+         owner:render()
+         return true
+     end
+@@ -333,7 +335,7 @@
+     end
+ 
+     return {
+-        point=point, retireInterruptedPress=retireInterruptedPress, down=down, swallowed=swallowed, move=move,
++        point=point, retireInterruptedPress=retireInterruptedPress, down=prepareDown, swallowed=swallowed, move=move,
+         updateCarry=updateCarry, releaseCardTap=releaseCardTap, finishCardRelease=finishCardRelease, release=release
+     }
+ end
+--- a/src/lua/abyss_battle_detail_bindings.lua
++++ b/src/lua/abyss_battle_detail_bindings.lua
+@@ -8,93 +8,41 @@
+ local function validPower(value,id)
+     return value and value.id==id and not value.hidden
+ end
+-local function travelerMode(owner)
+-    local run = owner.run
+-    return run and run.phase == "combat" and not run.combat.originalV4
+-        and (run.character == nil or run.character == "ironclad")
+-end
+-
+-local function bindTraveler(owner, host, dependencies, control, describe, shared)
+-    local held, released, observed
+-    local handlers = {}
+-    local function on(kind, callback)
+-        if shared then handlers[kind] = callback else control:AddCursorEventListener(kind, callback) end
+-    end
+-    local function touchScreen() return host.platform.touchScreen() == true end
+-    local function clear() held, released = nil, nil end
+-    local function ownsPointer(event, token)
+-        return not event or token and token.touch == event.touchId
+-    end
+-    local function cancelPointer(event)
+-        if ownsPointer(event, held or released) then clear() end
+-    end
+-    function handlers.observe()
+-        observed = true
+-        clear()
+-    end
+-    local function ready()
+-        return owner.active and not owner.busy and not owner.gesture and not owner.carry
+-            and not owner.potionAim and not owner.potionMenu and owner.run and owner.run.phase == "combat"
+-    end
+-    local function activate(spec, touch)
+-        if not spec then return end
+-        if travelerMode(owner) then owner:showPowerTip(spec, control, touch)
+-        else owner:showStatus(0) end
+-    end
+-    if host.cursor and host.cursor.CursorEnter and host.cursor.CursorExit then
+-        on(host.cursor.CursorEnter, function()
+-            if travelerMode(owner) and not touchScreen() then activate(describe(), false) end
+-        end)
+-        on(host.cursor.CursorExit, function(event)
+-            if ownsPointer(event, held) then held = nil end
+-            if not touchScreen() then owner:closePowerTip(control) end
+-        end)
+-    end
+-    function handlers.press()
+-        if ready() then activate(describe(), true) end
+-    end
+-    local function tapSpec(event)
+-        local touch, token = event and event.touchId, released
+-        if dependencies.consumeReleasedDragClick(event) or owner.suppressClick then return end
+-        if observed and (not token or token.touch ~= touch) then return end
+-        clear()
+-        if token and not dependencies.dragReady(token) then return end
+-        local spec = describe()
+-        if not token or spec and spec.statusId == token.spec.statusId and spec.offset == token.spec.offset then
+-            return spec
+-        end
+-    end
+-    on(host.clickEvent, function(event)
+-        if Pointer.blocked(host.platform) or not ready() then return end
+-        if travelerMode(owner) and not touchScreen() then return end
+-        local spec = tapSpec(event)
+-        if spec and not (owner.info and dependencies.swallowed(event)) then activate(spec, true) end
+-    end)
+-    if host.cursor and host.cursor.CursorDown and host.cursor.CursorUp then
+-        on(host.cursor.CursorDown, function(event)
+-            handlers.observe()
+-            if not ready() or travelerMode(owner) and not touchScreen() then return end
+-            if dependencies.down(event, true) then return end
+-            local run, spec = owner.run, describe()
+-            if spec then held = {run = run, battle = run.combat, turn = run.combat.turn,
+-                touch = event and event.touchId, spec = spec} end
+-        end)
+-        on(host.cursor.CursorUp, function(event)
+-            if held and held.touch == (event and event.touchId) then
+-                if not (event and event.dragging) then released = held end
+-                held = nil
+-            end
+-        end)
+-        if host.cursor.CursorDrag then control:AddCursorEventListener(host.cursor.CursorDrag, function(event)
+-            if travelerMode(owner) then cancelPointer(event) end
+-        end) end
+-        if host.cursor.CursorEndDrag then on(host.cursor.CursorEndDrag, cancelPointer) end
+-    end
+-    return handlers
+-end
+-
++local function potionCurrent(spec, run)
++    return spec.kind ~= "potion" or run.potions == spec.inventory and run.potions[spec.slot] == spec.potionId
++end
++local function travelerCombat(run)
++    return not run.combat.originalV4 and (run.character == nil or run.character == "ironclad")
++end
++local function closeSource(owner, closeInfo, control, silent)
++    local info = owner.info
++    if not info or info.source ~= control then return end
++    if silent == true and info.powerTips then owner.info = nil
++    elseif info.powerTips and info.index > 0 then owner:dismissActorDetails(control)
++    elseif info.transient then
++        closeInfo()
++        if silent ~= true then owner:renderDetailsOnly() end
++    end
++end
++local function bindEnemyReaders(bindHelp, screenSlot, box, entryAt, guard, cleanups)
++    for _, name in ipairs({"intentHit", "hpHit"}) do
++        if guard and not guard() then return end
++        local control = box:GetChild(name)
++        local function describe()
++            local entry = entryAt()
++            if not entry or control.visible == false or not Actors.isPresent(entry.actor) then return end
++            return {index = entry.index, screenSlot = screenSlot, controlBox = guard and box or nil, powerTips = true}
++        end
++        bindHelp(control, describe, true, nil, guard, cleanups, "enemy")
++    end
++end
++local function helpPressReady(owner, token, run)
++    return token and owner.active and not owner.busy and not owner.gesture and not owner.carry and run == token.run
++        and run.phase == "combat" and run.combat == token.battle and run.combat.turn == token.turn
++end
+ -- Explicit ports preserve the approved implementation without a shared constructor closure.
+ function M.install(owner, _ownership, host, dependencies)
++    local touchScreen = host.platform and host.platform.touchScreen
+     local function statusActorAt(slot)
+         local battle=owner.run and owner.run.combat
+         if not battle then return end
+@@ -117,90 +65,127 @@
+         if owner.info and owner.info.source==control then owner.info=nil end
+     end
+     -- hoverSlot: a reward card also reports pointer enter/exit for its hover pose (one listener per event).
+-    local function bindHelp(control,describe,clickable,hoverSlot,guard,cleanups,travel)
++    local function bindHelp(control,describe,clickable,hoverSlot,guard,cleanups,actorControl)
+         local function current()return not guard or guard()end
+         if not current() then return end
+         local input={}
+-        local function on(kind, callback)
+-            if not travel then return control:AddCursorEventListener(kind, callback) end
+-            control:AddCursorEventListener(kind, function(event)
+-                if host.cursor and kind == host.cursor.CursorDown then
+-                    travel.observe()
+-                    input.pointerObserved, input.held, input.released, input.consumed = true, nil, nil, nil
+-                end
+-                if travelerMode(owner) then return travel[kind](event) end
+-                return callback(event)
+-            end)
+-        end
+-        local function cancel(silent,engineDestroyed)
++        local enemyReader = actorControl == "enemy"
++        local function keepActor()
++            local info = owner.info
++            return actorControl and (enemyReader or not (info and info.powerTips and info.index > 0 and not info.transient))
++        end
++        local function on(kind, callback) control:AddCursorEventListener(kind, callback) end
++        local function show(spec, transient)
++            if actorControl == "overview" then return owner:showStatus(spec.index, control, transient, spec.powerTips) end
++            return owner:openHelp(spec, control, transient)
++        end
++        local function hoverOnly(spec)
++            return spec and spec.powerTips and touchScreen and not touchScreen() and not owner:canPinPowerTips(control)
++        end
++        local function cancel(silent,engineDestroyed,event)
+             if engineDestroyed then input.engineDestroyed=true end
+             if input.engineDestroyed then forgetHelp(control,hoverSlot,input);return end
++            local token = input.held or input.released
++            if event and token and token.touch ~= event.touchId then return end
+             input.held,input.released,input.consumed=nil,nil,nil
+             closeAutomaticCard(control)
+             if hoverSlot and owner.hover==hoverSlot then owner:setHover(nil) end
+             if owner.help and owner.help.source==control then owner.help=nil end
+-            if owner.info and owner.info.source==control and owner.info.transient then dependencies.closeInfo();if silent~=true then owner:renderDetailsOnly() end end
++            closeSource(owner, dependencies.closeInfo, control, silent)
+         end
+         if cleanups then cleanups[#cleanups+1]={control=control,cancel=cancel} end
+         if hasCursorPair("CursorEnter","CursorExit") then
+             on(host.cursor.CursorEnter,function()
+                 if not current() then return false end
+                 if hoverSlot then owner:setHover(hoverSlot) end
+-                owner:queueHelp(describe(),control,false)
++                local spec = describe()
++                if spec and not spec.kind then
++                    if not Pointer.blocked(host.platform) and not (touchScreen and touchScreen()) then
++                        return show(spec, true)
++                    end
++                else owner:queueHelp(spec,control,false) end
+             end)
+             if not current() then return end
+-            on(host.cursor.CursorExit,cancel)
+-            if not current() then return end
+-        end
+-        if not clickable then return end
+-        if not current() then return end
++            on(host.cursor.CursorExit,function(event) cancel(false,false,event) end)
++        end
++        if not clickable or not current() then return end
+         local function ready(token)
+             local run=owner.run
+-            return current() and token and owner.active and not owner.busy and not owner.gesture and run==token.run
+-                and run.phase=="combat" and run.combat==token.battle and run.combat.turn==token.turn
++            return current() and helpPressReady(owner, token, run)
+                 and dependencies.helpActorReady(token,run)
+-                and (token.spec.kind~="potion" or run.potions==token.spec.inventory and run.potions[token.spec.slot]==token.spec.potionId)
++                and (not owner.potionAim or enemyReader and not owner.potionAim.moving or not token.spec.powerTips)
++                and potionCurrent(token.spec,run)
++        end
++        local function tappedSpec(touch)
++            if not input.pointerObserved then return describe() end
++            local token = input.released
++            if not token or token.touch ~= touch then return end
++            input.released = nil
++            if not ready(token) then return end
++            local spec = describe()
++            if spec and spec.powerTips == token.spec.powerTips and spec.statusId == token.spec.statusId
++                and spec.offset == token.spec.offset then return spec end
+         end
+         on(host.clickEvent,function(event)
+-            if not current() or Pointer.blocked(host.platform)then return false end
+-            local touch=event and event.touchId
+-            if input.consumed and input.consumed.touch==touch then input.consumed=nil;return end
+-            if input.pointerObserved then
+-                local token=input.released;input.released=nil
+-                if not ready(token) or token.touch~=touch then return end
+-            end
+-            if dependencies.swallowed(event) then return end
+-            local spec=describe()
+-            if spec then owner:openHelp(spec,control,false) end
++            if not current() or Pointer.blocked(host.platform) or enemyReader and event and event.dragging then return false end
++            local touch = event and event.touchId
++            if input.consumed and input.consumed.touch == touch then input.consumed = nil; return end
++            if dependencies.consumeReleasedDragClick(event) or owner.suppressClick then return end
++            local spec = tappedSpec(touch)
++            if spec and not hoverOnly(spec) and not dependencies.swallowed(event, keepActor()) then return show(spec, false) end
+         end)
+-        if not current() then return end
+-        if hasCursorPair("CursorDown","CursorUp") then
++        if not current() or not hasCursorPair("CursorDown","CursorUp") then return end
++        local function bindPress()
++            local function capturePress(spec, event)
++                local run = owner.run
++                if not run or run.phase ~= "combat" or not spec then return end
++                local actor = spec.index == 0 and run.combat.player or run.combat.enemies[spec.index]
++                local press = {run=run,battle=run.combat,turn=run.combat.turn,touch=event and event.touchId,spec=spec,actor=actor}
++                if not ready(press) then return end
++                input.held = press
++                if actorControl ~= "overview" and not spec.powerTips then owner:queueHelp(spec,control,true,press.touch) end
++            end
+             on(host.cursor.CursorDown,function(event)
+                 if not current() then return false end
++                local token = input.held or input.released
++                if actorControl and ready(token) and token.touch ~= (event and event.touchId) then return end
+                 input.pointerObserved=true;input.held,input.released,input.consumed=nil,nil,nil
+-                if dependencies.down(event) then return end
+-                local run=owner.run
+-                if not run or run.phase~="combat" then return end
+-                local spec=describe()
+-                if not spec then return end
+-                local actor=spec.index==0 and run.combat.player or run.combat.enemies[spec.index]
+-                local token={run=run,battle=run.combat,turn=run.combat.turn,touch=event and event.touchId,spec=spec,actor=actor}
+-                if ready(token) then input.held=token;owner:queueHelp(describe(),control,true,token.touch) end
++                if hoverOnly(describe()) then return end
++                if dependencies.down(event, keepActor(), enemyReader) then return end
++                capturePress(describe(), event)
+             end)
+             if not current() then return end
++            local function releaseHelp(token)
++                local help = owner.help
++                owner.help = nil
++                local info = owner.info
++                if not help.fired or not info or info.source ~= control or not info.transient then
++                    input.released = token
++                    return
++                end
++                input.consumed = {touch = token.touch}
++                info.transient = false
++                owner:renderDetailsOnly()
++            end
+             on(host.cursor.CursorUp,function(event)
+-                local token=input.held;input.held=nil
+-                if not ready(token) or token.touch~=(event and event.touchId) then return end
+-                local help=owner.help
+-                if help and help.source==control and help.fired then
+-                    input.consumed={touch=token.touch}
+-                    if owner.info and owner.info.source==control then owner.info.transient=false;owner:renderDetailsOnly() end
+-                else input.released=token end
+-                if help and help.source==control then owner.help=nil end
++                local token = input.held
++                if not token or token.touch ~= (event and event.touchId) then return end
++                input.held = nil
++                if not ready(token) or event and event.dragging then
++                    if owner.help and owner.help.source == control then owner.help = nil end
++                elseif owner.help and owner.help.source == control then releaseHelp(token)
++                else input.released = token end
+             end)
+             if not current() then return end
+-            if host.cursor.CursorEndDrag then on(host.cursor.CursorEndDrag,cancel) end
+-        end
++            if host.cursor.CursorEndDrag then
++                on(host.cursor.CursorEndDrag,function(event) cancel(false,false,event) end)
++            end
++            if not current() then return end
++            if actorControl and host.cursor.CursorDrag then
++                on(host.cursor.CursorDrag,function(event) cancel(false,false,event) end)
++            end
++        end
++        bindPress()
+     end
+ 
+     local function statusSpec(screenSlot, position)
+@@ -210,61 +195,57 @@
+         if not entries[position] then return end
+         local slots = L.statusIcon.perRow * L.statusIcon.rows
+         local overflow = position == slots and #entries >= slots
+-        return {index = index, screenSlot = screenSlot > 0 and screenSlot or nil, position = position,
+-            statusId = not overflow and entries[position].id or nil, offset = overflow and position or nil}
++        local playerPosition = screenSlot == 0 and touchScreen and travelerCombat(owner.run) and position or nil
++        local spec = {index = index, screenSlot = screenSlot > 0 and screenSlot or nil,
++            powerTips = (screenSlot > 0 or touchScreen ~= nil) and true or nil, position = playerPosition}
++        if overflow then spec.offset = position else spec.statusId = entries[position].id end
++        return spec
+     end
+ 
+     local function bindActorHelp(screenSlot, box, entryAt, guard, cleanups)
+-        if guard and not guard() then return end
+-        if screenSlot > 0 then bindHelp(box:GetChild("intentHit"), function()
+-            local entry = entryAt()
+-            return entry and {kind = "intent", index = entry.index, screenSlot = screenSlot, controlBox = guard and box or nil}
+-        end, true, nil, guard, cleanups) end
+-        if guard or screenSlot == 0 and host.platform and host.platform.touchScreen then return end
++        if screenSlot > 0 then bindEnemyReaders(bindHelp, screenSlot, box, entryAt, guard, cleanups) end
++        if guard then return end
+         for slot = 1, L.statusIcon.perRow * L.statusIcon.rows do
+             local position = slot
+             bindHelp(box:GetChild("statusRow"):GetChild("hit" .. slot), function()
+                 return statusSpec(screenSlot, position)
+-            end, true)
++            end, true, nil, nil, nil, screenSlot > 0 and "enemy" or "status")
+         end
+     end
+ 
+-    local function bindTravelerControls()
++    local function bindDetailControls()
++        -- Portrait targeting remains on the enemy hit. All other actor controls
++        -- are read-only and use the same status reader as an untargeted portrait.
+         local hero = dependencies.child("hero")
+         hero.disableCursorEventPassthrough = true
+-        bindTraveler(owner, host, dependencies, hero:GetChild("hit"), function() return {index = 0} end)
+         local row = hero:GetChild("statusRow")
+         row.disableCursorEventPassthrough = true
+-        bindTraveler(owner, host, dependencies, row:GetChild("hit"), function() return {index = 0} end)
+-        local si = L.statusIcon
+-        for slot = 1, si.perRow * si.rows do
+-            local index = slot
+-            local control = row:GetChild("hit" .. slot)
+-            control:SetSizeDelta(si.size + si.gap, si.size + si.gap)
+-            local function describe() return statusSpec(0, index) end
+-            bindHelp(control, describe, true, nil, nil, nil, bindTraveler(owner, host, dependencies, control, describe, true))
+-        end
+-        local ground = dependencies.child("statusDismiss")
+-        ground:AddCursorEventListener(host.clickEvent, function(event)
+-            if not Pointer.blocked(host.platform) and not (event and event.dragging)
+-                and owner.powerTip and owner.powerTip.touch then owner:closePowerTip() end
++        local function player()
++            local _, _, actor = statusActorAt(0)
++            local run = owner.run
++            if not actor then return end
++            return {index = 0, powerTips = touchScreen and travelerCombat(run) or nil}
++        end
++        bindHelp(hero:GetChild("hit"), player, true, nil, nil, nil, "overview")
++        bindHelp(row:GetChild("hit"), player, true, nil, nil, nil, "overview")
++        if touchScreen then
++            local size = L.statusIcon.size + L.statusIcon.gap
++            for slot = 1, L.statusIcon.perRow * L.statusIcon.rows do row:GetChild("hit" .. slot):SetSizeDelta(size, size) end
++        end
++        if not host.monsterSurfaces then
++            for slot = 1, 5 do
++                local control = dependencies.child("enemy"..slot):GetChild("statusRow"):GetChild("hit")
++                bindHelp(control, function()
++                    local entry = dependencies.enemyAt(slot)
++                    return entry and {index = entry.index, screenSlot = slot, powerTips = true}
++                end, true, nil, nil, nil, "enemy")
++            end
++        end
++        dependencies.child("statusDismiss"):AddCursorEventListener(host.clickEvent,function(event)
++            if not Pointer.blocked(host.platform) and not (event and event.dragging) then
++                return owner:dismissActorDetails()
++            end
+         end)
+-    end
+-
+-    local function bindDetailControls()
+-        -- Enemy portraits keep targeting; the hero portrait and every status row only open
+-        -- details, so a status tap never plays a card or moves the potion target.
+-        local nativeDevice = host.platform and host.platform.touchScreen
+-        if nativeDevice then bindTravelerControls()
+-        else dependencies.listen(dependencies.child("hero"):GetChild("hit"), function() owner:showStatus(0) end) end
+-        local names = {"hero", "enemy1", "enemy2", "enemy3", "enemy4", "enemy5"}
+-        for i = nativeDevice and 2 or 1, host.monsterSurfaces and 1 or #names do
+-            local screenSlot, name = i - 1, names[i]
+-            dependencies.listen(dependencies.child(name):GetChild("statusRow"):GetChild("hit"), function()
+-                local entry=screenSlot>0 and dependencies.enemyAt(screenSlot)
+-                if screenSlot==0 or entry then owner:showStatus(entry and entry.index or 0) end
+-            end)
+-        end
+         local info = dependencies.child("statusInfo")
+         info.disableCursorEventPassthrough = true
+         dependencies.listen(info:GetChild("hit"), function() if dependencies.closeInfo() then owner:renderDetailsOnly() end end)
+@@ -278,7 +259,7 @@
+             elseif dependencies.closeInfo() then owner:renderDetailsOnly() end
+         end
+         info:GetChild("page"):AddCursorEventListener(host.clickEvent,function(event)
+-            if Pointer.blocked(host.platform)then return false end
++            if Pointer.blocked(host.platform) or event and event.dragging then return false end
+             local swallow=owner.swallow
+             if swallow and swallow.touch==(event and event.touchId) then owner.swallow=nil;return end
+             return infoPage()
+@@ -349,24 +330,32 @@
+                 or owner.run~=run or not run or run.combat~=battle
+                 or powerManager:control(powerSlot)~=powerBox)
+         end
+-        local function describe()
++        local function livePower()
+             if not surfaceCurrent() then return end
+             local entry=manager:entry(actorSlot)
+             local power=powerManager:entry(powerSlot)
+             local actor=entry and battle and battle.enemies[entry.index]
+             if not entry or entry.id~=actorId or not actor or actor.id~=actorId
+                 or not Actors.isPresent(actor) or not validPower(power,powerId) then return end
++            return entry, power, actor
++        end
++        local function describe()
++            local entry, power, actor = livePower()
++            if not entry then return end
++            local spec = {index=entry.index,screenSlot=actorSlot,controlBox=actorBox,powerTips=true}
+             if power.status and power.status.overflow then
+-                return {index=entry.index,screenSlot=actorSlot,controlBox=actorBox}
++                spec.offset = power.status.offset
++                return spec
+             end
+             -- Resolve by power identity, never the row position or a feedback snapshot.
+             for _,status in ipairs(Combat.statusView(actor))do
+                 if status.id==powerId then
+-                    return {index=entry.index,screenSlot=actorSlot,controlBox=actorBox,statusId=powerId}
++                    spec.statusId = powerId
++                    return spec
+                 end
+             end
+         end
+-        bindHelp(powerBox:GetChild("hit"),describe,true,nil,function()return describe()~=nil end,binding.controls)
++        bindHelp(powerBox:GetChild("hit"),describe,true,nil,function()return describe()~=nil end,binding.controls,"enemy")
+     end
+     local function unbindEnemyPowerControl(powerBox,engineDestroyed)
+         local binding=powerBindings[powerBox]
+--- a/src/lua/abyss_battle_details.lua
++++ b/src/lua/abyss_battle_details.lua
+@@ -40,7 +40,6 @@
+         dependencies.cancelActionInputs()
+         for _, input in ipairs(ownership.enemyInputs) do input.held, input.released = nil, nil end
+         if cancelled then self.gesture, self.carry, self.selected, self.suppressClick = nil, nil, nil, true end
+-        self:closePowerTip()
+         if closeInfo() then cancelled = true end
+         self.canvasWidth, self.canvasHeight = width, height
+         local k = math.min(width / Theme.canvas.base[1], height / Theme.canvas.base[2])
+@@ -57,62 +56,87 @@
+     closeInfo = function()
+         if host.potionPopup and host.potionPopup:close() then return true end
+         if not owner.info then return false end
+-        -- Pointer gestures may continue only after automatic card hover help;
+-        -- explicit/held readers and potion popups still consume their close.
+-        local automaticCard=owner.info.transient==true and owner.info.kind=='card'
++        local info = owner.info
++        local pinnedEnemy = info.powerTips and info.index > 0 and not info.transient
++        local passThrough = not info.kind and not pinnedEnemy or info.transient and info.kind == "card"
+         owner.info = nil
+         dependencies.child("statusInfo"):SetVisible(false)
+-        return true,automaticCard
++        if not info.kind then dependencies.child("statusDismiss"):SetVisible(false) end
++        return true,passThrough
+     end
+-    function owner:closePowerTip(source)
+-        if not self.powerTip or source and source ~= self.powerTip.source then return end
+-        self.powerTip = nil
+-        host.renderInfo(self.run and self.run.combat)
++    function owner:dismissActorDetails(source)
++        local info = self.info
++        if not info or info.kind or source and (info.source ~= source or not info.transient) then return false end
++        closeInfo()
++        if not (info.powerTips and info.index > 0) then self:renderDetailsOnly() end
+         return true
+     end
+-    function owner:showPowerTip(spec, source, touch)
+-        local run = self.run
+-        if not run or run.phase ~= "combat" or not self.active or self.info then return end
+-        local tip = self.powerTip
+-        if touch and tip and tip.source == source and tip.touch then
+-            return self:closePowerTip(source)
++    function owner:showStatus(index, source, transient, powerTips)
++        return self:openHelp({index = index, toggle = not transient and not powerTips, powerTips = powerTips}, source, transient)
++    end
++    function owner:canPinPowerTips(source)
++        local info = self.info
++        return info and info.powerTips and info.source == source and (info.pages or 1) > 1
++            and not self.selected and not self.potionAim
++    end
++    local function detailAvailable(spec, transient, enemyReader)
++        if spec.powerTips and not enemyReader and owner.potionAim then return false end
++        if spec.kind then return true end
++        if owner.gesture or owner.carry or owner.potionMenu then return false end
++        if owner.potionAim and (owner.potionAim.moving or transient and not enemyReader) then return false end
++        return not (transient and owner.info and not owner.info.transient)
++    end
++    local function repeatsDetail(spec, source, transient, battle, actor)
++        local info = owner.info
++        if not info or transient or info.transient or info.actor ~= actor
++            or info.battle ~= battle or info.turn ~= battle.turn then return false end
++        if info.powerTips ~= spec.powerTips or info.statusId ~= spec.statusId or info.offset ~= spec.offset then return false end
++        return spec.toggle or not spec.kind and source and source == info.source
++    end
++    local function helpContext(spec)
++        local run = owner.run
++        if not spec or not run or not owner.active or owner.busy then return end
++        local reward = spec.kind == "rewardCard" and RewardOwner.ready(owner, spec)
++        if run.phase ~= "combat" and not reward then return end
++        local battle = run.combat
++        local actor = spec.index == 0 and battle.player or battle.enemies[spec.index]
++        if Actors.isPresent(actor) then return battle, actor, reward end
++    end
++    local function paintHelp(battle, transient, enemyReader, cancelled)
++        if enemyReader then
++            if not transient then
++                dependencies.cancelActionInputs()
++                for _, input in pairs(ownership.enemyInputs) do input.held, input.released = nil, nil end
++            end
++            host.renderInfo(battle)
++        else owner:renderDetailsOnly(cancelled) end
++    end
++    function owner:openHelp(spec, source, transient)
++        local battle, actor, reward = helpContext(spec)
++        if not actor then return false end
++        local enemyReader = spec.powerTips and spec.index > 0
++        if not detailAvailable(spec, transient, enemyReader) then return false end
++        local cancelled = not enemyReader and dependencies.cancelPotionAim("已取消药水瞄准。")
++        if repeatsDetail(spec, source, transient, battle, actor) then
++            closeInfo()
++            if not enemyReader then self:renderDetailsOnly(cancelled) end
++            return true
+         end
+-        self.powerTip = {kind = "powerTips", index = 0, statusId = spec.statusId, offset = spec.offset,
+-            source = source, touch = touch, battle = run.combat, position = not touch and spec.position or nil}
+-        host.renderInfo(run.combat)
+-    end
+-    function owner:showStatus(index)
+-        local run = self.run
+-        if not self.active or self.busy or self.gesture or not run or run.phase ~= "combat" then return false end
+-        local actor = index == 0 and run.combat.player or run.combat.enemies[index]
+-        if not Actors.isPresent(actor) then return false end
+-        local cancelled=dependencies.cancelPotionAim("已取消药水瞄准。")
+-        if self.info and self.info.index == index and self.info.id == actor.id then closeInfo()
+-        else self.info = {index = index, id = actor.id, battle = run.combat} end
+-        self:renderDetailsOnly(cancelled)
+-        return true
+-    end
+-    function owner.openHelp(_, spec, source, transient)
+-        local run=owner.run
+-        local reward=spec and spec.kind=='rewardCard' and RewardOwner.ready(owner,spec)
+-        if not owner.active or owner.busy or not run or run.phase~="combat" and not reward then return false end
+-        local actor=spec.index==0 and run.combat.player or run.combat.enemies[spec.index]
+-        if not Actors.isPresent(actor)then return false end
+-        local cancelled=dependencies.cancelPotionAim("已取消药水瞄准。")
+-        owner.info={index=spec.index,id=actor.id,battle=run.combat,kind=spec.kind,statusId=spec.statusId,
+-            offset=spec.offset,uid=spec.uid,source=source,transient=transient==true,
++        if not spec.kind then
++            local help = self.help
++            if help and source ~= help.source then self.help = nil end
++        end
++        self.info={index=spec.index,id=actor.id,actor=actor,battle=battle,kind=spec.kind,powerTips=spec.powerTips,statusId=spec.statusId,
++            offset=spec.offset,position=transient and spec.position or nil,uid=spec.uid,source=source,transient=transient==true,turn=battle.turn,
+             slot=spec.slot,potionId=spec.potionId,inventory=spec.inventory,reward=reward and spec or nil}
+-        owner:renderDetailsOnly(cancelled)
+-        return owner.info~=nil
++        paintHelp(battle, transient, enemyReader, cancelled)
++        return self.info ~= nil
+     end
+     function owner.queueHelp(_,spec,source,held,touch,card)
+-        local run=owner.run
+-        if not spec or not owner.active or owner.busy or not run
+-            or run.phase~="combat" and not (spec.kind=='rewardCard' and RewardOwner.ready(owner,spec)) then return end
+-        local actor=spec.index==0 and run.combat.player or run.combat.enemies[spec.index]
+-        if not Actors.isPresent(actor)then return end
+-        owner.help={spec=spec,source=source,held=held,touch=touch,t=0,run=run,battle=run.combat,
+-            turn=run.combat.turn,actor=actor,card=card}
++        local battle, actor = helpContext(spec)
++        if not actor then return end
++        owner.help={spec=spec,source=source,held=held,touch=touch,t=0,run=owner.run,battle=battle,
++            turn=battle.turn,actor=actor,card=card}
+     end
+     function owner.cardHelpSpec(_,slot)
+         local run=owner.run
+--- a/src/lua/abyss_battle_ending_intent.lua
++++ b/src/lua/abyss_battle_ending_intent.lua
+@@ -34,7 +34,7 @@
+ local function painful(v)
+  local status=assert(v.state.catalog.statuses.painful_stabs)
+  local wound=assert(v.state.catalog.cards.wound).name
+- row(v,status.name,'获得'..status.name..'：普通攻击使你损失生命时，向弃牌堆加入1张「'..wound..'」','buff','持续本场战斗')
++ row(v,status.name,'获得'..status.name,'buff','普通攻击使你损失生命时，向弃牌堆加入1张「'..wound..'」。持续本场战斗')
+ end
+ local handlers={heartStatusDraw=statusCard,spireBashDebuff=bash,heartPainfulStabs=painful}
+ function M.describe(v,effect)
+--- a/src/lua/abyss_battle_enemy_view.lua
++++ b/src/lua/abyss_battle_enemy_view.lua
+@@ -30,13 +30,23 @@
+ -- The official native hand/status rectangles need a larger reserved lower lane
+ -- than the original atlas sprites. The theme owns that presentation adaptation.
+ M.floorY=Theme.presentationProfile=='official-assets-first' and L.enemyRow.nativeFloorY or L.enemyRow.floorY or 400
++local function powerSize(scale,mobile)
++ return 48*scale*(mobile and 1.17 or 1),-(mobile and 22 or 18)*scale
++end
++local function powerGap(healthHeight)
++ return math.max(healthHeight,Theme.font.small)/2+Theme.space.s
++end
++local function powerDepth(icon,countY)
++ local glyphDepth=Theme.font.small*1.2-L.nativeText.lineHeight/2-countY
++ return icon/2+math.max(icon/2,glyphDepth)
++end
+ function M.powerLayout(g,mobile)
+  local scale=g.sourceScale
+- local icon=48*scale*(mobile and 1.17 or 1)
+- local countY=-(mobile and 22 or 18)*scale
++ local icon,countY=powerSize(scale,mobile)
+  local pitch=(mobile and 55 or 48)*scale
+  local firstX=g.healthX-g.hitWidth/2+10*scale
+  local columns,rowPitch=math.huge,0
++ local rows=L.statusIcon.rows
+  if Theme.presentationProfile=='official-assets-first' then
+   local left=math.max(icon/2,(g.statusCountWidth or L.nativeText.lineHeight)-22*scale)
+   local right=math.max(icon/2,22*scale)
+@@ -48,10 +58,13 @@
+   -- The top-aligned 40px native box has transparent leading below the text.
+   -- Its 1.2em line fits inside the icon after compact lower-right placement.
+   rowPitch=icon+L.statusIcon.gap
++  local firstBottom=g.y+g.healthY-powerGap(g.healthHeight)-powerDepth(icon,countY)
++  local available=firstBottom-L.enemyRow.nativePowerFloorY
++  rows=math.max(1,math.min(rows,1+math.floor(available/rowPitch)))
+  else countY=countY-L.nativeText.lineHeight/2 end
+- return {icon=icon,countX=22*scale,countY=countY,pitch=pitch,columns=columns,
++ return {icon=icon,countX=22*scale,countY=countY,pitch=pitch,columns=columns,rows=rows,
+   hitHeight=48*scale,firstX=firstX,rowPitch=rowPitch,
+-  firstY=g.healthY-math.max(g.healthHeight,Theme.font.small)/2-Theme.space.s-icon/2}
++  firstY=g.healthY-powerGap(g.healthHeight)-icon/2}
+ end
+ local function statusCountWidth(actor)
+  local width=L.nativeText.lineHeight
+@@ -73,16 +86,26 @@
+  local sx,sy=Theme.canvas.base[1]/1920,Theme.canvas.base[2]/1080
+  local x=(1440+source.x)*sx-Theme.canvas.base[1]/2
+  local bottom=(M.floorY+source.y)*sy-Theme.canvas.base[2]/2
++ local healthOffset,healthHeight=18*sy,20*sy
++ local native=Theme.presentationProfile=='official-assets-first'
++ if native and source.hbY>0 then
++  -- Leave room for one complete power row above the hand on both input modes.
++  local icon,countY=powerSize(sy,true)
++  bottom=math.max(bottom,L.enemyRow.nativePowerFloorY+healthOffset+powerGap(healthHeight)+powerDepth(icon,countY))
++ end
+  local bodyScale=presentationScale(source,bottom,sy)
+  local portrait=math.max(source.width,source.height)*bodyScale
+  local hitX,hitBottom=x+source.hbX*bodyScale,bottom+source.hbY*bodyScale
+  local rootY=bottom+portrait/2
++ -- A raised source hitbox can cut through our portrait (e.g. the Guardian's legs).
++ -- Keep the lower annotations together beneath both the hitbox and the portrait.
++ local healthBase=math.min(hitBottom,bottom)-rootY
+  return {x=x,y=rootY,portrait=portrait,
+   hitX=hitX,hitY=hitBottom+source.height*bodyScale/2,hitWidth=source.width*bodyScale,hitHeight=source.height*bodyScale,
+-  statusWidth=source.width*sx,statusCountWidth=Theme.presentationProfile=='official-assets-first' and statusCountWidth(actor)or L.nativeText.lineHeight,
+-  nameX=hitX-x,nameY=hitBottom-36*sy-rootY,sourceScale=sy,
+-  healthX=hitX-x,healthY=hitBottom-18*sy-rootY,healthTextY=hitBottom-17*sy-rootY,healthHeight=20*sy,
+-  blockX=hitX-source.width*bodyScale/2-14*sx-x,blockY=hitBottom-14*sy-rootY,blockTextY=hitBottom-16*sy-rootY,
++  statusWidth=source.width*sx,statusCountWidth=native and statusCountWidth(actor)or L.nativeText.lineHeight,
++  nameX=hitX-x,nameY=healthBase-36*sy,sourceScale=sy,
++  healthX=hitX-x,healthY=healthBase-healthOffset,healthTextY=healthBase-17*sy,healthHeight=healthHeight,
++  blockX=hitX-source.width*bodyScale/2-14*sx-x,blockY=healthBase-14*sy,blockTextY=healthBase-16*sy,
+   blockWidth=64*sx,blockHeight=64*sy,
+   intentX=hitX-x+(actor.definitionId=='gremlin_nob' and -30*sx or 0),
+   -- Full-bleed native glyphs and their 40px text line must clear both art and hitbox.
+--- a/src/lua/abyss_battle_info_content.lua
++++ b/src/lua/abyss_battle_info_content.lua
+@@ -10,6 +10,39 @@
+     blocked_by_mark={name='绽放印记阻断',text='绽放印记阻止复活，保留本局的一次使用机会。',colour=C.danger},
+ }
+ 
++-- AbstractMonster.updateIntentTip and the STS1 Simplified Chinese UI text.
++local attackTips = {
++    ATTACK = {"攻势", "这名敌人将要\n攻击造成 "},
++    ATTACK_BUFF = {"攻势", "这名敌人将要进行强化并攻击造成 "},
++    ATTACK_DEBUFF = {"策略", "这名敌人将要对你施加负面效果并攻击造成 "},
++    ATTACK_DEFEND = {"攻势", "这名敌人将要格挡并攻击造成 "},
++}
++local otherTips = {
++    BUFF = {"策略", "这名敌人将要进行强化。"},
++    DEBUFF = {"策略", "这名敌人将要对你施加一种负面效果。"},
++    STRONG_DEBUFF = {"策略", "这名敌人将要对你施加一种强大的负面效果。"},
++    DEFEND = {"守势", "这名敌人将要在这个回合进行格挡。"},
++    DEFEND_DEBUFF = {"守势", "这名敌人将要进行格挡并对你施加一种负面效果。"},
++    DEFEND_BUFF = {"守势", "这名敌人将要进行格挡并进行强化。"},
++    ESCAPE = {"胆小", "这名敌人将要逃跑。"},
++    MAGIC = {"魔法", "这名敌人将要在这个回合使用神秘的魔法。"},
++    SLEEP = {"熟睡", "这名敌人正在睡觉。"},
++    STUN = {"击晕", "这名敌人在这个回合被击晕了。"},
++    UNKNOWN = {"不明", "这名敌人的意图不明（但不是攻击）。"},
++}
++
++function M.intentTip(enum, damage, times)
++    if not enum or enum == 'NONE' then return end
++    local copy = attackTips[enum] or otherTips[enum]
++    local body = copy[2]
++    if attackTips[enum] then
++        body = body .. number(damage) .. ' 点伤害'
++        if times and enum ~= 'ATTACK_DEBUFF' then body = body .. ' ' .. number(times) .. ' 次' end
++        body = body .. '。'
++    end
++    return {name = copy[1], body = body}
++end
++
+ -- CJK glyphs take one font size; ASCII takes about half. Count UTF-8 lead bytes.
+ function M.lines(text, boxWidth, fontSize, inset)
+     if not text or text == "" then return 0 end
+@@ -27,12 +60,8 @@
+ end
+ 
+ local function selectedEntries(entries, info)
+-    if info.position and info.kind == "powerTips" then
+-        local position = info.position
+-        if position == L.statusIcon.perRow * L.statusIcon.rows then
+-            return {table.unpack(entries, position)}
+-        end
+-        return {entries[position]}
++    if info.position and not info.offset then
++        return {entries[info.position]}
+     elseif info.statusId then
+         local selected = find(entries, "id", info.statusId)
+         if not selected then return end
+@@ -71,14 +100,6 @@
+         return { status = entry.id, icon = (Theme.icon.status[entry.id] or Theme.icon.status[entry.id:match('^colorless_bomb_') and 'colorless_bomb' or entry.icon]),
+             colour = kind == "buff" and C.buff or C.debuff, tag = tag, text = text, note = note,
+             name = entry.name .. (entry.stack == "none" and "" or " " .. number(entry.amount)) }
+-    end
+-
+-    local function intentCard(card, battle, info)
+-        local view = projectedIntent(battle, info.index)
+-        card.tag, card.accent, card.hp = "下一步行动", describe.intentColors[view.kind] or C.textDim, nil
+-        card.subtitle = "尚未执行 · 敌方回合时发生"
+-        card.sections[1] = { rows = view.rows }
+-        return card
+     end
+ 
+     local function potionRows(data, battle, info)
+@@ -275,26 +296,33 @@
+         end
+     end
+ 
+-    local function powerRows(entries, battle, info, actor)
++    local function powerBody(row)
++        local body = row.text or ""
++        if row.tag and row.tag ~= "" and tonumber(row.tag) == nil then body = body .. "。 " .. row.tag end
++        if row.note and row.note ~= "" then body = body .. "。 " .. row.note end
++        return body
++    end
++
++    local function powerRows(battle, info, actor)
+         local rows = {}
+-        for _, entry in ipairs(selectedEntries(entries, info) or {}) do
++        if info.index > 0 and not info.statusId and not info.offset
++            and not require('abyss_boss_relics').hidesIntents(self.run) then
++            rows[1] = M.intentTip(describe.displayedIntent(battle, actor.id))
++        end
++        for _, entry in ipairs(selectedEntries(Combat.statusView(actor), info) or {}) do
+             local row = statusRow(entry, battle, actor)
+-            local body = row.text or ""
+-            if row.tag and row.tag ~= "" and tonumber(row.tag) == nil then body = body .. "。 " .. row.tag end
+-            if row.note and row.note ~= "" then body = body .. "。 " .. row.note end
+-            rows[#rows + 1] = {name = row.name, body = body}
++            rows[#rows + 1] = {name = row.name, body = powerBody(row)}
+         end
+         return #rows > 0 and rows or nil
+     end
+ 
+     return function(data, presentation, battle, info, actor)
+-        local entries = Combat.statusView(actor)
+-        if info.kind == "powerTips" then return powerRows(entries, battle, info, actor) end
++        if info.powerTips then return powerRows(battle, info, actor) end
+         local card = {title = actor.name or "旅行者", tag = "当前状态", accent = C.gold,
+             hp = actor.hp, maxHp = actor.maxHp, block = actor.block, sections = {}}
+-        if info.kind == "intent" then return intentCard(card, battle, info) end
+         if info.kind == "card" or info.kind == "potion" or info.kind=='rewardCard' then return keywordCard(card, data, presentation, battle, info, actor) end
+-        entries = selectedEntries(entries, info)
++        card.actorDetail = true
++        local entries = selectedEntries(Combat.statusView(actor), info)
+         if not entries then return end
+         if info.index > 0 and not info.statusId and not info.offset then
+             local view = projectedIntent(battle, info.index)
+@@ -303,7 +331,10 @@
+         end
+         playerResources(card, battle, info, actor)
+         statusSections(card, entries, battle, actor)
+-        if #card.sections == 0 then card.empty = "暂无状态" end
++        if #card.sections == 0 then
++            if info.transient then return end
++            card.empty = "暂无状态"
++        end
+         return card
+     end
+ end
+--- a/src/lua/abyss_battle_info_view.lua
++++ b/src/lua/abyss_battle_info_view.lua
+@@ -4,10 +4,13 @@
+ local number = require("abyss_numbers").integer
+ local M = {}
+ local UnitView=require("abyss_battle_unit_view")
++local EnemyView=require("abyss_battle_enemy_view")
+ local C, L, S = Theme.color, Theme.layout, Theme.space
+-local I, P = L.statusInfo, L.powerTips
+-local wrappedLines = require("abyss_battle_info_content").lines
++local I, A, P = L.statusInfo, L.actorDetail, L.powerTips
+ local powerTitle = string.format("<color=#%02X%02X%02X>", P.title.r, P.title.g, P.title.b)
++local function rowHeight(row, pitch)
++    return I.name + (row.textLines + row.noteLines) * pitch + I.entryGap
++end
+ 
+ local function openPage(paging)
+     paging.page = {items = {}, rows = 0, sections = 0}
+@@ -31,7 +34,7 @@
+         local labelled, continued = false, false
+         for _, row in ipairs(section.rows) do
+             row.textLines, row.noteLines = lines(row.text,paging.width,paging.font), lines(row.note,paging.width,paging.font)
+-            local height = I.name + (row.textLines + row.noteLines) * I.line + I.entryGap
++            local height = rowHeight(row, paging.pitch)
+             local head = section.label and not labelled and I.section or 0
+             if needsPage(paging.page, paging.used, head, height, paging.budget) then
+                 openPage(paging)
+@@ -50,7 +53,8 @@
+     return function(card,width,font)
+         local room = Theme.canvas.base[2] - L.topBar.height - S.s - Theme.canvas.safe.y
+         local heading=card.keywordOnly and 0 or I.header+I.summary+I.divider
+-        local paging = {pages = {}, used = 0, width=width,font=font,budget = room - I.pad * 2 - heading - I.footer}
++        local paging = {pages = {}, used = 0, width=width,font=font,
++            pitch = card.actorDetail and A.pitch or I.line, budget = room - I.pad * 2 - heading - I.footer}
+         openPage(paging)
+         for _, section in ipairs(card.sections) do appendSection(paging, section) end
+         return paging.pages
+@@ -64,8 +68,9 @@
+ 
+ local function pageHeight(card, page, footer)
+     local body = card.empty and I.section or 0
++    local pitch = card.actorDetail and A.pitch or I.line
+     for _, item in ipairs(page.items) do
+-        body = body + (item.label and I.section or I.name + (item.row.textLines + item.row.noteLines) * I.line + I.entryGap)
++        body = body + (item.label and I.section or rowHeight(item.row, pitch))
+     end
+     local heading=card.keywordOnly and 0 or I.header+I.summary+I.divider
+     return I.pad * 2 + heading + body + (footer and I.footer or 0)
+@@ -82,47 +87,75 @@
+     return info and battle and (info.index == 0 and battle.player or battle.enemies[info.index])
+ end
+ 
++local function cardStyle(card, anchor)
++    if anchor then return I.cardHoverWidth, I.cardHoverFont end
++    if card.actorDetail then return A.width, A.font end
++    return I.width
++end
++
++local function powerTextHeight(copy, width, font)
++    local plain = copy:gsub('<color=[^>]+>', ''):gsub('</color>', '')
++    local room, lines = math.floor(width * 10 / font), 0
++    for paragraph in (plain .. '\n'):gmatch('(.-)\n') do
++        lines = lines + 1
++        local used = 0
++        for glyph in paragraph:gmatch('[%z\1-\127\194-\244][\128-\191]*') do
++            local advance = #glyph == 1 and 6 or 10
++            if used + advance > room then
++                lines, used = lines + 1, 0
++            end
++            used = used + advance
++        end
++    end
++    -- Reserve the project's compatibility budget for each visible line.
++    return lines * L.nativeText.lineHeight
++end
++
+ local function powerColumns(rows, width, font, room)
+     local column, used, columns = {}, 0, {}
+-    local pitch = math.ceil(font * 1.25)
+-    for i = 1, math.min(#rows, P.rows) do
+-        local row = rows[i]
+-        local count = wrappedLines(row.name, width, font, P.padding * 2)
+-        for paragraph in row.body:gmatch("[^\n]+") do
+-            count = count + wrappedLines(paragraph, width, font, P.padding * 2)
+-        end
+-        local height = math.max(L.nativeText.lineHeight, count * pitch + P.padding * 2)
++    for _, row in ipairs(rows) do
++        local text = powerTitle .. row.name .. "</color>\n" .. row.body
++        local height = powerTextHeight(text, width - P.padding * 2, font) + P.padding * 2
+         if used > 0 and used + height > room then
+             columns[#columns + 1] = {rows = column, height = used - P.gap}
+             column, used = {}, 0
+         end
+-        column[#column + 1] = {row = row, height = height, y = used}
++        column[#column + 1] = {text = text, height = height, y = used}
+         used = used + height + P.gap
+     end
+     columns[#columns + 1] = {rows = column, height = used - P.gap}
+     return columns
+ end
+ 
+-local function powerLayout(rows)
+-    local left = L.player.position[1] + L.player.portrait / 2 + S.l
++local function powerLayout(rows, edge, direction, info)
++    -- Work in coordinates running inward from the actor, mirrored for enemies.
+     local safeRight = Theme.canvas.base[1] / 2 - Theme.canvas.safe.x
++    local anchor = math.max(-safeRight, edge * direction)
+     local top = L.battlePotions.origin[2] - L.battlePotions.size[2] / 2 - S.s
+     local floor = L.battleNotice.bandTop + S.s
+-    local width = P.width
+-    for font = P.font, P.minFont, -1 do
+-        local columns = powerColumns(rows, width, font, top - floor)
+-        local fits = left + #columns * (width + P.gap) - P.gap <= safeRight
+-        if fits and (#columns == 1 or #rows > 3 or font == P.minFont) then
+-            return columns, left, top, floor, width, font, 1
+-        end
+-        if #rows > 3 then width = math.max(P.minWidth, width - S.l) end
+-    end
+-    -- At the smallest size, use the whole safe battlefield for an unusually long list.
+-    local columns = powerColumns(rows, width, P.minFont, top - floor)
+-    local span = #columns * (width + P.gap) - P.gap
+-    local scale = math.min(1, 2 * safeRight / span)
+-    left = math.min(left, safeRight - span * scale)
+-    return columns, left, top, floor, width, P.minFont, scale
++    local step = P.width + P.gap
++    local perPage = math.floor((2 * safeRight + P.gap) / step)
++    local columns = powerColumns(rows, P.width, P.font, top - floor)
++    if #columns > perPage then
++        floor = floor + L.nativeText.lineHeight
++        columns = powerColumns(rows, P.width, P.font, top - floor)
++    end
++    info.pages = math.ceil(#columns / perPage)
++    info.page = math.min(info.page or 1, info.pages)
++    local first = (info.page - 1) * perPage + 1
++    local page = {table.unpack(columns, first, math.min(#columns, first + perPage - 1))}
++    local left = math.min(anchor, safeRight - math.min(#columns, perPage) * step + P.gap)
++    return page, left, top, floor
++end
++
++-- STS TipHelper.calculateAdditionalOffset, using the measured native text heights.
++local function monsterTipTop(columns, actorY, top, floor)
++    local height = 0
++    for _, column in ipairs(columns) do height = math.max(height, column.height) end
++    local canvasHeight = Theme.canvas.base[2]
++    local above = 0.5 - actorY / canvasHeight
++    local natural = actorY + above * height - columns[1].rows[1].height / 2
++    return math.min(top, math.max(natural, floor + height))
+ end
+ 
+ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, picture)
+@@ -150,7 +183,7 @@
+             end
+         end
+     end
+-    local function pageGeometry(battle, info, height, anchor, width, font)
++    local function pageGeometry(battle, info, height, anchor, width, font, actorDetail)
+         local x, portrait
+         if anchor then
+             local right=anchor.x+anchor.halfW+I.cardHoverGap
+@@ -159,12 +192,11 @@
+             x=(anchor.x>Theme.canvas.base[1]/4 or right+width>limit) and left-width/2 or right+width/2
+         elseif info.index == 0 then
+             x, portrait = L.player.position[1], L.player.portrait
+-            x = x + portrait / 2 + S.l + I.width / 2
++            x = x + portrait / 2 + S.l + width / 2
+         else
+             local enemyX, _, size = enemyPosition(battle, info.index)
+-            x, portrait = enemyX - size / 2 - S.l - I.width / 2, size
+-        end
+-        width=width or I.width
++            x, portrait = enemyX - size / 2 - S.l - width / 2, size
++        end
+         local edge = Theme.canvas.base[1] / 2 - Theme.canvas.safe.x - width / 2
+         x = math.max(-edge, math.min(edge, x))
+         local top = Theme.canvas.base[2] / 2 - L.topBar.height - S.s
+@@ -173,7 +205,9 @@
+         local cardTop=anchor and anchor.y+anchor.halfH or unitY+portrait/2
+         local y = math.min(top - height / 2, cardTop - height / 2)
+         y = math.max(-Theme.canvas.base[2] / 2 + Theme.canvas.safe.y + height / 2, y)
+-        return {x = x, y = y, height = height, width=width,reading=font,line = L.nativeText.lineHeight, inner = width - I.pad * 2,
++        return {x = x, y = y, height = height, width=width,reading=font,line = L.nativeText.lineHeight,
++            pitch = actorDetail and A.pitch or I.line, tagWidth = actorDetail and A.tagWidth or I.tagWidth,
++            inner = width - I.pad * 2,
+             left = x - width / 2 + I.pad, right = x + width / 2 - I.pad,
+             cursor = y + height / 2 - I.pad, sections = 0, rows = 0}
+     end
+@@ -181,21 +215,25 @@
+     local function frame(panel, card, geometry)
+         local x, y, height = geometry.x, geometry.y, geometry.height
+         place(panel, "shadow", x + S.s, y - S.s, geometry.width + S.border * 2, height + S.border * 2)
+-        place(panel, "border", x, y, geometry.width + S.border * 2, height + S.border * 2)
+-        place(panel, "plate", x, y, geometry.width, height)
++        tint(place(panel, "border", x, y, geometry.width + S.border * 2, height + S.border * 2),
++            card.actorDetail and A.border or C.goldDim)
++        tint(place(panel, "plate", x, y, geometry.width, height), card.actorDetail and A.fill or C.panelSunken)
+         place(panel, "page", x, y, geometry.width, height)
+-        tint(place(panel, "accent", x, y + height / 2 - I.accent / 2, geometry.width, I.accent), card.accent)
++        tint(place(panel, "accent", x, y + height / 2 - I.accent / 2, geometry.width, I.accent), card.actorDetail and A.border or card.accent)
+     end
+ 
+     local function header(panel, card, geometry)
++        local showTag = not card.keywordOnly and (card.actorDetail or not geometry.reading)
+         panel:GetChild('title'):SetVisible(not card.keywordOnly)
+-        panel:GetChild('tag'):SetVisible(not card.keywordOnly and not geometry.reading)
++        panel:GetChild('tag'):SetVisible(showTag)
+         if card.keywordOnly then return end
+-        local titleWidth=geometry.inner-(geometry.reading and 0 or I.tagWidth)
++        local titleWidth=geometry.inner-(showTag and geometry.tagWidth or 0)
+         local title = place(panel, "title", geometry.left + titleWidth / 2, geometry.cursor - I.header / 2,titleWidth,geometry.line)
++        readingSize(title, "title", card.actorDetail and geometry.reading)
+         title.text = card.title
+-        local tag = place(panel, "tag", geometry.right - I.tagWidth / 2, geometry.cursor - I.header / 2)
+-        tag:SetVisible(not geometry.reading)
++        ink(title, card.actorDetail and A.title or C.goldBright)
++        local tag = place(panel, "tag", geometry.right - geometry.tagWidth / 2, geometry.cursor - I.header / 2)
++        readingSize(tag, "tag", card.actorDetail and geometry.reading)
+         tag.text = card.tag
+         ink(tag, card.accent)
+         geometry.cursor = geometry.cursor - I.header
+@@ -267,22 +305,28 @@
+             or row.status and Theme.icon.status[row.status]
+             or Theme.icon.intent[row.icon or row.intent] or Theme.icon.intent.unknown)
+         tint(icon, row.colour)
+-        local name = place(panel, "name" .. i, textX, geometry.cursor - I.name / 2,geometry.inner-I.icon-I.gap,geometry.line)
++        local nameWidth = geometry.inner - I.icon - I.gap
++        if row.tag and row.tag ~= "" then nameWidth = nameWidth - geometry.tagWidth - S.xs end
++        local name = place(panel, "name" .. i, geometry.left + I.icon + I.gap + nameWidth / 2,
++            geometry.cursor - I.name / 2, nameWidth, geometry.line)
+         name.text = row.name
++        readingSize(name, "name"..i, geometry.reading)
+         ink(name, row.colour)
+-        local rowTag = place(panel, "tag" .. i, geometry.right - I.tagWidth / 2, geometry.cursor - I.name / 2)
++        local rowTag = place(panel, "tag" .. i, geometry.right - geometry.tagWidth / 2, geometry.cursor - I.name / 2,
++            geometry.tagWidth,geometry.line)
+         rowTag.text = row.tag or ""
++        readingSize(rowTag, "tag"..i, geometry.reading)
+         geometry.cursor = geometry.cursor - I.name
+-        local text = place(panel, "text" .. i, textX, geometry.cursor - row.textLines * I.line / 2,
+-            geometry.inner - I.icon - I.gap, math.max(geometry.line, row.textLines * I.line + I.line))
++        local text = place(panel, "text" .. i, textX, geometry.cursor - row.textLines * geometry.pitch / 2,
++            geometry.inner - I.icon - I.gap, math.max(geometry.line, row.textLines * geometry.pitch + I.line))
+         text.text = row.text
+         readingSize(text,'text'..i,geometry.reading)
+-        geometry.cursor = geometry.cursor - row.textLines * I.line
+-        local note = place(panel, "note" .. i, textX, geometry.cursor - row.noteLines * I.line / 2,
+-            geometry.inner - I.icon - I.gap, math.max(geometry.line, row.noteLines * I.line + I.line))
++        geometry.cursor = geometry.cursor - row.textLines * geometry.pitch
++        local note = place(panel, "note" .. i, textX, geometry.cursor - row.noteLines * geometry.pitch / 2,
++            geometry.inner - I.icon - I.gap, math.max(geometry.line, row.noteLines * geometry.pitch + I.line))
+         note.text = row.note or ""
+         readingSize(note,'note'..i,geometry.reading)
+-        geometry.cursor = geometry.cursor - row.noteLines * I.line - I.entryGap
++        geometry.cursor = geometry.cursor - row.noteLines * geometry.pitch - I.entryGap
+         for _, part in ipairs({icon, name, rowTag, text, note}) do part:SetVisible(true) end
+         note:SetVisible(row.note ~= nil)
+     end
+@@ -306,33 +350,66 @@
+         end
+     end
+ 
+-    local function finish(panel, info, geometry, footer)
++    local function finish(panel, info, geometry, footer, actorDetail)
+         local more = panel:GetChild("more")
+         more:SetVisible(footer ~= nil)
+         more:SetAnchoredPosition(geometry.x, geometry.y - geometry.height / 2 + I.pad + I.footer / 2)
+         more.text = footer or ""
+         more:SetSizeDelta(geometry.inner,geometry.line)
+         panel:SetVisible(true)
+-        panel:GetChild("hit"):SetVisible(not info.transient)
++        local modal = not info.transient and not actorDetail
++        child("statusDismiss"):SetVisible(not info.transient and actorDetail == true)
++        panel:GetChild("hit"):SetVisible(modal)
+         panel:GetChild("page"):SetVisible(not info.transient)
+-        panel.disableCursorEventPassthrough = not info.transient
++        panel.disableCursorEventPassthrough = modal
+         panel:SetAsLastSibling()
+     end
+ 
+     local compact, shown = false, 0
+     local staticFrame = {"shadow", "border", "plate", "accent", "rule"}
+-    local function nativePowerBox(layer, index, geometry, entry)
+-        local box = place(layer, "tip" .. index, geometry.x, geometry.y, geometry.width, entry.height)
+-        place(box, "edge", 0, 0, geometry.width, entry.height)
+-        place(box, "face", 0, 0, geometry.width - 2, entry.height - 2)
+-        box:SetLocalScale(geometry.scale, geometry.scale, 1)
+-        local copy = place(box, "copy", 0, 0, geometry.width - P.padding * 2, entry.height)
+-        copy.fontSize, copy.minimumFontSize = geometry.font, geometry.font
+-        copy.text = powerTitle .. entry.row.name .. "</color>\n" .. entry.row.body
++    local function nativePowerBox(layer, index, x, y, entry)
++        local box = place(layer, "tip" .. index, x, y, P.width, entry.height)
++        place(box, "edge", 0, 0, P.width, entry.height)
++        place(box, "face", 0, 0, P.width - 2, entry.height - 2)
++        box:SetLocalScale(1, 1, 1)
++        local copy = place(box, "copy", 0, 0, P.width - P.padding * 2, entry.height - P.padding * 2)
++        copy.fontSize, copy.minimumFontSize = P.font, P.font
++        copy.text = entry.text
+         box:SetVisible(true)
+     end
+ 
+-    local function paintPowers(panel, tip, rows, heroTop)
++    local function powerFooter(panel, info, x, floor)
++        local line = L.nativeText.lineHeight
++        local y = floor - line / 2
++        local label = place(panel, "more", x, y, P.width, line)
++        local page = place(panel, "page", x, y, P.width, line)
++        if info.pages > 1 then
++            local hint = not info.transient and " · 点按翻页" or self:canPinPowerTips(info.source) and " · 点击固定" or ""
++            label.text = "第 " .. info.page .. "/" .. info.pages .. " 页" .. hint
++        end
++        label:SetVisible(info.pages > 1)
++        page:SetVisible(info.pages > 1 and not info.transient)
++    end
++
++    local function powerAnchor(battle, info)
++        if info.index == 0 then
++            local x, y = table.unpack(L.player.position)
++            local size = L.player.portrait
++            return x + size / 2 + S.l, 1, y + UnitView.noticeLift(battle.player, size, y, true) + size / 2
++        end
++        local g = EnemyView.geometry(battle.enemies[info.index])
++        local width = Theme.canvas.base[1]
++        local scale = width / 1920
++        local right = g.hitX + g.hitWidth / 2
++        local rightEdge = right + 20 * scale
++        local safeRight = width / 2 - Theme.canvas.safe.x
++        -- STS AbstractMonster.renderTip chooses a side at TIP_X_THRESHOLD.
++        -- The native tooltip is wider, so it also must fit before the safe edge.
++        if right + width / 2 < 1544 * scale and rightEdge + P.width <= safeRight then return rightEdge, 1, g.hitY end
++        return g.hitX - g.hitWidth / 2 - 60 * scale, -1, g.hitY
++    end
++
++    local function paintPowers(panel, info, rows, battle)
+         local layer = panel:GetChild("powerTips")
+         if not compact then
+             for _, name in ipairs(staticFrame) do panel:GetChild(name):SetVisible(false) end
+@@ -341,23 +418,26 @@
+             end
+             hideUnused(panel, {sections = 0, rows = 0})
+         end
+-        local columns, left, top, floor, width, font, scale = powerLayout(rows)
++        local edge, direction, actorTop = powerAnchor(battle, info)
++        local columns, left, top, floor = powerLayout(rows, edge, direction, info)
++        local monsterTop = info.index > 0 and monsterTipTop(columns, actorTop, top, floor)
+         local index = 0
+         for column, items in ipairs(columns) do
+-            local y = math.min(top, math.max(heroTop, floor + items.height * scale))
+-            local x = left + ((column - 1) * (width + P.gap) + width / 2) * scale
++            local y = monsterTop or math.min(top, math.max(actorTop, floor + items.height))
++            local x = direction * (left + (column - 1) * (P.width + P.gap) + P.width / 2)
+             for _, entry in ipairs(items.rows) do
+                 index = index + 1
+-                nativePowerBox(layer, index, {x=x, y=y-(entry.y+entry.height/2)*scale, width=width, font=font, scale=scale}, entry)
++                nativePowerBox(layer, index, x, y - entry.y - entry.height / 2, entry)
+             end
+         end
+         for i = index + 1, shown do layer:GetChild("tip" .. i):SetVisible(false) end
+         compact, shown = true, index
++        powerFooter(panel, info, direction * (left + P.width / 2), floor)
+         layer:SetVisible(true)
+         panel.disableCursorEventPassthrough = false
+         panel:SetVisible(true)
+         panel:SetAsLastSibling()
+-        child("statusDismiss"):SetVisible(tip.touch == true)
++        child("statusDismiss"):SetVisible(not info.transient)
+     end
+ 
+     local function clearPowers(panel)
+@@ -378,63 +458,53 @@
+         end
+         return anchor,false
+     end
+-    local function describedCard(battle,info)
+-        local actor = detailActor(battle, info)
++    local function describedCard(battle,info,actor)
+         if not actor or actor.id~=info.id or not Actors.isPresent(actor)then return end
++        if not info.kind and (info.actor ~= actor or info.turn ~= battle.turn) then return end
+         return describeInfo(battle,info,actor)
+     end
+-    local function currentPowerRows(battle, tip)
+-        if not battle or tip.battle ~= battle or not self.active or self.gesture
+-            or self.carry or self.potionAim or self.potionMenu or not Actors.isPresent(battle.player) then
+-            self.powerTip = nil
+-            return
+-        end
+-        if self.busy then return end
+-        local rows = describeInfo(battle, tip, battle.player)
+-        if not rows and (tip.touch or tip.statusId or tip.offset) then self.powerTip = nil end
+-        return rows
+-    end
+-
+-    local function updatePowers(panel, battle, info)
+-        local rows = not info and self.powerTip and currentPowerRows(battle, self.powerTip)
+-        if rows then
+-            local y = L.player.position[2]
+-            local top = y + UnitView.noticeLift(battle.player, L.player.portrait, y, true) + L.player.portrait / 2
+-            paintPowers(panel, self.powerTip, rows, top)
+-            return true
+-        end
++    local function awaitingPowers(info, battle, actor)
++        -- An empty portrait hover can gain its first Power before the pointer exits.
++        return info.transient and not info.statusId and not info.offset and actor == info.actor
++            and Actors.isPresent(actor) and info.turn == battle.turn
++    end
++    local function renderPowers(panel, info, rows, battle, actor)
++        if rows then paintPowers(panel, info, rows, battle); return true end
++        if not awaitingPowers(info, battle, actor) then return false end
+         clearPowers(panel)
+-        if info then self.powerTip = nil end
+-    end
+-
++        panel:SetVisible(false)
++        return true
++    end
+     return function(battle,positionOnly)
+         local panel, info = child("statusInfo"), self.info
+-        if not positionOnly and updatePowers(panel, battle, info) then return end
+         local anchor,skip=positionContext(battle,info,positionOnly)
+         if skip then return end
+-        local card=describedCard(battle,info)
++        local actor = detailActor(battle, info)
++        local card=describedCard(battle,info,actor)
++        if info and info.powerTips and renderPowers(panel, info, card, battle, actor) then return end
++        clearPowers(panel)
+         if not card then
+             self.info = nil
++            child("statusDismiss"):SetVisible(false)
+             panel:SetVisible(false)
+             return
+         end
+         if transientHand(info) and not anchor then
+-            self.info=nil;panel:SetVisible(false);return
+-        end
+-        local width=anchor and I.cardHoverWidth or I.width
+-        local font=anchor and I.cardHoverFont or nil
++            self.info=nil;child("statusDismiss"):SetVisible(false);panel:SetVisible(false);return
++        end
++        local width, font=cardStyle(card,anchor)
+         local pages = paginate(card,width,font)
+         info.page = math.max(1, math.min(info.page or 1, #pages))
+         info.pages = #pages
+         local page = pages[info.page]
+         local footer = footerText(info, pages)
+-        local geometry = pageGeometry(battle, info, pageHeight(card, page, footer),anchor,width,font)
++        local geometry = pageGeometry(battle, info, pageHeight(card, page, footer),anchor,width,font,card.actorDetail)
+         frame(panel, card, geometry)
+         header(panel, card, geometry)
+         summaryLine(panel, card, geometry)
+         pageItems(panel, card, page, geometry)
+         hideUnused(panel, geometry)
+-        finish(panel, info, geometry, footer)
++        finish(panel, info, geometry, footer, card.actorDetail)
+         info.sideAnchor=anchor
+     end
+ end
+--- a/src/lua/abyss_battle_intent_view.lua
++++ b/src/lua/abyss_battle_intent_view.lua
+@@ -18,6 +18,12 @@
+     heartStatusDraw='debuff',spireBashDebuff='debuff',heartPainfulStabs='buff',
+     enemyRally = 'buff', enemyEncourage = 'buff', enemyTorchSpawn = 'buff', enemyTorchRevive = 'buff',
+     enemyBronzeSpawn = 'buff', enemyStasis = 'debuff', writhingParasite='debuff', enemyBurnBoth='debuff', enemyDazedDraw='debuff',awakenedVoid='debuff' }
++-- The source displays these effects around the main icon. A native badge keeps
++-- the second meaning visible throughout the preview without relying on particles.
++local sourceBadges = {
++    ATTACK_BUFF = 'buff', ATTACK_DEBUFF = 'debuff', ATTACK_DEFEND = 'defend',
++    DEFEND_BUFF = 'buff', DEFEND_DEBUFF = 'debuff',
++}
+ 
+ -- Mixed moves show the first other effect kind in the original icon priority.
+ function M.intentBadge(intent)
+@@ -58,7 +64,7 @@
+ local specialIntents = {
+     unknown = function(_,enemy)
+         if enemy.ai and enemy.ai.kind=='darkling'then
+-            local view=special('unknown','unknown','再生：本次行动不攻击，随后准备复生；全部共生暗影同时休眠才会被击败。')
++            local view=special('unknown','unknown','本次行动准备复生。','全部共生暗影同时休眠才会被击败。')
+             view.label,view.rows[1].name='再生','再生';return view
+         end
+         if enemy.ai and enemy.ai.kind=='awakened_one'then
+@@ -98,6 +104,7 @@
+ local function newPreview(state, index, intent)
+     local preview = Events.frame(state)
+     preview.rules,preview.catalog=state.rules,state.catalog
++    preview.relics=Combat.copy(state.relics)
+     preview.events = {}
+     local soften = state.originalV4 and require("abyss_original_v4").intentReduction(state, index) or 0
+     return { state = state, enemy = state.enemies[index], intent = intent, preview = preview,
+@@ -187,9 +194,10 @@
+ 
+ local function blockEffect(v, effect)
+     local master = effect.target == 'automaton'
+-    local amount = number(Combat.blockAmount(v.state, v.copy, effect.value, effect.fixed or master or effect.target == "random_ally"))
++    local group = effect.target == 'all_allies'
+     local ally = effect.target == "random_ally"
+-    local text = effect.target=='all_allies' and '敌方全体存活单位各获得 '..amount..' 点格挡'
++    local amount = number(Combat.blockAmount(v.state, v.copy, effect.value, effect.fixed or master or group or ally))
++    local text = group and '敌方全体存活单位各获得 '..amount..' 点格挡'
+         or master and '使青铜机枢获得 '..amount..' 点格挡'
+         or ally and "让一名随机队友获得 " .. amount .. " 点格挡（没有队友时给自己）" or "获得 " .. amount .. " 点格挡"
+     v.result[#v.result + 1] = text
+@@ -217,10 +225,11 @@
+     local gain = effect.op == "gainStatus"
+     -- Each copied status passes ApplyPower before later effects read it. Artifact
+     -- is spent in order and can reject a status before its addition overflows.
+-    Actors.applyPower(v.preview, gain and v.copy or v.player, effect.status, effect.value, v.copy)
++    local applied = Actors.applyPower(v.preview, gain and v.copy or v.player, effect.status, effect.value, v.copy)
+     local status = assert(v.state.catalog.statuses[effect.status])
+     local size = number(math.abs(effect.value))
+     local sentence = statusSentence(gain, effect, status, size)
++    if not applied then sentence = sentence .. "（当前会被抵挡）" end
+     v.result[#v.result + 1] = sentence
+     v.rows[#v.rows + 1] = statusRow(v, effect, gain, status, size, sentence)
+ end
+@@ -262,8 +271,8 @@
+     act2Row(v,'吸血','按你实际损失的生命回复自身生命','buff','格挡部分不产生治疗')
+ end
+ local function stasisEffect(v)
+-    act2Row(v,'扣押卡牌','扣押抽牌堆中的一张牌；抽牌堆为空时从弃牌堆选择。击败此浮核后归还，满手时放入弃牌堆',
+-        'debuff','优先稀有，其次罕见、普通；同稀有度随机选择')
++    act2Row(v,'扣押卡牌','扣押抽牌堆中的一张牌；抽牌堆为空时从弃牌堆选择',
++        'debuff','击败此浮核后归还，满手时放入弃牌堆。优先稀有，其次罕见、普通；同稀有度随机选择')
+ end
+ local function summonEffect(v,effect)
+     local name,text
+@@ -353,6 +362,9 @@
+  face.sourceEnum=actor and SourceIntents.enum(actor,intent)
+  if face.sourceEnum then
+   face.sourceTexture,face.worldKind,face.worldVisible=SourceIntents.visual(face.sourceEnum,face.worldDamage,face.worldTimes)
++  face.badge=sourceBadges[face.sourceEnum]
++ else
++  face.tooltipEnum=SourceIntents.previewTooltipEnum(actor,intent)
+  end
+  return face
+ end
+@@ -378,6 +390,6 @@
+  assert(not enum or enum:sub(1,6)~='ATTACK' or base~=-1,'source attack move has no damage metadata')
+  return {id=intent.id,intent=enum or 'NONE',baseDamage=base,
+   multiplier=times,isMultiDamage=SourceIntents.isMulti(actor,intent),
+-  face={value='',kind=intent.kind,badge=enum=='DEFEND_BUFF'and'buff'or nil,rows={}}}
++  face={value='',kind=intent.kind,badge=sourceBadges[enum],rows={}}}
+ end
+ return M
+--- a/src/lua/abyss_battle_render_actors.lua
++++ b/src/lua/abyss_battle_render_actors.lua
+@@ -2,10 +2,10 @@
+ local Combat = require("abyss_combat")
+ local Actors = require("abyss_actor")
+ local Theme = require("abyss_theme")
++local Acts = require("abyss_acts")
+ local EnemyView = require('abyss_battle_enemy_view')
+ local DamageView = require('abyss_battle_damage_view')
+ local PotionView = require("abyss_battle_potion_view")
+-local Acts = require("abyss_acts")
+ local IntentView = require("abyss_battle_intent_view")
+ local RewardOwner = require("abyss_battle_reward_owner")
+ local LowCostArt=require('abyss_lowcost_art')
+@@ -14,14 +14,6 @@
+ local number = require("abyss_numbers").integer
+ local potionText = PotionView.potionText
+ local intentView = IntentView.intentView
+-local function continueCaption(frame, embedded)
+-    if not frame.manual then return "再战一场" end
+-    local run = frame.run
+-    if embedded and run.nodeFlow and run.nodeFlow.type == 'boss' and Acts.get(run.act or 1).terminal == 'boss_treasure' then
+-        return "前往首领宝箱"
+-    end
+-    return "前往地图"
+-end
+ -- Last successful geometry writer per native handle; tokens hold no view references.
+ local intentSizes=setmetatable({},{__mode='k'})
+ local intentPositions=setmetatable({},{__mode='k'})
+@@ -91,14 +83,17 @@
+ end
+ local function renderIntentBadge(box,face,x,y,size,allowed,alpha,binding,picture,tint)
+     local badge=box:GetChild('intentBadge')
+-    local visible=allowed~=false and face.sourceEnum=='DEFEND_BUFF'and face.worldVisible==true and face.badge=='buff'
++    local kind=face.badge
++    local visible=allowed~=false and kind~=nil and (not face.sourceEnum or face.worldVisible==true)
+     intentVisible(badge,visible,binding)
+     if not visible then return end
+     local glyph=math.min(size,L.intent.size)
++    -- Attack damage owns the right side of the main icon, including multi-hit text.
++    local side=(face.worldKind or face.kind)=='attack' and -1 or 1
+     intentSize(badge,L.intent.badge,L.intent.badge,binding)
+-    intentPosition(badge,x+glyph/2+S.xs+L.intent.badge/2,y,binding)
+-    picture(badge,Theme.icon.intent.buff)
+-    tint(badge,intentTone(alpha,'buff'))
++    intentPosition(badge,x+side*(glyph/2+S.xs+L.intent.badge/2),y,binding)
++    picture(badge,Theme.icon.intent[kind])
++    tint(badge,intentTone(alpha,kind))
+ end
+ -- Explicit ports preserve the approved implementation without a shared constructor closure.
+ function M.install(owner, ownership, host, dependencies)
+@@ -142,14 +137,16 @@
+         return targetable == true or potionHighlighted(enemy,index,pendingTarget) or owner.acting == enemy.id
+     end
+     local function enemyIntentFace(frame,enemy,index)
+-        local face
++        local view, face = host.monsterIntentParticles
+         if IntentView.hasSourceIntent(enemy)then
+-            local view=host.monsterIntentParticles
+             local selected=view:needsSelected(enemy.id) and IntentView.selectedDescriptor(frame.battle,index) or nil
+             face=view:face(enemy.id,selected,function(base)
+                 return Combat.intentAttackAmount(frame.battle,enemy,frame.battle.player,base)
+             end)
+-        else face=intentView(frame.battle,index)end
++        else
++            face=intentView(frame.battle,index)
++            view:rememberPreview(enemy.id,face)
++        end
+         -- Dome changes visibility, never the source selected/displayed state.
+         if require('abyss_boss_relics').hidesIntents(owner.run)then face.hidden=true;face.value=''end
+         return face
+@@ -237,6 +234,10 @@
+         local geometry=EnemyView.geometry(enemy)
+         host.unit(box, enemy, portrait, enemyPortraitIcon(enemy), width, selected,step,geometry)
+         host.monsterPowers:render(box,entry.controlSlot,enemy,geometry)
++        local hpHit = box:GetChild('hpHit')
++        hpHit:SetAnchoredPosition(geometry.healthX, geometry.healthY)
++        hpHit:SetSizeDelta(geometry.hitWidth + S.border * 2, geometry.healthHeight + S.border * 2)
++        hpHit:SetVisible(Actors.isPresent(enemy))
+         box:GetChild('hit'):SetSizeDelta(geometry.hitWidth,geometry.hitHeight)
+         box:GetChild('hit'):SetAnchoredPosition(geometry.hitX-x,geometry.hitY-y)
+         local dim = (aim.pendingTarget or owner.potionAim ~= nil) and not selected
+@@ -303,7 +304,7 @@
+     end
+     local function hideEscapingHud(box,id)
+         if not owner.feedback.escaping[id] then return end
+-        for _,name in ipairs({'hpBorder','hpTrack','hpGhost','hpFill','hp','blockEdge','blockIcon','block','name','statusRow','intentIcon','intentBadge','intentExtra','intent','intentHit'})do
++        for _,name in ipairs({'hpBorder','hpTrack','hpGhost','hpFill','hp','hpHit','blockEdge','blockIcon','block','name','statusRow','intentIcon','intentBadge','intentExtra','intent','intentHit'})do
+             local control=box:GetChild(name)
+             intentVisibilities[control]=nil
+             local ok,why=pcall(control.SetVisible,control,false)
+@@ -361,6 +362,16 @@
+         dependencies.button("stolenGold", owner.active and stolen and not stolen.claimed and not owner.busy, false,
+             stolen and (stolen.claimed and "已取回失金 " or "取回失金 ") .. number(stolen.amount) or "取回失金")
+     end
++local function continueCaption(frame, embedded)
++    if not frame.manual then return "再战一场" end
++    local run = frame.run
++    if embedded and run.nodeFlow and run.nodeFlow.type == 'boss' and Acts.get(run.act or 1).terminal == 'boss_treasure' then
++        return "前往首领宝箱"
++    end
++    return "前往地图"
++end
++
++
+     local function renderContinue(frame)
+         local run = frame.run
+         dependencies.button("continue", owner.active and run and (frame.manual or run.phase == "map") and not owner.busy, true,
+--- a/src/lua/abyss_battle_target_bindings.lua
++++ b/src/lua/abyss_battle_target_bindings.lua
+@@ -40,44 +40,65 @@
+             -- Reuse the same selection/turn/actor checks as the eventual command.
+             local function previewEnemy(token)
+                 local entry=entryAt()
+-                if not entry or not token.uid or token.aim or not dependencies.enemyReady(token) then return end
++                if not entry or not Actors.isActive(entry.actor) or not token.uid or token.aim or not dependencies.enemyReady(token) then return end
+                 local selected
+                 for _,card in ipairs(token.battle.hand)do if card.uid==token.uid then selected=card end end
+                 if not selected or not needsTarget(token.battle,selected) then return end
+                 token.previewReady=function()
+-                    if owner.gesture or not entryAt() or not dependencies.enemyReady(token) then return false end
++                    if owner.gesture or not Actors.isActive(token.actor) or not entryAt() or not dependencies.enemyReady(token) then return false end
+                     return input.held==token or input.released==token
+                 end
+                 owner.cardAim=token
+                 owner:render()
++            end
++            local device = host.platform and host.platform.touchScreen
++            local function selectedCard()
++                local battle = owner.run and owner.run.combat
++                for _, instance in ipairs(battle and battle.hand or {}) do
++                    if instance.uid == owner.selected then return instance end
++                end
++            end
++            local function dismissPinnedReader(event, down)
++                local info = owner.info
++                if not info or not info.powerTips or info.index == 0 or info.transient then return false end
++                local selected = selectedCard()
++                if not owner.potionAim and not (selected and needsTarget(owner.run.combat, selected)) then return false end
++                if not owner:dismissActorDetails() then return false end
++                if down then owner.swallow = {touch = event and event.touchId} end
++                dependencies.discardEnemyPointer(input, event)
++                return true
++            end
++            local function inspectEnemy(target)
++                if device and not device() and not owner:canPinPowerTips(control) then return false end
++                return owner:showStatus(target, control, false, true)
+             end
+             local function chooseEnemy()
+             local entry=entryAt()
+             if not entry then return false end
+             local target=entry.index
+             local current=owner.run and owner.run.combat and owner.run.combat.enemies[target]
+-            if not current or current.id~=entry.id then return false end
++            if not Actors.isPresent(current) or current.id~=entry.id then return false end
+             if owner.potionAim then
++                if not Actors.isActive(current) then return false end
+                 local slot = owner.potionAim.slot
+                 owner.target = target
+                 return owner:commitPotion(slot, target)
+             end
+-            if owner.active and not owner.busy and owner.run.phase == "combat" and Actors.isActive(current) then
+-                owner.target = target
+-                local selected
+-                for _, instance in ipairs(owner.run.combat.hand) do
+-                    if instance.uid == owner.selected then selected = instance break end
+-                end
+-                if selected and needsTarget(owner.run.combat, selected) then owner:playSelected(target)
+-                else
+-                    owner:showStatus(target)
+-                end
++            if owner.active and not owner.busy and owner.run.phase == "combat" then
++                local selected = selectedCard()
++                if selected and needsTarget(owner.run.combat, selected) then
++                    if not Actors.isActive(current) then return false end
++                    owner.target = target
++                    return owner:playSelected(target)
++                end
++                if Actors.isActive(current) then owner.target = target end
++                return inspectEnemy(target)
+             end
+             end
+             if not entryAt() then return end
+             control:AddCursorEventListener(host.clickEvent, function(event)
+                 if not entryAt() or Pointer.blocked(host.platform)then return false end
+-                if dependencies.swallowed(event) then
++                if dismissPinnedReader(event) or dependencies.swallowed(event, true) then
+                     -- Dismissal consumes this pointer too, but cannot consume a
+                     -- newer token owned by a different touch on the same actor.
+                     dependencies.discardEnemyPointer(input,event)
+@@ -94,11 +115,13 @@
+                 if not dependencies.consumeReleasedDragClick(event) and not owner.suppressClick and not owner.gesture then return chooseEnemy() end
+             end)
+             if not entryAt() then return end
+-            if owner.dragEnabled then
++            local function bindPointer()
+                 control:AddCursorEventListener(host.cursor.CursorDown, function(event)
+                     if not entryAt() then return false end
+                     ownership.enemyPointerObserved = true
+-                    local dismissed = dependencies.down(event)
++                    local token = input.held or input.released
++                    if token and dependencies.enemyReady(token) and token.touch ~= (event and event.touchId) then return end
++                    local dismissed = dismissPinnedReader(event, true) or dependencies.down(event, true)
+                     input.held, input.released = nil, nil
+                     if dismissed then return end
+                     local run, battle = owner.run, owner.run and owner.run.combat
+@@ -114,8 +137,9 @@
+                     end
+                 end)
+                 if not entryAt() then return end
+-                local function clearCardAim(token)
+-                    if owner.cardAim==token then owner.cardAim=nil;owner:render() end
++                local function retireAim(token)
++                    if owner.cardAim == token then owner.cardAim = nil; owner:render() end
++                    if dependencies.cancelPotionAim("已取消药水瞄准。") then owner:render() end
+                 end
+                 local function releaseEnemy(event, ended)
+                     if not entryAt() then return false end
+@@ -123,19 +147,25 @@
+                     local touch, held = event and event.touchId, input.held
+                     if held and held.touch == touch then
+                         input.held = nil
+-                        input.released = not ended and dependencies.enemyReady(held) and held or nil
+-                        if ended then
+-                            clearCardAim(held)
+-                            if dependencies.cancelPotionAim("已取消药水瞄准。") then owner:render() end
+-                        end
++                        if ended then retireAim(held)
++                        elseif not (event and event.dragging) and dependencies.enemyReady(held) then input.released = held end
+                     elseif ended and input.released and input.released.touch == touch then
+-                        clearCardAim(input.released)
++                        local released = input.released
+                         input.released = nil
+-                        if dependencies.cancelPotionAim("已取消药水瞄准。") then owner:render() end
++                        retireAim(released)
+                     end
+                 end
++                if device and host.cursor.CursorEnter and host.cursor.CursorExit then
++                    control:AddCursorEventListener(host.cursor.CursorEnter,function()
++                        if device() or Pointer.blocked(host.platform) or owner.selected then return end
++                        local entry = entryAt()
++                        if entry then return owner:showStatus(entry.index, control, true, true) end
++                    end)
++                end
++                if not entryAt() then return end
+                 if host.cursor.CursorExit then
+                     control:AddCursorEventListener(host.cursor.CursorExit,function(event)
++                        if device then owner:dismissActorDetails(control) end
+                         local aim=owner.cardAim
+                         if aim and aim.touch==(event and event.touchId) and (aim==input.held or aim==input.released) then
+                             owner.cardAim=nil;owner:render()
+@@ -145,13 +175,19 @@
+                 if not entryAt() then return end
+                 control:AddCursorEventListener(host.cursor.CursorUp, releaseEnemy)
+                 if not entryAt() then return end
++                if device and host.cursor.CursorDrag then
++                    control:AddCursorEventListener(host.cursor.CursorDrag, function(event) releaseEnemy(event, true) end)
++                end
++                if not entryAt() then return end
+                 control:AddCursorEventListener(host.cursor.CursorEndDrag, function(event) releaseEnemy(event, true) end)
+             end
++            if owner.dragEnabled then bindPointer() end
+     end
+     local function unbindEnemyControl(screenSlot,box)
+         local input=bound[box]
+         if not input then return end
+         input.retired=true;input.held=nil;input.released=nil
++        if owner.info and owner.info.source == input.control then owner.info = nil end
+         if ownership.enemyInputs[screenSlot]==input then ownership.enemyInputs[screenSlot]=nil end
+         bound[box]=nil
+     end
+--- a/src/lua/abyss_battle_ui.lua
++++ b/src/lua/abyss_battle_ui.lua
+@@ -124,7 +124,7 @@
+     })))
+     install(services, require("abyss_battle_detail_bindings").install(self, ownership, host, ports(links, {
+         "enemyAt", "listen", "child", "closeInfo",
+-        "helpActorReady", "swallowed", "down", "consumeReleasedDragClick", "dragReady"
++        "helpActorReady", "swallowed", "down", "consumeReleasedDragClick"
+     })))
+     connect(links, services)
+     -- Runtime bindings keep only their own ports, not the construction registry.
+@@ -193,6 +193,7 @@
+     host.infoContent = InfoContent.new(self, {
+         statusDetail = statusDetail, statusKind = statusKind, intentView = intentView, potionText = potionText,
+         temporaryOps = temporaryOps, stanceNames = stanceNames, orbNames = orbNames,
++        displayedIntent = function(battle, id) return host.monsterIntentParticles:tooltip(battle, id) end,
+         kindNames = kindNames, intentColors = intentColors,
+     }, host.lines)
+     host.paginate = InfoView.paginator(host.lines)
+--- a/src/lua/abyss_monster_intent_particle_view.lua
++++ b/src/lua/abyss_monster_intent_particle_view.lua
+@@ -86,6 +86,21 @@
+   if state.powersPending then Displayed.applyPowers(state.displayed,selected,calculate);state.powersPending=nil end
+   return Displayed.face(state.displayed)
+  end
++ function self.rememberPreview(_,id,face)
++  self.states[id].preview=face
++ end
++ function self.tooltip(_,battle,id)
++  local state=self.states[id]
++  if self.battle~=battle or not state then return end
++  local preview=state.preview
++  if preview then
++   local times=preview.worldTimes
++   return preview.tooltipEnum,preview.worldDamage,times and times>1 and times or nil
++  end
++  if state.intentAlphaTarget~=1 then return end
++  local shown=state.displayed
++  return shown.intent,shown.intentDmg,shown.isMultiDmg and shown.intentMultiAmt or nil
++ end
+  function self.update(_,id,dt,face,g,dying,escaping)
+   local state=assert(self.states[id],'missing intent instance')
+   Particles.updateAlpha(state,dt)
+--- a/src/lua/abyss_monster_source_intents.lua
++++ b/src/lua/abyss_monster_source_intents.lua
+@@ -59,6 +59,26 @@
+  if actor.definitionId=='gremlin_nob' and intent.id=='gremlin_nob_2' and actor.canVuln==false then return 'ATTACK'end
+  return value
+ end
++
++-- A0 setMove overrides for later acts, whose world faces still use the
++-- legacy preview path. Keep their tooltip metadata out of hasDefinition.
++local tooltipOverrides={
++ awakened_one={sludge='ATTACK_DEBUFF'}, corrupt_heart={debilitate='STRONG_DEBUFF'},
++ deca={beam='ATTACK_DEBUFF'}, jaw_worm_hard={thrash='ATTACK_DEFEND',bellow='DEFEND_BUFF'},
++ maw={roar='STRONG_DEBUFF'}, orb_walker={laser='ATTACK_DEBUFF'},
++ reptomancer={snake_strike='ATTACK_DEBUFF'}, snake_dagger={stab='ATTACK_DEBUFF'},
++ spire_growth={constrict='STRONG_DEBUFF'}, spire_shield={bash='ATTACK_DEBUFF',smash='ATTACK_DEFEND'},
++ spire_spear={burn_strike='ATTACK_DEBUFF'}, time_eater={head_slam='ATTACK_DEBUFF',ripple='DEFEND_DEBUFF'},
++ writhing_mass={attack_block='ATTACK_DEFEND',attack_debuff='ATTACK_DEBUFF',implant='STRONG_DEBUFF'},
++}
++local simpleTooltips={attack='ATTACK',buff='BUFF',debuff='DEBUFF',defend='DEFEND',escape='ESCAPE',
++ magic='MAGIC',sleep='SLEEP',stunned='STUN',unknown='UNKNOWN',charge='UNKNOWN',split='UNKNOWN'}
++function M.previewTooltipEnum(actor,intent)
++ if not intent then return 'NONE' end
++ local overrides=tooltipOverrides[actor.definitionId]
++ return overrides and overrides[intent.id] or simpleTooltips[intent.kind]
++end
++
+ local images={BUFF='BUFF',DEBUFF='DEBUFF',STRONG_DEBUFF='DEBUFF2',DEFEND='DEFEND',
+  DEFEND_DEBUFF='DEFEND',DEFEND_BUFF='DEFEND_BUFF',ESCAPE='ESCAPE',MAGIC='MAGIC',SLEEP='SLEEP',UNKNOWN='UNKNOWN'}
+ function M.visual(enum,damage,times)
+--- a/tests/approved-enemy-details.test.mjs
++++ b/tests/approved-enemy-details.test.mjs
+@@ -1,8 +1,25 @@
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import {runLua} from '../scripts/test-lua.mjs';
++import {nativeTheme} from '../scripts/native-ui-theme.mjs';
++import {capacityProblems, powerTipSnapshots, textConflicts} from './helpers/ui-readability.mjs';
+ test('approved unit details retain complete information and command priority',()=>{
+  const result=runLua('tests/lua/approved_enemy_details.lua');
+  assert.equal(result.status,0,result.stdout+result.stderr);
+- assert.match(result.stdout,/APPROVED_ENEMY_DETAILS_PASS 2/);
++ assert.match(result.stdout,/APPROVED_ENEMY_DETAILS_PASS 11/);
++ const snapshots = powerTipSnapshots(result.stdout);
++ assert.deepEqual(Object.keys(snapshots), ['jaw-worm-attack', 'cultist-buff', 'narrow-power-list', 'long-power-list', 'multi-hit-with-power']);
++ for (const [name, rows] of Object.entries(snapshots)) {
++   assert.ok(rows.length > 0, name);
++   assert.deepEqual(capacityProblems(rows, nativeTheme.layout.nativeText.lineHeight), [], name);
++   assert.deepEqual(textConflicts(rows, () => 'tip'), [], name);
++   assert.ok(rows.every(row => row.font === 18 && row.minimum === 18 && row.align === 'left' && row.valign === 'middle'), name);
++ }
+ });
++
++test('the shared capacity guard measures visible glyphs and preserves explicit empty lines', () => {
++ const row = {path:'copy', kind:'text', visible:true, text:'<color=#ABCDE0>攻势</color>\n\n攻击', font:18, size:[36,120]};
++ assert.deepEqual(capacityProblems([row]), []);
++ assert.equal(capacityProblems([{...row, size:[36,119]}]).length, 1);
++ assert.equal(capacityProblems([{...row, size:[35,120]}]).length, 1);
++});
+--- a/tests/helpers/ui-readability.mjs
++++ b/tests/helpers/ui-readability.mjs
+@@ -23,13 +23,21 @@
+     // Chinese glyph occupies at most one em; ASCII needs only 0.6 em here.
+     // This is a text-box budget, not a claim about the native font's ink.
+     const font = node.minimum || node.font;
+-    const rows = node.text.split('\n').reduce((sum, line) => {
++    const plain = node.text.replace(/<color=[^>]+>|<\/color>/gi, '');
++    const rows = plain.split(/\r?\n/).reduce((sum, line) => {
+       const ems = [...line].reduce((n, ch) => n + (ch.codePointAt(0) > 0xff ? 1 : 0.6), 0);
+       return sum + Math.max(1, Math.ceil(ems * font / node.size[0]));
+     }, 0);
+     return rows * lineHeight <= node.size[1] + 0.01 ? [] :
+       [`${node.path}: ${JSON.stringify(node.text)} needs ${rows} native lines (${rows * lineHeight}), box height ${node.size[1]}`];
+   });
++}
++export function powerTipSnapshots(stdout) {
++  return Object.fromEntries(stdout.split(/\r?\n/).filter(line => line.startsWith('UI_READABILITY\t')).map(line => {
++    const [, name, json] = line.split('\t');
++    const nodes = JSON.parse(json).nodes.filter(node => /^\/battlePanel\/statusInfo\/powerTips\/tip\d+\/copy$/.test(node.path));
++    return [name, nodes];
++  }));
+ }
+ export function rewardRole(path) {
+   if (/^\/battlePanel\/(notice|(?:potionHelp\/)?potionReward)$/.test(path)) return 'feedback';
+--- a/tests/lua/approved_enemy_details.lua
++++ b/tests/lua/approved_enemy_details.lua
+@@ -1,61 +1,399 @@
+-local H=dofile('tests/lua/support/battle_gesture_fixture.lua')
+-local Combat,Theme=H.F.Combat,H.F.Theme
+-local count=0
+-local function same(a,b)
+- assert(type(a)==type(b),'inspection changed rule-state type')
+- if type(a)~='table'then assert(a==b,'inspection changed rule-state value');return end
+- for key,value in pairs(a)do same(value,b[key])end
+- for key in pairs(b)do assert(a[key]~=nil,'inspection added a rule-state field')end
+-end
+-local function test(name,fn)fn();count=count+1;print('ok approved details '..count..' - '..name)end
+-local function contents(ui,panel)
+- local info,parts=panel:GetChild('statusInfo'),{}
+- assert(info.visible,'portrait click must open the existing independent detail card')
+- local pages=assert(ui.info.pages)
+- for page=1,pages do
+-  assert(ui.info.page==page)
+-  for i=1,Theme.layout.statusInfo.rows do
+-   for _,field in ipairs({'name','text','tag','note'})do
+-    local part=info:GetChild(field..i)
+-    if part.visible then parts[#parts+1]=part.text end
+-   end
+-  end
+-  if page<pages then info:GetChild('page').click()end
+- end
+- return table.concat(parts,'\n')
+-end
+-test('one ordinary portrait click lists all intent effects and all statuses without a notice',function()
+- local host,ui,p,event,tap=H.setup({'strike','defend'},{'guardian'})
+- local battle=host.run.combat;local enemy=battle.enemies[1]
+- -- Synthetic tooltip effects retain a real source mixed-attack identity;
+- -- world texture selection must not infer an intent from effect order.
+- enemy.ai=nil;enemy.intentIndex=1;enemy.intents={{id='guardian_7',kind='defend',effects={
+-  {op='gainStatus',status='dexterity',value=3},{op='block',value=10},{op='damage',value=6,times=2}}}}
+- for _,id in ipairs({'strength','dexterity','ritual','artifact','thorns','weak','vulnerable','frail','poison','regen','barricade'})do Combat.addStatus(enemy,id,2)end
+- ui:render()
+- local before=Combat.copy(battle);local notice=p:GetChild('notice').text
+- tap('enemy1',91)
+- local text=contents(ui,p)
+- assert(text:find('自身获得 3 层敏捷',1,true) and text:find('获得 11 点格挡',1,true),'full mixed intent effects')
+- assert(text:find('攻击 2 次',1,true),'mixed intent attack remains explained')
+- for _,entry in ipairs(Combat.statusView(enemy))do assert(text:find(entry.name,1,true),'missing status '..entry.id)end
+- assert(p:GetChild('notice').text==notice,'ordinary inspection must not write a global intent notice')
+- same(battle,before)
+- p:GetChild('statusInfo'):GetChild('hit').click()
+- assert(not ui.info and not p:GetChild('statusInfo').visible,'blank click closes detail card')
+- same(battle,before)
+-end)
+-
+-test('target card and potion clicks retain priority over inspection',function()
+- local host,ui,p,event,tap,drain=H.setup({'strike','defend'},{'cultist','jaw_worm'})
+- local battle=host.run.combat;local hp=battle.enemies[2].hp
+- local slot;for i,c in ipairs(battle.hand)do if c.cardId=='strike'then slot=i end end
+- tap('card'..slot,92);tap('enemy2',92);drain()
+- assert(battle.enemies[2].hp<hp and not ui.info,'target card click must play, not inspect')
+- host.run.potions={'fire_potion'};ui:render();hp=battle.enemies[2].hp
+- tap('potion1',93);dofile('tests/lua/support/confirm_potion_popup.lua')(ui,p,93);assert(ui.potionAim)
+- tap('enemy2',93);drain()
+- assert(battle.enemies[2].hp==hp-20 and not ui.info and #host.run.potions==0,'potion must commit once')
+-end)
+-
+-print('APPROVED_ENEMY_DETAILS_PASS '..count)
++local H = dofile('tests/lua/support/battle_gesture_fixture.lua')
++local monsterControl = dofile('tests/lua/support/monster_control_fixture.lua')
++local enemyPower = dofile('tests/lua/support/monster_power_control_fixture.lua')
++local Snapshot = dofile('tests/lua/support/ui_readability_snapshot.lua')
++local Combat, Theme = H.F.Combat, H.F.Theme
++local L = Theme.layout
++local surfaces = {'hit', 'intentHit', 'hpHit'}
++local count = 0
++local capacityOnly = ... == 'capacity'
++
++local function same(a, b)
++    assert(type(a) == type(b), 'inspection changed rule-state type')
++    if type(a) ~= 'table' then assert(a == b, 'inspection changed rule-state value'); return end
++    for key, value in pairs(a) do same(value, b[key]) end
++    for key in pairs(b) do assert(a[key] ~= nil, 'inspection added a rule-state field') end
++end
++
++local function test(name, fn, capacityCase)
++    if capacityOnly and not capacityCase then return end
++    fn()
++    count = count + 1
++    print('ok approved details ' .. count .. ' - ' .. name)
++end
++
++local function contains(text, part)
++    assert(text:find(part, 1, true), 'missing ' .. part .. ' in ' .. text)
++end
++
++local function tapControl(hit, touch)
++    local e = {touchId = touch}
++    hit.listeners.down(e)
++    hit.listeners.up(e)
++    hit.listeners.click(e)
++end
++
++local function contents(panel)
++    local info, parts = panel:GetChild('statusInfo'), {}
++    local layer = info:GetChild('powerTips')
++    assert(info.visible and layer.visible and not info:GetChild('plate').visible)
++    local right = Theme.canvas.base[1] / 2 - Theme.canvas.safe.x
++    local top = L.battlePotions.origin[2] - L.battlePotions.size[2] / 2 - Theme.space.s
++    for i = 1, L.powerTips.rows do
++        local tip = layer:GetChild('tip' .. i)
++        if tip.visible then
++            local halfW = tip.sizeDeltaX * tip.localScaleX / 2
++            local halfH = tip.sizeDeltaY * tip.localScaleY / 2
++            assert(tip.localScaleX == 1 and tip.localScaleY == 1, 'power text must not shrink to fit')
++            assert(tip.x - halfW >= -right - .01 and tip.x + halfW <= right + .01)
++            assert(tip.y + halfH <= top + .01 and tip.y - halfH >= L.battleNotice.bandTop)
++            local copy = tip:GetChild('copy')
++            assert(copy.sizeDeltaY >= L.nativeText.lineHeight and copy.sizeDeltaY < tip.sizeDeltaY)
++            parts[#parts + 1] = copy.text
++        end
++    end
++    return table.concat(parts, '\n'), parts
++end
++
++local function spikeScene(mobile)
++    local host, ui, panel = H.setup({'strike','defend'}, {'spike_slime_l'},
++        {touchScreen = function() return mobile end})
++    local battle = Combat.new(H.F.Data, {deck={'strike','defend'}, enemies={'spike_slime_l'}, seed=2})
++    battle.enemies[1].ai, battle.enemies[1].intentIndex = nil, 1
++    host.run.combat = battle
++    host:refresh()
++    return host, ui, panel, battle, monsterControl(panel, 'enemy1')
++end
++
++test('attack and pure buff without powers replace one another on rapid PC hover', function()
++    local host, ui, panel, _, _, _, _, root = H.setup({'defend'}, {'jaw_worm','cultist'},
++        {touchScreen = function() return false end})
++    local battle = host.run.combat
++    local first = monsterControl(panel, 'enemy1'):GetChild('hit')
++    local second = monsterControl(panel, 'enemy2'):GetChild('hpHit')
++    for _, actor in ipairs(battle.enemies) do assert(#Combat.statusView(actor) == 0) end
++    first.listeners.enter()
++    local _, rows = contents(panel)
++    assert(#rows == 1)
++    assert(rows[1] == '<color=#F5D78A>攻势</color>\n这名敌人将要\n攻击造成 11 点伤害。')
++    Snapshot.capture('jaw-worm-attack', root, H.F.Layout,
++        {enemy='jaw_worm', move=Combat.intent(battle, 1).id})
++    second.listeners.enter()
++    first.listeners.exit()
++    assert(ui.info and ui.info.actor == battle.enemies[2])
++    _, rows = contents(panel)
++    assert(#rows == 1 and rows[1] == '<color=#F5D78A>策略</color>\n这名敌人将要进行强化。')
++    Snapshot.capture('cultist-buff', root, H.F.Layout)
++    second.listeners.exit()
++    assert(not ui.info and not panel:GetChild('statusInfo').visible)
++end, true)
++
++for _, mobile in ipairs({false, true}) do
++    test(mobile and 'mobile tap shows the same STS stack from icon, body and HP' or
++        'PC hover shows the same STS stack from icon, body and HP', function()
++        local _, ui, panel, battle, box = spikeScene(mobile)
++        local before, notice, target = Combat.copy(battle), panel:GetChild('notice').text, ui.target
++        if mobile then ui:resize(844, 390) end
++        local first
++        local body, hp = box:GetChild('hit'), box:GetChild('hpHit')
++        local track = box:GetChild('hpTrack')
++        assert(hp.x == track.x and hp.y == track.y and hp.sizeDeltaX >= track.sizeDeltaX)
++        assert(hp.y + hp.sizeDeltaY / 2 < body.y - body.sizeDeltaY / 2, 'HP is outside body targeting')
++        for _, name in ipairs(surfaces) do
++            local hit = box:GetChild(name)
++            assert(hit.visible)
++            if mobile then
++                hit.listeners.enter()
++                assert(not ui.info, 'touch arrival must not synthesize hover')
++                tapControl(hit, 90)
++            else
++                tapControl(hit, 90)
++                assert(not ui.info, 'PC clicks must not pin compact info')
++                hit.listeners.enter()
++            end
++            local text, rows = contents(panel)
++            assert(ui.info.transient == not mobile and ui.info.source == hit)
++            assert(rows[1] == '<color=#F5D78A>策略</color>\n这名敌人将要对你施加负面效果并攻击造成 16 点伤害。')
++            assert(#rows == 2)
++            contains(rows[2], '分裂')
++            first = first or text
++            assert(first == text, 'icon, body and HP must show the same overview')
++            if mobile then panel:GetChild('statusDismiss').click({touchId = 90}) else hit.listeners.exit() end
++            assert(not ui.info and not panel:GetChild('statusInfo').visible)
++        end
++        local split = enemyPower(box, 'split'):GetChild('hit')
++        if mobile then tapControl(split, 91) else split.listeners.enter() end
++        local _, rows = contents(panel)
++        assert(#rows == 1 and ui.info.statusId == 'split')
++        contains(rows[1], '生命值降至一半或以下时')
++        assert(panel:GetChild('notice').text == notice and ui.target == target)
++        same(battle, before)
++    end)
++end
++
++test('Jaw Worm action results match settlement and stay separate from active Block and Strength', function()
++    local host, _, panel, _, tap, drain = H.setup({'defend'}, {'jaw_worm'}, {touchScreen = function() return true end})
++    -- Seed 2 naturally selects Chomp, Bellow, then Thrash.
++    local battle = Combat.new(H.F.Data, {deck = {'defend'}, enemies = {'jaw_worm'}, seed = 2})
++    host.run.combat = battle
++    host:refresh()
++    local enemy = battle.enemies[1]
++    local box = monsterControl(panel, 'enemy1')
++    local function expectIntent(touch, title, text, activeStrength)
++        tapControl(box:GetChild('intentHit'), touch)
++        local _, rows = contents(panel)
++        assert(#rows == (activeStrength and 2 or 1))
++        assert(rows[1] == '<color=#F5D78A>' .. title .. '</color>\n' .. text, rows[1])
++        if activeStrength then
++            contains(rows[2], '>力量 3</color>')
++            contains(rows[2], '普通攻击每段伤害 +3')
++        end
++        panel:GetChild('statusDismiss').click({touchId = touch})
++    end
++    local hp = battle.player.hp
++    expectIntent(50, '攻势', '这名敌人将要\n攻击造成 11 点伤害。')
++    tap('endTurn', 51)
++    drain()
++    assert(battle.player.hp == hp - 11)
++    expectIntent(52, '守势', '这名敌人将要进行格挡并进行强化。')
++    assert(Combat.statusView(enemy)[1] == nil and enemy.block == 0 and battle.player.hp == hp - 11)
++    tap('endTurn', 53)
++    drain()
++    assert(enemy.statuses.strength == 3 and enemy.block == 6 and battle.player.hp == hp - 11)
++    tapControl(enemyPower(box, 'strength'):GetChild('hit'), 54)
++    local _, rows = contents(panel)
++    assert(#rows == 1)
++    contains(rows[1], '普通攻击每段伤害 +3')
++    panel:GetChild('statusDismiss').click({touchId = 54})
++    expectIntent(55, '攻势', '这名敌人将要格挡并攻击造成 10 点伤害。', true)
++    assert(enemy.block == 6)
++    tap('endTurn', 56)
++    drain()
++    assert(enemy.statuses.strength == 3 and enemy.block == 5 and battle.player.hp == hp - 21)
++end)
++
++test('the Three Sentries use the STS side threshold and keep the inspected actor clear', function()
++    local enemies = {'sentry', 'sentry', 'sentry'}
++    local host, ui, panel = H.setup({'defend'}, enemies, {touchScreen = function() return false end})
++    local battle = Combat.new(H.F.Data, {deck = {'defend'}, enemies = enemies, encounterSource = '3 Sentries', seed = 2})
++    host.run.combat = battle
++    host:refresh()
++    local tip = panel:GetChild('statusInfo'):GetChild('powerTips'):GetChild('tip1')
++    local geometry = require('abyss_battle_enemy_view').geometry
++    local safeRight = 640 - Theme.canvas.safe.x
++    for slot = 1, #enemies do
++        local hit = monsterControl(panel, 'enemy' .. slot):GetChild('intentHit')
++        hit.listeners.enter()
++        assert(ui.info and tip.visible)
++        contents(panel)
++        local halfW = tip.sizeDeltaX * tip.localScaleX / 2
++        local g = geometry(battle.enemies[slot])
++        local right = g.hitX + g.hitWidth / 2
++        if right + 640 < 1544 / 1.5 and right + 20 / 1.5 + L.powerTips.width <= safeRight then
++            assert(tip.x - halfW >= right, 'available right side should clear the inspected actor')
++        else
++            assert(tip.x + halfW <= g.hitX - g.hitWidth / 2, 'near the right edge the stack should open on the left')
++        end
++        assert(not panel:GetChild('statusInfo').disableCursorEventPassthrough)
++        hit.listeners.exit()
++    end
++end)
++
++test('long lists retain a separate attack-buff intent, active powers and source text', function()
++    local touch = false
++    local host, ui, panel, _, _, _, _, root = H.setup({'strike','defend'}, {'guardian'}, {touchScreen = function() return touch end})
++    local battle = Combat.new(H.F.Data, {deck={'strike', 'defend'}, enemies={'guardian'}, seed=2})
++    local enemy = battle.enemies[1]
++    for i, move in ipairs(enemy.intents) do if move.id == 'guardian_7' then enemy.intentIndex = i end end
++    for _, id in ipairs({'strength','dexterity','ritual','artifact','thorns','weak','vulnerable',
++        'frail','poison','regen','barricade','constricted'}) do Combat.addStatus(enemy, id, 2) end
++    enemy.constrictedSourceName = '来源测试'
++    host.run.combat = battle
++    host:resize(844,390)
++    host:refresh()
++    local box = monsterControl(panel, 'enemy1')
++    local hpHit = box:GetChild('hpHit')
++    local page = panel:GetChild('statusInfo'):GetChild('page')
++    hpHit.listeners.enter()
++    assert(ui.info.transient and ui.info.pages > 1 and not page.visible)
++    Snapshot.capture('narrow-power-list', root, H.F.Layout)
++    tapControl(hpHit, 97)
++    assert(not ui.info.transient and page.visible)
++    hpHit.listeners.exit()
++    local footerX, footerY = page.x, page.y
++    page.click({touchId=97,dragging=true})
++    assert(ui.info.page == 1)
++    page.click({touchId=97})
++    assert(ui.info.page == 2)
++    assert(page.x == footerX and page.y == footerY)
++    panel:GetChild('statusDismiss').click({touchId=97})
++    assert(not ui.info)
++    -- The complete status definition set is larger than the preallocated pool.
++    for id in pairs(enemy.statusDefinitions) do
++        if id ~= 'no_block' and enemy.statuses[id] == nil then Combat.addStatus(enemy, id, 1) end
++    end
++    ui:render()
++    touch = true
++    tapControl(hpHit, 98)
++    assert(ui.info.pages > 1 and page.visible)
++    local all = {}
++    local _, rows = contents(panel)
++    Snapshot.capture('long-power-list', root, H.F.Layout)
++    for i = 1, ui.info.pages do
++        assert(ui.info.page == i)
++        local _, items = contents(panel)
++        for _, item in ipairs(items) do all[#all + 1] = item end
++        page.click({touchId=98})
++        assert(page.x == footerX and page.y == footerY)
++    end
++    assert(#all == #Combat.statusView(enemy) + 1 and ui.info.page == 1)
++    local text = table.concat(all, '\n')
++    local damage, times = box:GetChild('intent').text:match('^(%d+)x(%d+)$')
++    assert(damage and times == '2')
++    assert(rows[1] == '<color=#F5D78A>攻势</color>\n这名敌人将要进行强化并攻击造成 ' .. damage .. ' 点伤害 2 次。')
++    contains(text, '剩余 2 回合')
++    contains(text, '来源：来源测试')
++    local last = #rows[1]
++    for _, entry in ipairs(Combat.statusView(enemy)) do
++        local title = entry.name .. (entry.stack == 'none' and '' or ' ' .. require('abyss_numbers').integer(entry.amount))
++        last = assert(text:find('>' .. title .. '</color>', last + 1, true), 'missing or reordered status ' .. entry.id)
++    end
++    panel:GetChild('statusDismiss').click({touchId=98})
++    assert(not ui.info)
++end, true)
++
++test('Runic Dome hides intent effects from both body and HP', function()
++    local host, ui, panel = spikeScene(false)
++    assert(H.Run.obtainRelic(host.run, 'runic_dome'))
++    ui:render()
++    local box = monsterControl(panel, 'enemy1')
++    assert(not box:GetChild('intentHit').visible)
++    box:GetChild('intentHit').listeners.enter()
++    assert(not ui.info)
++    for _, name in ipairs({'hit', 'hpHit'}) do
++        local hit = box:GetChild(name)
++        hit.listeners.enter()
++        local text = contents(panel)
++        contains(text, '分裂')
++        assert(not text:find('策略', 1, true) and not text:find('负面效果', 1, true))
++        hit.listeners.exit()
++    end
++end)
++
++test('multi-hit hover follows displayed damage after a live Power callback', function()
++    local host, _, panel, _, tap, drain, _, root = H.setup({'disarm'}, {'guardian'},
++        {touchScreen = function() return false end})
++    local battle = Combat.new(H.F.Data, {deck={'disarm'}, enemies={'guardian'}, seed=2})
++    local enemy = battle.enemies[1]
++    for i, move in ipairs(enemy.intents) do if move.id == 'guardian_3' then enemy.intentIndex = i end end
++    host.run.combat = battle
++    host:refresh()
++    local box = monsterControl(panel, 'enemy1')
++    local hit = box:GetChild('intentHit')
++    local function preview()
++        local damage, times = box:GetChild('intent').text:match('^(%d+)x(%d+)$')
++        assert(damage and times == '4')
++        hit.listeners.enter()
++        local _, rows = contents(panel)
++        contains(rows[1], '攻击造成 ' .. damage .. ' 点伤害 4 次。')
++        return tonumber(damage)
++    end
++    local before = preview()
++    hit.listeners.exit()
++    tap('card1', 91)
++    tap('enemy1', 91)
++    drain()
++    assert(enemy.statuses.strength == -2 and preview() == before - 2)
++    Snapshot.capture('multi-hit-with-power', root, H.F.Layout)
++end, true)
++
++test('special intents and the attack-debuff multi-hit disclosure match the source branches', function()
++    local tip = require('abyss_battle_info_content').intentTip
++    for enum, expected in pairs({SLEEP={'熟睡','正在睡觉'}, STUN={'击晕','被击晕'},
++        ESCAPE={'胆小','将要逃跑'}, MAGIC={'魔法','神秘的魔法'}, UNKNOWN={'不明','意图不明'},
++        DEBUFF={'策略','一种负面效果'}, STRONG_DEBUFF={'策略','一种强大的负面效果'},
++        DEFEND={'守势','回合进行格挡'}, DEFEND_DEBUFF={'守势','格挡并对你施加一种负面效果'}}) do
++        local row = tip(enum)
++        assert(row.name == expected[1])
++        contains(row.body, expected[2])
++    end
++    assert(tip('NONE') == nil)
++    assert(tip('ATTACK_DEBUFF', 4, 2).body == '这名敌人将要对你施加负面效果并攻击造成 4 点伤害。')
++end)
++
++test('intent and HP preserve card and potion aim while the portrait commits each once', function()
++    local host, ui, panel, _, tap, drain = H.setup({'strike','defend'}, {'cultist','jaw_worm'},
++        {touchScreen = function() return true end})
++    local battle = host.run.combat
++    local box = monsterControl(panel, 'enemy2')
++    local body = box:GetChild('hit')
++    local hp = battle.enemies[2].hp
++    local slot
++    for i, c in ipairs(battle.hand) do if c.cardId == 'strike' then slot = i end end
++    tap('card' .. slot, 92)
++    local selected, energy = ui.selected, battle.energy
++    for _, name in ipairs({'intentHit', 'hpHit'}) do
++        tapControl(box:GetChild(name), 92)
++        contents(panel)
++        assert(ui.selected == selected and battle.enemies[2].hp == hp and battle.energy == energy)
++    end
++    tap('enemy2', 92)
++    assert(ui.selected == selected and not ui.info and battle.energy == energy, 'dismissal consumes the touch')
++    tap('enemy2', 92)
++    body.listeners.click({touchId = 92})
++    drain()
++    assert(battle.enemies[2].hp == hp - 6 and battle.energy == energy - 1 and not ui.info)
++
++    host.run.potions = {'fire_potion'}
++    ui:render()
++    hp = battle.enemies[2].hp
++    tap('potion1', 93)
++    dofile('tests/lua/support/confirm_potion_popup.lua')(ui, panel, 93)
++    local aim = assert(ui.potionAim)
++    for _, name in ipairs({'intentHit', 'hpHit'}) do
++        tapControl(box:GetChild(name), 93)
++        contents(panel)
++        assert(ui.potionAim == aim and battle.enemies[2].hp == hp and #host.run.potions == 1)
++    end
++    tap('enemy2', 93)
++    assert(ui.potionAim == aim and not ui.info, 'dismissal keeps the potion armed')
++    tap('enemy2', 93)
++    body.listeners.click({touchId = 93})
++    drain()
++    assert(battle.enemies[2].hp == hp - 20 and not ui.info and #host.run.potions == 0)
++end)
++
++test('physical card and potion drags take priority over tooltip input', function()
++    local host, ui, panel, event, _, drain = H.setup({'strike'}, {'jaw_worm'},
++        {touchScreen = function() return true end})
++    local battle = host.run.combat
++    local box = monsterControl(panel, 'enemy1')
++    local hp, energy = battle.enemies[1].hp, battle.energy
++    for _, input in ipairs({'card1', 'potion1'}) do
++        if input == 'potion1' then assert(H.Run.obtainPotion(host.run, 'fire_potion')); host:refresh() end
++        event(input, 'down', 94)
++        event(input, 'drag', 94, box.x, box.y)
++        if input == 'potion1' and Theme.presentationProfile == 'official-assets-first' then
++            -- This profile already cancels belt drags. Its supported potion
++            -- targeting is exercised by the point-selection case above.
++            event(input, 'up', 94, box.x, box.y)
++            event(input, 'click', 94, box.x, box.y)
++            assert(not ui.potionAim and not ui.potionMenu and not ui.info)
++            assert(#host.run.potions == 1 and battle.enemies[1].hp == hp)
++            return
++        end
++        assert(ui.gesture and ui.gesture.moving or ui.potionAim and ui.potionAim.moving)
++        for _, name in ipairs(surfaces) do
++            local hit = box:GetChild(name)
++            if hit.listeners.enter then hit.listeners.enter() end
++            tapControl(hit, 95)
++            assert(not ui.info and not panel:GetChild('statusInfo').visible)
++        end
++        event('dragLayer', 'up', 94, box.x, box.y)
++        drain()
++        hp = hp - (input == 'card1' and 6 or 20)
++        assert(battle.enemies[1].hp == hp and battle.energy == energy - 1 and #host.run.potions == 0)
++    end
++end, true)
++
++print('APPROVED_ENEMY_DETAILS_PASS ' .. count)
+--- a/tests/lua/support/ui_readability_snapshot.lua
++++ b/tests/lua/support/ui_readability_snapshot.lua
+@@ -35,7 +35,8 @@
+             rows[#rows+1] = {path=path,kind=spec.kind,visible=visible,text=spec.text and box.text or '',
+                 rect={x,y,size[1]*sx,size[2]*sy},size=size,scale={sx,sy},
+                 font=spec.text and (box.fontSize or spec.text.fontSize) or 0,
+-                minimum=spec.text and spec.text.minFontSize or 0}
++                minimum=spec.text and (box.minimumFontSize or spec.text.minFontSize) or 0,
++                align=spec.text and spec.text.align or '',valign=spec.text and spec.text.valign or ''}
+         end
+         -- Native preset buttons select a state internally; the test fixture
+         -- retains all four branches. Compare the actual normal/disabled state,

@@ -1,0 +1,102 @@
+[
+  {
+    "path": "data/presentation/ui_theme.json",
+    "beforeSha256": "60cceaa32c8182f6ea1695b33d6c2b0fc526e17732acc8f7825feeec6404bedf",
+    "afterSha256": "8df005786b308754dd354b21a049b64b1a7b762403d87d38fd875ecbb3fb1e40"
+  },
+  {
+    "path": "scripts/ui-layout.mjs",
+    "beforeSha256": "9d671299ed00ee58617585a3eecebe6eb8fe0fc4fd92b13daac3305337b55f7d",
+    "afterSha256": "365ffa70df4b446b40bccf2994edb7ea6a4ccd88f4d40cfe3a172c124007d83a"
+  },
+  {
+    "path": "src/lua/abyss_battle_action_bindings.lua",
+    "beforeSha256": "09ac9271cfd259fc87f8ab87ed71278a360727315ea30c71742411d43d454db8",
+    "afterSha256": "101e61067f903b3140ca55a997fa55ed0800b6cb2d1210035377478e3a352fbb"
+  },
+  {
+    "path": "src/lua/abyss_battle_card_gestures.lua",
+    "beforeSha256": "ad120caa51e3797eb593fdb45e7bc6f2e529c4165734c559def28f495f7435df",
+    "afterSha256": "a955b66462ff34863e78fea7df1e92bce3f7abc4c73beafec80b20b9fe8c928c"
+  },
+  {
+    "path": "src/lua/abyss_battle_detail_bindings.lua",
+    "beforeSha256": "c9d0617ff1d8850e934890be716ea26482c593dd9b63b4aadb2b32a95073d89f",
+    "afterSha256": "0b938b87d7a4308af6f10730ce404463f34c1655eff797a09b224eeca9c92b75"
+  },
+  {
+    "path": "src/lua/abyss_battle_details.lua",
+    "beforeSha256": "6ea9aa49326f30269f1ef111050581ee09f51a8f2ea3aa221ee9855bd4c70823",
+    "afterSha256": "309a411725930f32e119d18eb8361bf07a195e96036f2e2e743db437ab5e8573"
+  },
+  {
+    "path": "src/lua/abyss_battle_ending_intent.lua",
+    "beforeSha256": "fd7c1b135604fe71fefaabc5caedf107d22cefa4889bd2f109b5d4a30f06b466",
+    "afterSha256": "52966df3b4101238fa8450ea6d59483b9e189829dc18f9a737ffe31967e23ec6"
+  },
+  {
+    "path": "src/lua/abyss_battle_enemy_view.lua",
+    "beforeSha256": "25894f61ea8084bf59db4f948d1a5ad9644c08e0d35ffb7cf651cbc335a171df",
+    "afterSha256": "0be9e70714cd4bfd01b744cbe7f525f9ba96c1aa02c2b4f2f4f53b0ac9189260"
+  },
+  {
+    "path": "src/lua/abyss_battle_info_content.lua",
+    "beforeSha256": "05a4c0a0b579ab0f1dcd303b8e6b646133b2f81bb696cc668749e224531644fe",
+    "afterSha256": "01435039ae0c633d37b32da2002405d98c810ef30a431315cf9c6782ccf41533"
+  },
+  {
+    "path": "src/lua/abyss_battle_info_view.lua",
+    "beforeSha256": "868f0319ef29b31285dbab17e93b406a216b742ef2430f62ac954ebb2b64e8ca",
+    "afterSha256": "2c0b78ccc798d833091cbb72cbc692539133fce2ddc2f44f49ce685cca5d92b6"
+  },
+  {
+    "path": "src/lua/abyss_battle_intent_view.lua",
+    "beforeSha256": "99e10a9eae432a1843758ec95e189a3805e21bd59c98a12b1cce5efb7843f237",
+    "afterSha256": "262567f3ce8e798f897594ee8660ac40d6dd0baad351494b2a407f47a58cdc7d"
+  },
+  {
+    "path": "src/lua/abyss_battle_render_actors.lua",
+    "beforeSha256": "a4f1c326ccb1ecf1db97906ba59315e20089894a3f04b28a28d1d6802300b282",
+    "afterSha256": "f44a288dc70d0fcab28945b82b5462137be7143e82c0d627e30c0710f0d1d216"
+  },
+  {
+    "path": "src/lua/abyss_battle_target_bindings.lua",
+    "beforeSha256": "01d8aa93514a57ceac23db2a4edcd6259e1324373dffa460444ed37f2a30d1b8",
+    "afterSha256": "5efb235d2421a6b034a965cecd5e0af68ee58f13fef55181188d6d631e9db38c"
+  },
+  {
+    "path": "src/lua/abyss_battle_ui.lua",
+    "beforeSha256": "d8eb24ede70c655ae222b28633d206e177c9bf60f03459e29cb3f4e43735198d",
+    "afterSha256": "3affbf9c19612e9c54202c24cca26ef66576e8076d4bee337cafb5fa12b48f1b"
+  },
+  {
+    "path": "src/lua/abyss_monster_intent_particle_view.lua",
+    "beforeSha256": "8117dd827ff947880d410f19fc5999fdce6cbd8caeb0b8e2b2cdb11b9db3dd70",
+    "afterSha256": "b95e48a63ef04217ed3b562338cecd9fc0041799b7699c966a7dcd36b86f8e08"
+  },
+  {
+    "path": "src/lua/abyss_monster_source_intents.lua",
+    "beforeSha256": "8992382ce56ae66c54194686160bfac78c035f545a50410557d02e8ae6820675",
+    "afterSha256": "50a0280ffee412f07daa4f8543ebf051db172468e393b735dc78a205730bb45f"
+  },
+  {
+    "path": "tests/approved-enemy-details.test.mjs",
+    "beforeSha256": "710185cfd6005110378634bfea6f2fac7908441838e7a7db11cea1282992b2f2",
+    "afterSha256": "54054b01605ce8608c0d34de5d162d4aa523e4e2ff66db462ed3b350d75dbf0a"
+  },
+  {
+    "path": "tests/helpers/ui-readability.mjs",
+    "beforeSha256": "c79f35c93452e3c1b5924a65cc24086c8ba24296751a4f3043197d49e5823ea0",
+    "afterSha256": "d056df22ea169b1cac68c75174796fe9cb29579b8841965bf25a4c0d72a70aaa"
+  },
+  {
+    "path": "tests/lua/approved_enemy_details.lua",
+    "beforeSha256": "2c6a807cf923b71751fd0aa0bd30331d02edfaf56f82c1812d13f2ca11b562f4",
+    "afterSha256": "194ee5bd20450a50d465a2e9e9a6a8e2ea3315997501975bc345a54fa11c6a5d"
+  },
+  {
+    "path": "tests/lua/support/ui_readability_snapshot.lua",
+    "beforeSha256": "1cc2e34543fbc3c946246f095297f4fcb75b25f93f9c9e1075efc5e277734c23",
+    "afterSha256": "21455bd8ca48d8f72f47e6e7368a90a3a11edfedd615e4fb570886f697806b13"
+  }
+]

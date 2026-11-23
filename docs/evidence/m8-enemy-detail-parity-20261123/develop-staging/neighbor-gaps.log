@@ -1,0 +1,171 @@
+✖ Act2 enemy intentions describe healing, cleanse and life-drain without changing combat (2831.448862ms)
+✖ both intent slices retain every original assertion and cover all fourteen cases once (2.056069ms)
+✖ new Boss intents and mixed split actors work in generated battle controls (2511.369286ms)
+✔ Act4 intent details retain source actions without mutating combat or RNG (1647.810417ms)
+✖ Act4 intent tooltip remains readable through generated strict native controls and pagination (1919.450628ms)
+Lua fixture tests/lua/intent_artifact_preview.lua: 6509 ms
+✖ generated GameUI intent previews respect ordered Artifact gates without mutating combat (6927.621103ms)
+✔ source displayed intent preserves copied enum/multi while applyPowers uses current selected base damage (123.820806ms)
+✔ new potion drag path preserves complete pointer owner cases 1,2,3 (6805.457922ms)
+✔ new potion drag path preserves complete pointer owner cases 4,5,6 (7898.729779ms)
+✔ new potion drag path preserves complete pointer owner cases 7,8,9 (7589.935326ms)
+✔ approved single-target potion drag: potion_drag_parity (6266.23661ms)
+✔ approved single-target potion drag: potion_drag_parity_cancel (9707.050591ms)
+✔ approved single-target potion drag: potion_drag_parity_owners (10535.355837ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 8
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65933.650296
+
+✖ failing tests:
+
+test at tests/act2-intent-ui.test.mjs:7:1
+✖ Act2 enemy intentions describe healing, cleanse and life-drain without changing combat (2831.448862ms)
+  AssertionError [ERR_ASSERTION]: tests/lua/support/act2_intent_ui_cases.lua:40: Mystic group heal intent is missing
+  stack traceback:
+  	[JS]: in function 'assert'
+  	tests/lua/support/act2_intent_ui_cases.lua:40: in field '?'
+  	tests/lua/support/act2_intent_ui_cases.lua:124: in function <tests/lua/support/act2_intent_ui_cases.lua:122>
+  	checkout-parent/checkout/tests/lua/act2_intent_ui.lua:1: in main chunk
+  	[JS]: in function 'dofile'
+  	(command line):1: in main chunk
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file://checkout/tests/act2-intent-ui.test.mjs:10:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/act2-intent-ui.test.mjs:15:1
+✖ both intent slices retain every original assertion and cover all fourteen cases once (2.056069ms)
+  Error: incorrect header check
+      at genericNodeError (node:internal/errors:986:15)
+      at wrappedFn (node:internal/errors:540:14)
+      at Zlib.zlibOnError [as onerror] (node:zlib:197:13)
+      at processChunkSync (node:zlib:443:12)
+      at zlibBufferSync (node:zlib:182:12)
+      at syncBufferWrapper (node:zlib:818:14)
+      at sourceArchive (file://checkout/tests/helpers/historical-baseline-inputs.mjs:22:27)
+      at loadHistoricalBaselineInputs (file://checkout/tests/helpers/historical-baseline-inputs.mjs:42:70)
+      at readHistoricalBaselineSource (file://checkout/tests/helpers/historical-baseline-inputs.mjs:105:15)
+      at TestContext.<anonymous> (file://checkout/tests/act2-intent-ui.test.mjs:17:15) {
+    errno: -3,
+    code: 'Z_DATA_ERROR'
+  }
+
+test at tests/bosses-intent-ui.test.mjs:5:1
+✖ new Boss intents and mixed split actors work in generated battle controls (2511.369286ms)
+  AssertionError [ERR_ASSERTION]: ABYSS_RUN seed=1 source=explicit
+  ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+  ABYSS_FEEDBACK play source=- target=1 amount=0
+  ABYSS_FEEDBACK damage source=player target=slime_boss_1 amount=6
+  ABYSS_FEEDBACK enemy_interrupt source=slime_boss_1 target=- amount=0
+  checkout-parent/checkout/tests/lua/bosses_intent_ui.lua:6:  missing 大型棘刺团
+  stack traceback:
+  	[JS]: in function 'assert'
+  	checkout-parent/checkout/tests/lua/bosses_intent_ui.lua:6: in local 'has'
+  	checkout-parent/checkout/tests/lua/bosses_intent_ui.lua:38: in main chunk
+  	[JS]: in function 'dofile'
+  	(command line):1: in main chunk
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file://checkout/tests/bosses-intent-ui.test.mjs:7:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/ending-intent-view.test.mjs:9:1
+✖ Act4 intent tooltip remains readable through generated strict native controls and pagination (1919.450628ms)
+  AssertionError [ERR_ASSERTION]: ABYSS_POWER_ICON_MISSING beat_of_death using labelled unknown placeholder
+  ABYSS_POWER_ICON_MISSING invincible using labelled unknown placeholder
+  checkout-parent/checkout/tests/lua/ending_intent_ui.lua:27: assertion failed!
+  stack traceback:
+  	[JS]: in function 'assert'
+  	checkout-parent/checkout/tests/lua/ending_intent_ui.lua:27: in main chunk
+  	[JS]: in function 'dofile'
+  	(command line):1: in main chunk
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file://checkout/tests/ending-intent-view.test.mjs:11:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/intent-artifact-preview.test.mjs:7:1
+✖ generated GameUI intent previews respect ordered Artifact gates without mutating combat (6927.621103ms)
+  AssertionError [ERR_ASSERTION]: tests/lua/support/intent_artifact_fixture.lua:141: Intent Artifact failures: 1
+  stack traceback:
+  	[JS]: in function 'assert'
+  	tests/lua/support/intent_artifact_fixture.lua:141: in field 'finish'
+  	checkout-parent/checkout/tests/lua/intent_artifact_preview.lua:66: in main chunk
+  	[JS]: in function 'dofile'
+  	(command line):1: in main chunk
+  ABYSS_RUN seed=1 source=explicit
+  FAIL stock Fat Gremlin refresh and real end-turn agree at Weak upper bound with Artifact: checkout-parent/checkout/tests/lua/intent_artifact_preview.lua:15: assertion failed!
+  ABYSS_RUN seed=1 source=explicit
+  ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+  ABYSS_FEEDBACK intent source=fat_gremlin_1 target=- amount=0
+  ABYSS_FEEDBACK damage source=fat_gremlin_1 target=player amount=4
+  ABYSS_FEEDBACK status source=player target=player amount=-1
+  ABYSS_FEEDBACK status source=player target=player amount=-1
+  ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+  ABYSS_FEEDBACK player_turn source=- target=- amount=0
+  PASS ordinary stock values retain status details, card preview and command behavior
+  ABYSS_RUN seed=1 source=explicit
+  ABYSS_RUN seed=1 source=explicit
+  PASS neighboring boundary and stock non-applying intent remain valid
+  ABYSS_RUN seed=1 source=explicit
+  PASS unblocked true overflow remains visible and leaves the live state untouched
+  LUA_INTENT_ARTIFACT_PREVIEW 3 passed; 1 failed
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file://checkout/tests/intent-artifact-preview.test.mjs:24:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

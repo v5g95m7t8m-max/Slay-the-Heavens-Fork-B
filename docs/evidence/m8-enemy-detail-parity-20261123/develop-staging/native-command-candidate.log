@@ -1,0 +1,83 @@
+ABYSS_RUN seed=1 source=explicit
+ok approved details 1 - attack and pure buff without powers replace one another on rapid PC hover
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ok approved details 2 - PC hover shows the same STS stack from icon, body and HP
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ok approved details 3 - mobile tap shows the same STS stack from icon, body and HP
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=jaw_worm_1 target=- amount=0
+ABYSS_FEEDBACK damage source=jaw_worm_1 target=player amount=11
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=jaw_worm_1 target=- amount=0
+ABYSS_FEEDBACK status source=jaw_worm_1 target=jaw_worm_1 amount=3
+ABYSS_FEEDBACK block source=jaw_worm_1 target=jaw_worm_1 amount=6
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK block_reset source=- target=jaw_worm_1 amount=0
+ABYSS_FEEDBACK intent source=jaw_worm_1 target=- amount=0
+ABYSS_FEEDBACK damage source=jaw_worm_1 target=player amount=10
+ABYSS_FEEDBACK block source=jaw_worm_1 target=jaw_worm_1 amount=5
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+ok approved details 4 - Jaw Worm action results match settlement and stay separate from active Block and Strength
+ABYSS_RUN seed=1 source=explicit
+ok approved details 5 - the Three Sentries use the STS side threshold and keep the inspected actor clear
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING constricted using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING invincible using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING beat_of_death using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING surrounded using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING back_attack using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING regenerate_monster using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING curiosity using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING unawakened using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING regrow using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING painful_stabs using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING malleable using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING hex using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING flight using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING confusion using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING minion using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING stasis using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING generic_strength_up using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING explosive using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING shifting using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING fading using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING reactive using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING slow using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING nemesis_intangible using labelled unknown placeholder
+ok approved details 6 - long lists retain a separate attack-buff intent, active powers and source text
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING split using labelled unknown placeholder
+ok approved details 7 - Runic Dome hides intent effects from both body and HP
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK play source=- target=1 amount=0
+ABYSS_FEEDBACK status source=player target=guardian_1 amount=-2
+ABYSS_FEEDBACK exhaust source=- target=- amount=0
+ok approved details 8 - multi-hit hover follows displayed damage after a live Power callback
+ok approved details 9 - special intents and the attack-debuff multi-hit disclosure match the source branches
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK play source=- target=2 amount=0
+ABYSS_FEEDBACK damage source=player target=jaw_worm_2 amount=6
+ABYSS_FEEDBACK damage source=player target=jaw_worm_2 amount=20
+ABYSS_FEEDBACK potion source=- target=2 amount=0
+ok approved details 10 - intent and HP preserve card and potion aim while the portrait commits each once
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK play source=- target=1 amount=0
+ABYSS_FEEDBACK damage source=player target=jaw_worm_1 amount=6
+ABYSS_FEEDBACK damage source=player target=jaw_worm_1 amount=20
+checkout-parent/checkout/tests/lua/approved_enemy_details.lua:382: assertion failed!
+stack traceback:
+	[JS]: in function 'assert'
+	checkout-parent/checkout/tests/lua/approved_enemy_details.lua:382: in local 'fn'
+	checkout-parent/checkout/tests/lua/approved_enemy_details.lua:20: in local 'test'
+	checkout-parent/checkout/tests/lua/approved_enemy_details.lua:366: in main chunk
+	[JS]: in function 'dofile'
+	(command line):22: in main chunk
