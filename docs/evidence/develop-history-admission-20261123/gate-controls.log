@@ -1,0 +1,1 @@
+8 checks passed: exact predecessor + exact LF/CRLF current; tampered, malformed CR, altered assertion, duplicate rejected; unrelated inventory unchanged.
