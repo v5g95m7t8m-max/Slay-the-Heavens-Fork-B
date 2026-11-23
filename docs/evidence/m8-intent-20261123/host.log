@@ -1,0 +1,32 @@
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=automaton_1 target=- amount=0
+ABYSS_POWER_ICON_MISSING minion using labelled unknown placeholder
+ABYSS_FEEDBACK status source=bronze_orb_2 target=bronze_orb_2 amount=1
+ABYSS_FEEDBACK enemy_spawn source=bronze_orb_2 target=- amount=0
+ABYSS_FEEDBACK status source=bronze_orb_3 target=bronze_orb_3 amount=1
+ABYSS_FEEDBACK enemy_spawn source=bronze_orb_3 target=- amount=0
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+UNKNOWN_PENDING_GREEN 召唤 召唤 2 名青铜浮核  actors=1->3
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING beat_of_death using labelled unknown placeholder
+ABYSS_POWER_ICON_MISSING invincible using labelled unknown placeholder
+HEART_PAGE 1/3 易伤 2=使你获得 2 回合易伤; 虚弱 2=使你获得 2 回合虚弱; 脆弱 2=使你获得 2 回合脆弱
+HEART_PAGE 2/3 塞入「晕眩」×1=将 1 张「晕眩」随机放入你的抽牌堆; 塞入「黏滞」×1=将 1 张「黏滞」随机放入你的抽牌堆; 塞入「伤口」×1=将 1 张「伤口」随机放入你的抽牌堆
+HEART_PAGE 3/3 塞入「灼烧」×1=将 1 张「灼烧」随机放入你的抽牌堆; 塞入「虚空」×1=将 1 张「虚空」随机放入你的抽牌堆
+LONG_DETAIL_GREEN old_chars=143 pages=3 effects=8
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING minion using labelled unknown placeholder
+ABYSS_FEEDBACK heal source=- target=player amount=16
+ABYSS_FEEDBACK potion source=- target=- amount=0
+CROWDED_HEAL_GREEN 1280x720 enemies=3 concurrent_frames=14 with_notice=13 hp=40->56 overlap_negative=RED
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_POWER_ICON_MISSING minion using labelled unknown placeholder
+ABYSS_FEEDBACK heal source=- target=player amount=16
+ABYSS_FEEDBACK potion source=- target=- amount=0
+CROWDED_HEAL_GREEN 960x720 enemies=3 concurrent_frames=14 with_notice=13 hp=40->56 overlap_negative=RED
