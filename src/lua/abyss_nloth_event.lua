@@ -1,6 +1,7 @@
 -- N'loth at fixed STS319009d5: all owned relics are candidates, no filter.
 local Run=require('abyss_run')
 local R=require('abyss_sts_random')
+local Names=require('abyss_relic_names')
 local M={}
 local function definition(run,id)
  for _,d in ipairs(run.data.relics.relics)do if d.id==id or d.sourceId==id then return d end end
@@ -24,9 +25,10 @@ function M.options(run,event)
  if event.stage~='intro'then return {}end
  local rows={}
  local repeated=owns(run,"Nloth's Gift")
+ local description=repeated and ('已经持有礼物：获得'..Names.get(run.data,'circlet')..'，不失去所示遗物。')
+    or '交出所示遗物，获得恩洛斯的礼物。'
  for i,id in ipairs(event.relicChoices)do
   local d=definition(run,id)
-  local description=repeated and '已经持有礼物：获得圆环，不失去所示遗物。'or'交出所示遗物，获得恩洛斯的礼物。'
   rows[i]=row('trade_'..i,'选择'..(d and d.name or id),description,id)
  end
  rows[3]=row('leave','离开','拒绝交易。');return rows
