@@ -1,0 +1,6 @@
+name=恩洛斯
+body=恩洛斯指着你随身的两件遗物，提出交换。
+option1/description=交出所示遗物，获得恩洛斯的礼物。
+body=恩洛斯转过身去，交易结束了。
+获得遗物：恩洛斯的礼物。
+LUA_NLOTH_CHINESE_PRESENTATION_PASS
