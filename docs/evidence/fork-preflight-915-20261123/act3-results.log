@@ -1,0 +1,4 @@
+act3_boss_complete_fights.exact.log:ACT3_BOSS_COMPLETE_FIGHTS_PASS 3
+formal_campaign_entry.exact.log:FORMAL_CAMPAIGN_ENTRY_PASS 4; controlled room completions; native/natural NOT_RUN
+full_source_campaign_entry-red.exact.log:tests/lua/full_source_campaign_entry.lua:152: normal third-act result must use the real campaign floor range
+full_source_campaign_entry.exact.log:FULL_SOURCE_CAMPAIGN_ENTRY_PASS 3; controlled room completions; native/natural NOT_RUN
