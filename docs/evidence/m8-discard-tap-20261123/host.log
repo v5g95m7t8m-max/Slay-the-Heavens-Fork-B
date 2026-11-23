@@ -1,0 +1,24 @@
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=cultist_1 target=- amount=0
+ABYSS_FEEDBACK status source=cultist_1 target=cultist_1 amount=3
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+PILING_TOUCH_GREEN 1280x720 gap=40.361 design (dx=27.000 dy=30.000), 40.361 projected pixels; gap=no-op, discard=read-only, end-turn=+1, negative=RED
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=cultist_1 target=- amount=0
+ABYSS_FEEDBACK status source=cultist_1 target=cultist_1 amount=3
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+PILING_TOUCH_GREEN 960x720 gap=40.361 design (dx=27.000 dy=30.000), 30.271 projected pixels; gap=no-op, discard=read-only, end-turn=+1, negative=RED
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_RUN seed=1 source=explicit
+ABYSS_FEEDBACK enemy_turn source=- target=- amount=0
+ABYSS_FEEDBACK intent source=cultist_1 target=- amount=0
+ABYSS_FEEDBACK status source=cultist_1 target=cultist_1 amount=3
+ABYSS_FEEDBACK reshuffle source=- target=- amount=0
+ABYSS_FEEDBACK player_turn source=- target=- amount=0
+PILING_TOUCH_GREEN 844x390 gap=40.361 design (dx=27.000 dy=30.000), 21.862 projected pixels; gap=no-op, discard=read-only, end-turn=+1, negative=RED
