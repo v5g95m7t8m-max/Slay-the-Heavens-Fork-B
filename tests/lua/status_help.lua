@@ -31,12 +31,14 @@ test("debuff intent is an upcoming action, not an existing status or a stack cou
     assert((s.player.statuses.frail or 0)==0 and (s.enemies[1].statuses.frail or 0)==0)
     emit(monsterControl(p,"enemy1"):GetChild("intentHit"),"click")
     local info=p:GetChild("statusInfo")
-    assert(info.visible and info:GetChild("tag").text:find("下一步行动",1,true))
-    assert(info:GetChild("summary").text:find("尚未执行",1,true))
-    assert(info:GetChild("text1").text:find("使你获得 1 回合脆弱",1,true))
-    -- The row names the status and stack, says how long it would last and what it would do.
-    assert(info:GetChild("name1").text=="脆弱 1" and info:GetChild("tag1").text=="持续 1 回合")
-    assert(info:GetChild("note1").text:find("25%",1,true))
+    assert(info.visible and u.info.kind=="intent" and info:GetChild("tag").text=="当前意图")
+    assert(info:GetChild("name1").text=="策略" and info:GetChild("text1").text=="这名敌人将要对你施加一种负面效果。")
+    assert(not info:GetChild("text1").text:find("脆弱",1,true), "shown source is not ordered preview")
+    -- The forecast still names the status and stack, duration and effect.
+    local row=require('abyss_battle_intent_view').intentView(s,1).rows[1]
+    assert(row.text:find("使你获得 1 回合脆弱",1,true))
+    assert(row.name=="脆弱 1" and row.tag=="持续 1 回合")
+    assert(row.note:find("25%",1,true))
     assert((s.player.statuses.frail or 0)==0 and (s.enemies[1].statuses.frail or 0)==0)
 end)
 test("actual Vulnerable names its owner, name, stack and effect in visible text frames",function()

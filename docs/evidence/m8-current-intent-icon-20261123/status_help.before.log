@@ -1,0 +1,9 @@
+ABYSS_RUN seed=1 source=explicit
+tests/lua/status_help.lua:34: assertion failed!
+stack traceback:
+	[JS]: in function 'assert'
+	tests/lua/status_help.lua:34: in local 'fn'
+	tests/lua/status_help.lua:5: in local 'test'
+	tests/lua/status_help.lua:24: in main chunk
+	[JS]: in function 'dofile'
+	(command line):1: in main chunk

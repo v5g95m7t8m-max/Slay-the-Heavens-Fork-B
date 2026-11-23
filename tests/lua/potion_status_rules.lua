@@ -53,7 +53,10 @@ test('S07 duration intent says turns before it is applied',function()
     -- Synthetic effect wording keeps a legal selected source move identity.
     s.enemies[1].intents={{id='cultist_2',kind='debuff',effects={{op='applyStatus',status='weak',value=2}}}}
     u:render();monsterControl(p,'enemy1'):GetChild('intentHit').click()
-    assert(p:GetChild('statusInfo'):GetChild('text1').text:find('2 回合虚弱',1,true),'duration must not be described as intensity')
+    local info=p:GetChild('statusInfo')
+    assert(info.visible and u.info.kind=='intent' and info:GetChild('text1').text=='这名敌人将要进行强化。')
+    local row=require('abyss_battle_intent_view').intentView(s,1).rows[1]
+    assert(row.text:find('2 回合虚弱',1,true),'forecast duration must not be described as intensity')
     assert((s.player.statuses.weak or 0)==0)
 end)
 test('S08 current poison detail updates amount and next tick without a stale value',function()

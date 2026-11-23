@@ -86,6 +86,21 @@ function M.new(platform,picture,tint)
   if state.powersPending then Displayed.applyPowers(state.displayed,selected,calculate);state.powersPending=nil end
   return Displayed.face(state.displayed)
  end
+ -- Retain only the published face's tooltip inputs, not its forecast rows.
+ function self.rememberPreview(_,battle,actor,face,allowed)
+  local state=self.battle==battle and self.states[actor.id]
+  if not state then return end
+  if not allowed or not face.sourceEnum then state.preview=nil;return end
+  local preview=state.preview or {}
+  preview.actor,preview.enum,preview.kind=actor,face.sourceEnum,face.worldKind or face.kind
+  preview.damage,preview.times=face.worldDamage,face.worldTimes
+  state.preview=preview
+ end
+ function self.tooltip(_,battle,actor)
+  local state=self.battle==battle and self.states[actor.id]
+  local preview=state and state.preview
+  return preview and preview.actor==actor and preview or nil
+ end
  function self.update(_,id,dt,face,g,dying,escaping)
   local state=assert(self.states[id],'missing intent instance')
   Particles.updateAlpha(state,dt)

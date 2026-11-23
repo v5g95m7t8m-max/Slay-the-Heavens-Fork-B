@@ -1,0 +1,10 @@
+ABYSS_RUN seed=1 source=explicit
+SPECIAL_HEAD move=spawn_orbs enum=UNKNOWN icon=false shown= text=这名敌人的意图不明（但不是攻击）。 read_only=true
+ABYSS_RUN seed=1 source=explicit
+SPECIAL_HEAD move=inferno enum=ATTACK_DEBUFF icon=true shown=2x6 text=这名敌人将要对你施加负面效果并攻击造成 2 点伤害 6 次。 read_only=true
+tests/lua/current_enemy_intent_tooltip.lua:64: ATTACK_DEBUFF disclosure mismatch: 这名敌人将要对你施加负面效果并攻击造成 2 点伤害 6 次。
+stack traceback:
+	[JS]: in function 'assert'
+	tests/lua/current_enemy_intent_tooltip.lua:64: in main chunk
+	[JS]: in function 'dofile'
+	(command line):22: in main chunk

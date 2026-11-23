@@ -1,0 +1,7 @@
+ABYSS_RUN seed=1 source=explicit
+tests/lua/current_enemy_intent_tooltip.lua:36: existing intent-entry reader must explain displayed 11, not calculated future: 造成 7 点伤害
+stack traceback:
+	[JS]: in function 'assert'
+	tests/lua/current_enemy_intent_tooltip.lua:36: in main chunk
+	[JS]: in function 'dofile'
+	(command line):22: in main chunk

@@ -1,5 +1,6 @@
 -- Read-only detail projection. Combat owns the effects, durations and preview values.
 local Combat = require("abyss_combat")
+local Intent = require("abyss_battle_intent_view")
 local Theme = require("abyss_theme")
 local number = require("abyss_numbers").integer
 local M = {}
@@ -59,10 +60,43 @@ local function ownedStatusText(self, describe, entry, battle, actor)
     return text, tag, note
 end
 
+-- The head icon explains the published intent, never the ordered outcome forecast.
+local attackTips = {
+    ATTACK = "这名敌人将要攻击造成 ",
+    ATTACK_BUFF = "这名敌人将要进行强化并攻击造成 ",
+    ATTACK_DEBUFF = "这名敌人将要对你施加负面效果并攻击造成 ",
+    ATTACK_DEFEND = "这名敌人将要格挡并攻击造成 ",
+}
+local currentTips = {
+    BUFF = {"策略", "这名敌人将要进行强化。"},
+    DEBUFF = {"策略", "这名敌人将要对你施加一种负面效果。"},
+    STRONG_DEBUFF = {"策略", "这名敌人将要对你施加一种强大的负面效果。"},
+    DEFEND = {"守势", "这名敌人将要在这个回合进行格挡。"},
+    DEFEND_DEBUFF = {"守势", "这名敌人将要进行格挡并对你施加一种负面效果。"},
+    DEFEND_BUFF = {"守势", "这名敌人将要进行格挡并进行强化。"},
+    ESCAPE = {"胆小", "这名敌人将要逃跑。"},
+    MAGIC = {"魔法", "这名敌人将要在这个回合使用神秘的魔法。"},
+    SLEEP = {"熟睡", "这名敌人正在睡觉。"},
+    STUN = {"击晕", "这名敌人在这个回合被击晕了。"},
+    UNKNOWN = {"不明", "这名敌人的意图不明（但不是攻击）。"},
+}
+local function intentTip(face)
+    local enum = face.enum
+    local attack = attackTips[enum]
+    if attack and face.damage and face.damage >= 0 then
+        local repeatText = enum ~= 'ATTACK_DEBUFF' and face.times and face.times > 1
+            and (' ' .. number(face.times) .. ' 次') or ''
+        return {name = enum == 'ATTACK_DEBUFF' and '策略' or '攻势',
+            text = attack .. number(face.damage) .. ' 点伤害' .. repeatText .. '。'}
+    end
+    local copy = currentTips[enum] or currentTips.UNKNOWN
+    return {name = copy[1], text = copy[2]}
+end
+
 -- Fixed presentation dependencies stay with the existing battle description helpers.
 function M.new(self, describe, lines)
     local function projectedIntent(battle,index)
-        if require('abyss_boss_relics').hidesIntents(self.run)then return require('abyss_battle_intent_view').hidden()end
+        if require('abyss_boss_relics').hidesIntents(self.run)then return Intent.hidden()end
         return describe.intentView(battle,index)
     end
     local function statusRow(entry, battle, actor)
@@ -73,11 +107,20 @@ function M.new(self, describe, lines)
             name = entry.name .. (entry.stack == "none" and "" or " " .. number(entry.amount)) }
     end
 
-    local function intentCard(card, battle, info)
-        local view = projectedIntent(battle, info.index)
-        card.tag, card.accent, card.hp = "下一步行动", describe.intentColors[view.kind] or C.textDim, nil
-        card.subtitle = "尚未执行 · 敌方回合时发生"
-        card.sections[1] = { rows = view.rows }
+    local function intentCard(card, battle, info, actor)
+        if require('abyss_boss_relics').hidesIntents(self.run) or not Intent.hasSourceIntent(actor) then
+            local view = projectedIntent(battle, info.index)
+            card.tag, card.accent, card.hp = "下一步行动", describe.intentColors[view.kind] or C.textDim, nil
+            card.subtitle = "尚未执行 · 敌方回合时发生"
+            card.sections[1] = {rows = view.rows}
+            return card
+        end
+        local face = describe.displayedIntent and describe.displayedIntent(battle,actor)
+        if not face or face.enum == 'NONE' then return end
+        card.tag, card.accent, card.hp = "当前意图", describe.intentColors[face.kind] or C.textDim, nil
+        local row = intentTip(face)
+        row.colour = card.accent
+        card.sections[1] = {rows = {row}}
         return card
     end
 
@@ -292,7 +335,7 @@ function M.new(self, describe, lines)
         if info.kind == "powerTips" then return powerRows(entries, battle, info, actor) end
         local card = {title = actor.name or "旅行者", tag = "当前状态", accent = C.gold,
             hp = actor.hp, maxHp = actor.maxHp, block = actor.block, sections = {}}
-        if info.kind == "intent" then return intentCard(card, battle, info) end
+        if info.kind == "intent" then return intentCard(card, battle, info, actor) end
         if info.kind == "card" or info.kind == "potion" or info.kind=='rewardCard' then return keywordCard(card, data, presentation, battle, info, actor) end
         entries = selectedEntries(entries, info)
         if not entries then return end

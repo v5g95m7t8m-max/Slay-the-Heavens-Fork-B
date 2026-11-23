@@ -1,0 +1,4 @@
+ABYSS_RUN seed=1 source=explicit
+SPECIAL_HEAD move=spawn_orbs enum=UNKNOWN icon=false shown= text=<color=#F5D78A>不明</color> / 这名敌人的意图不明（但不是攻击）。 | <color=#F5D78A>人工制品 3</color> / 抵挡接下来 3 次减益效果。 剩余 3 次。 每抵挡一次减 1；不抵挡塞入的状态牌 read_only=true
+ABYSS_RUN seed=1 source=explicit
+SPECIAL_HEAD move=inferno enum=ATTACK_DEBUFF icon=true shown=2x6 text=<color=#F5D78A>策略</color> / 这名敌人将要对你施加负面效果并攻击造成 2 点伤害。 read_only=true
