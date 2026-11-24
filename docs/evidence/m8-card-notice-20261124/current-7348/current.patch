@@ -1,0 +1,10 @@
+--- a/src/lua/abyss_battle_actions.lua
++++ b/src/lua/abyss_battle_actions.lua
+@@ -177,6 +177,7 @@
+     end
+     function owner:setActive(active, suspend, deferRender)
+         assert(type(active) == "boolean", "active must be boolean")
++        if self.active and not active and self.run and self.run.phase=="combat" then dependencies.notice("") end
+         self.active = active
+         -- Only the host may request a temporary same-battle cover. Plain false still unmounts.
+         self.suspendedBattle = not active and suspend == true and self.run and self.run.combat or nil

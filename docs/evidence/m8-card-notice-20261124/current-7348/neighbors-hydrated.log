@@ -1,0 +1,21 @@
+✔ gesture budget slices jointly register and execute all eleven original groups once (2.222558ms)
+✔ boss entrance expires once without clobbering newer feedback (5055.450518ms)
+✔ [historical 98fef source contract] two original-budget potion context fixtures preserve the full eight-case source and fresh inputs (475.599358ms)
+✔ [historical 98fef source contract] potion context inverse and coverage guards reject lost assertions, skipped cases, inert wrappers and input drift (400.95895ms)
+✔ current potion context discovery and wrappers retain both complete ranges and the ordinary budget (1.990317ms)
+✔ current potion context budget rejects classification drift, timeout overrides and a missing wrapper (1.30768ms)
+✔ [historical 98fef source contract] two original-budget potion inventory fixtures preserve the full seven-case source and fresh inputs (443.629594ms)
+✔ current raw discovery retains both complete potion inventory ranges (1.639469ms)
+✔ [historical 98fef source contract] potion inventory inverse and coverage guards reject lost assertions, skipped cases, inert wrappers and input drift (415.129861ms)
+✔ [historical 98fef source contract] four original-budget potion pointer fixtures preserve the full seven-case source and fresh inputs (496.355261ms)
+✔ [historical 98fef source contract] potion pointer inverse and coverage guards reject lost assertions, skipped cases, inert wrappers and input drift (395.421365ms)
+✔ current potion pointer coverage retains four executable ranges, raw discovery and the ordinary fixture budget (2.814979ms)
+✔ current potion pointer budget rejects classification drift, timeout overrides and missing wrappers (0.985765ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5363.657405
