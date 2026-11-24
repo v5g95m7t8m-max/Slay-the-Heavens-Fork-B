@@ -105,10 +105,12 @@ function M.install(owner, _ownership, host, dependencies)
     local function hasCursorPair(first,second)
         return host.cursor and host.cursor[first] and host.cursor[second]
     end
-    local function closeAutomaticCard(control)
+    local function closeTransientCard(control)
         local info=owner.info
-        if Theme.presentationProfile=='official-assets-first' and info and info.source==control
-            and info.transient and info.kind=='card' then dependencies.closeInfo()end
+        if info and info.source==control and info.transient and info.kind then
+            dependencies.closeInfo(true)
+            return true
+        end
     end
     local function forgetHelp(control,hoverSlot,input)
         input.held,input.released,input.consumed=nil,nil,nil
@@ -132,24 +134,43 @@ function M.install(owner, _ownership, host, dependencies)
                 return callback(event)
             end)
         end
-        local function cancel(silent,engineDestroyed)
+        local function cancelCardRead(event)
+            local info=owner.info
+            if not (hoverSlot and info and info.press) then return false end
+            if info.source==control and event and info.press.touch==event.touchId then
+                dependencies.closeInfo()
+                owner:render(true)
+            end
+            return true
+        end
+        local function enterCard()
+            local info=owner.info
+            if host.platform.touchScreen and host.platform.touchScreen() or info and info.press then return false end
+            if info and info.source~=control and (info.kind=='card' or info.kind=='rewardCard') then
+                dependencies.closeInfo(true)
+            end
+            owner:setHover(hoverSlot)
+            return true
+        end
+        local function cancel(silent,engineDestroyed,event)
             if engineDestroyed then input.engineDestroyed=true end
             if input.engineDestroyed then forgetHelp(control,hoverSlot,input);return end
             input.held,input.released,input.consumed=nil,nil,nil
-            closeAutomaticCard(control)
+            if cancelCardRead(event) then return end
+            local closed=closeTransientCard(control)
             if hoverSlot and owner.hover==hoverSlot then owner:setHover(nil) end
             if owner.help and owner.help.source==control then owner.help=nil end
-            if owner.info and owner.info.source==control and owner.info.transient then dependencies.closeInfo();if silent~=true then owner:renderDetailsOnly() end end
+            if closed and not silent then owner:renderDetailsOnly() end
         end
         if cleanups then cleanups[#cleanups+1]={control=control,cancel=cancel} end
         if hasCursorPair("CursorEnter","CursorExit") then
             on(host.cursor.CursorEnter,function()
                 if not current() then return false end
-                if hoverSlot then owner:setHover(hoverSlot) end
+                if hoverSlot and not enterCard() then return end
                 owner:queueHelp(describe(),control,false)
             end)
             if not current() then return end
-            on(host.cursor.CursorExit,cancel)
+            on(host.cursor.CursorExit,function(event) cancel(false,false,event) end)
             if not current() then return end
         end
         if not clickable then return end

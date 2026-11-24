@@ -99,6 +99,12 @@ function M.install(owner, ownership, _host, dependencies)
             and token.battle.turn == token.turn and token.battle.phase == 'player'
             and instance and instance.uid == token.uid
     end
+    local function retireCardHelp()
+        local info=owner.info
+        if info and (info.kind=='card' or info.kind=='rewardCard') and not owner:cardHelpReady(info) then
+            owner.info,owner.hover,owner.handHover=nil,nil,nil
+        end
+    end
     local function syncRewardOwner(frame)
         local run = frame.run
         local reward = not owner.busy and run and run.phase == "reward"
@@ -113,6 +119,7 @@ function M.install(owner, ownership, _host, dependencies)
         end
         frame.picking = reward and owner.rewardScreen == "cards"
         frame.listing = reward and owner.rewardScreen == "list"
+        retireCardHelp()
         if reward then owner.handHover = nil
         elseif not handHoverReady() then owner.hover,owner.handHover = nil,nil end
     end

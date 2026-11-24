@@ -67,11 +67,11 @@ local function samePotion(token, potion)
         and token.potionUnavailable == (potion and potion.unavailable)
 end
 
-local function sameManualPage(token, view, rewards)
+local function sameManualPage(token, view, rewards, readOnly)
     local item = rewards.stolenGold
     -- A no-loss reward keeps its gesture through a pure redraw. Stolen-gold
     -- pages retain their explicit-redraw boundary and their claimed identity.
-    return not ((item and token.render ~= view.rewardRender) or token.item ~= item
+    return not ((item and not readOnly and token.render ~= view.rewardRender) or token.item ~= item
         or token.claimed ~= (item and item.claimed) or token.cardResolved ~= rewards.cardResolved)
 end
 
@@ -94,7 +94,7 @@ local function sameEmerald(token,rewards,run)
     return true
 end
 
-function M.ready(view, token)
+function M.ready(view, token, readOnly)
     local run = view.run
     if not run or run.phase ~= "reward" or run.rewards ~= token.rewards or run.combat ~= token.battle then return false end
     if token.rewardScreen ~= view.rewardScreen or token.rewardEpoch ~= view.rewardEpoch then return false end
@@ -103,7 +103,7 @@ function M.ready(view, token)
     if not sameEmerald(token,rewards,run)then return false end
     if not sameGoldAndCards(token, rewards) then return false end
     if not samePotion(token, rewards.potion) then return false end
-    if rewards.manualContinue and not sameManualPage(token, view, rewards) then return false end
+    if rewards.manualContinue and not sameManualPage(token, view, rewards, readOnly) then return false end
     return true
 end
 

@@ -553,6 +553,8 @@ const newerTests={
   'tests/potion-sts-structure.test.mjs':'56b91c313e26d1129a39b7678a39df7df38a71a2252deb060351c5cc115e6118'
  },
  lua:{
+  'tests/lua/card_body_catalog.lua':'7d7d69e5c551e045b354d047e156c26985bbc36dc55103ce85eef2cf0c7fe35c',
+  'tests/lua/card_body_focus.lua':'b5705056728fc8592242b790ca1023e7dc0a38eb375b3a206ca2076581b90679',
   'tests/lua/detail_latency.lua':'8cd646c8d369ffdf1a59d08ee59c336acf2d064757b27c0c658e08c182caf4a0',
   'tests/lua/potion_management_visual.lua':'4732441f834fa47346ac567392bb4c68758b580b091ef2ce54ab05591d89c5f4',
   'tests/lua/traveler_power_tooltip.lua':'eacaefc663ef5800d114a4118546a170ee7c93be09800df02108a223285afda0'

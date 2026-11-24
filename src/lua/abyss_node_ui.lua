@@ -38,6 +38,20 @@ local function snapshotDeck(deck)
 end
 local function iconId(entry) return type(entry) == "table" and entry.id or entry end
 
+local function refreshPickerNotice(ctx, node, screen, notice, message)
+    if screen ~= "pickerView" or ctx.enhancedForge(node) or MatchUI.isBoard(node.event) then return false end
+    -- Keep prompts and errors in the same coordinate space as the paged cards.
+    if ctx.self.picker == "library_offer" and not ctx.self.failed and not message:find("不能跳过", 1, true) then
+        message = message .. "不能跳过。"
+    end
+    notice.text = ""
+    notice = ctx.child("pickerView"):GetChild("empty")
+    ctx.show(notice, message ~= "")
+    notice.text = message
+    ctx.ink(notice, ctx.self.failed and C.danger or C.text)
+    return true
+end
+
 local function merchantVisible(ctx, node, active)
     if not node or node.type ~= 'shop' or ctx.self.mode ~= 'main' or not (active or node.complete) then return false end
     return true
@@ -195,15 +209,7 @@ function M.new(root, run, map, presentation, clickEvent, onChange, options)
         ctx.merchant:setVisible(merchantVisible(ctx, node, active))
         local message=ctx.self.notice ~= "" and ctx.self.notice or hint or ""
         local notice=ctx.child("notice")
-        if screen == "pickerView" and not ctx.enhancedForge(node) and not MatchUI.isBoard(node.event) then
-            -- Keep prompts and errors in the same coordinate space as the paged cards.
-            notice.text = ""
-            notice = ctx.child("pickerView"):GetChild("empty")
-            ctx.show(notice, message ~= "")
-            notice.text = message
-            ctx.ink(notice, ctx.self.failed and C.danger or C.text)
-            return
-        end
+        if refreshPickerNotice(ctx, node, screen, notice, message) then return end
         if repeatedEventNotice(ctx,node,message)then message=''end
         notice.text = message
         ctx.ink(notice, ctx.self.failed and ctx.self.notice ~= "" and C.danger or C.text)

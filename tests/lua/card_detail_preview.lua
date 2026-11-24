@@ -14,6 +14,9 @@ local function setup(cards)
  local panel=root:GetChild('deckPanel')
  return host,panel,panel:GetChild('grid')
 end
+local function face(panel)return panel:GetChild('cardFocus'):GetChild('face')end
+local function body(panel)return face(panel):GetChild('label').text end
+local function title(panel)return face(panel):GetChild('name').text end
 local function toggle(panel)return panel:GetChild('upgradePreview'):GetChild('hit').click()end
 
 test('ordinary real hit opens current details and preview is reversible without any run mutation',function()
@@ -21,15 +24,19 @@ test('ordinary real hit opens current details and preview is reversible without 
  local before=Combat.copy(host.run)
  local hit=grid.items[0]:GetChild('hit')
  assert(hit.visible,'ordinary card detail hit must be visible')
- assert(hit.click());assert(panel:GetChild('details').visible and not grid.visible)
- local current=panel:GetChild('details').text
+ local refresh=grid.refreshCallback
+ assert(hit.click());assert(panel:GetChild('cardFocus').visible and not grid.visible)
+ assert(not panel:GetChild('detailHit').visible,'simple cards have no paging')
+ local currentFace=face(panel)
+ local current=body(panel)
  assert(current:find('8',1,true),'current Bash damage')
- assert(toggle(panel));local upgraded=panel:GetChild('details').text
+ assert(toggle(panel));local upgraded=body(panel)
  assert(upgraded:find('10',1,true) and upgraded~=current,'upgraded Bash damage')
- assert(toggle(panel));assert(panel:GetChild('details').text==current)
- assert(toggle(panel));assert(panel:GetChild('details').text==upgraded)
+ assert(toggle(panel));assert(body(panel)==current)
+ assert(toggle(panel));assert(body(panel)==upgraded)
  assert(same(before,host.run),'details/preview changed complete Run')
- assert(host.deckUI:back());assert(grid.visible)
+ assert(host.deckUI:back());assert(grid.visible and not panel:GetChild('cardFocus').visible)
+ assert(face(panel)==currentFace and grid.refreshCallback==refresh,'one face and one grid generation suffice')
  assert(host:closeDeck());assert(same(before,host.run))
 end)
 
@@ -38,8 +45,8 @@ test('already upgraded and unupgradeable cards remain current, never downgrade',
   local host,panel,grid=setup({card});local before=Combat.copy(host.run)
   assert(grid.items[0]:GetChild('hit').click())
   assert(not panel:GetChild('upgradePreview').visible)
-  local text=panel:GetChild('details').text
-  assert(not toggle(panel));assert(panel:GetChild('details').text==text)
+  local text=body(panel)
+  assert(not toggle(panel));assert(body(panel)==text)
   assert(same(before,host.run));host:closeDeck()
  end
 end)
@@ -47,12 +54,12 @@ end)
 test('repeatable Searing Blow previews exactly one additional upgrade each time',function()
  local host,panel,grid=setup({{uid=11,cardId='searing_blow',upgraded=true,upgrades=2}})
  local before=Combat.copy(host.run)
- assert(grid.items[0]:GetChild('hit').click());local current=panel:GetChild('details').text
- assert(current:find('21',1,true));assert(panel:GetChild('title').text:find('+2',1,true))
+ assert(grid.items[0]:GetChild('hit').click());local current=body(panel)
+ assert(current:find('21',1,true));assert(title(panel):find('＋2',1,true))
  for _=1,3 do
-  assert(toggle(panel));assert(panel:GetChild('details').text:find('27',1,true))
-  assert(panel:GetChild('title').text:find('+3',1,true))
-  assert(toggle(panel));assert(panel:GetChild('details').text==current)
+  assert(toggle(panel));assert(body(panel):find('27',1,true))
+  assert(title(panel):find('＋3',1,true))
+  assert(toggle(panel));assert(body(panel)==current)
  end
  assert(same(before,host.run));host:closeDeck()
 end)
@@ -65,10 +72,10 @@ test('combat detail preserves temporary cost and complete battle while previewin
  assert(host.deckUI:openPile(host.run,'discard'));host.deckUI:update(0)
  local panel=root:GetChild('deckPanel');local grid=panel:GetChild('grid')
  assert(grid.items[0]:GetChild('hit').click())
- assert(panel:GetChild('details').text:find('费用 0',1,true))
- assert(panel:GetChild('details').text:find('18',1,true),'current damage bonus and strength retained')
- assert(toggle(panel));assert(panel:GetChild('details').text:find('费用 0',1,true))
- assert(panel:GetChild('details').text:find('20',1,true),'upgraded damage bonus and strength retained')
+ assert(face(panel):GetChild('cost').text=='0')
+ assert(body(panel):find('18',1,true),'current damage bonus and strength retained')
+ assert(toggle(panel));assert(face(panel):GetChild('cost').text=='0')
+ assert(body(panel):find('20',1,true),'upgraded damage bonus and strength retained')
  assert(toggle(panel));assert(same(before,host.run),'combat preview modified real cost/piles/RNG')
  host.deckUI:close();assert(same(before,host.run))
 end)
@@ -84,6 +91,7 @@ test('return retains sort and scroll, stale and destroyed callbacks cannot reope
  assert(toggle(panel));assert(host.deckUI:back());host:update(0)
  assert(host.deckUI.sortMode=='type')
  assert(grid.scrollProgress==.6,'detail return lost scroll position')
+ assert(grid.refreshCallback==oldRefresh and grid.items[0]==first,'detail return rebuilt the scroller')
  local before=Combat.copy(host.run)
  grid.destroyOnRefresh=true;grid:RefreshItems(grid.itemCount,grid.refreshCallback)
  assert(first.alive==false);assert(not oldClick())
@@ -98,7 +106,7 @@ test('text-only and V4 inspection keep descriptions and reset preview state',fun
  local host,panel,grid=setup({{uid=1,cardId='bash',upgraded=false}})
  assert(grid.items[0]:GetChild('hit').click());assert(toggle(panel))
  assert(host.deckUI:showText('规则','测试正文'))
- assert(not toggle(panel));assert(not panel:GetChild('upgradePreview').visible)
+ assert(not toggle(panel));assert(not panel:GetChild('upgradePreview').visible and not panel:GetChild('cardFocus').visible)
  assert(host:closeDeck())
  local original=require('abyss_original_v4_display')
  local raw=assert(require('abyss_original_v4_data').cards[1])
@@ -115,10 +123,10 @@ end)
 test('Searing Blow count-only constructor copies retain their real baseline',function()
  local host,panel,grid=setup({{uid=61,cardId='searing_blow',upgraded=false,upgrades=2,searingBlowCopyUpgrades=2}})
  local before=Combat.copy(host.run);assert(grid.items[0]:GetChild('hit').click())
- assert(panel:GetChild('details').text:find('12',1,true))
+ assert(body(panel):find('12',1,true))
  for _=1,2 do
-  assert(toggle(panel));assert(panel:GetChild('details').text:find('18',1,true))
-  assert(toggle(panel));assert(panel:GetChild('details').text:find('12',1,true))
+  assert(toggle(panel));assert(body(panel):find('18',1,true))
+  assert(toggle(panel));assert(body(panel):find('12',1,true))
  end
  assert(same(before,host.run));host:closeDeck()
 end)
@@ -127,7 +135,8 @@ for _,id in ipairs({'whirlwind','burn'})do
  local host,root=F.fixture();assert(F.start(host));host.run.deck={{uid=41,cardId=id,upgraded=false}}
  local before=F.Combat.copy(host.run);assert(host:openDeck());host:update(0)
  local panel=root:GetChild('deckPanel');assert(panel:GetChild('grid').items[0]:GetChild('hit').click())
- assert(panel:GetChild('details').text:find(id=='whirlwind' and '费用 X' or '费用 不可打出',1,true))
+ local cost=face(panel):GetChild('cost')
+ assert(cost.text==(id=='whirlwind' and 'X' or '') and cost.visible==(id=='whirlwind'))
  assert(same(before,host.run));host:closeDeck()
 end
 end)
@@ -148,7 +157,7 @@ test('a new Run never inherits a previous upgrade preview',function()
  local newer=F.Combat.copy(host.run);newer.deck={{uid=91,cardId='defend',upgraded=true}};host.run=newer
  assert(host:openDeck());host:update(0)
  assert(not host.deckUI.cardDetail);assert(panel:GetChild('grid').items[0]:GetChild('hit').click())
- assert(panel:GetChild('title').text:find('防御',1,true));assert(not panel:GetChild('upgradePreview').visible)
+ assert(title(panel):find('防御',1,true));assert(not panel:GetChild('upgradePreview').visible)
  assert(not host.deckUI:toggleUpgradePreview());host:closeDeck()
 end)
 print('CARD_DETAIL_PREVIEW_PASS '..passed)

@@ -44,11 +44,22 @@ local function portraitSize(source,status,reference)
     end
     return width,height
 end
+local function referencePortraitTransform(reference,rise)
+    local height=reference.portrait.viewport[2]
+    local scale=1-rise/height
+    local top=reference.portrait.position[2]+height/2
+    return scale,top*(1-scale)
+end
 local function placePortrait(control,definition,face,reference)
     local content=Theme.layout.card.v25Content
-    if reference or content and face and bodyFrames[face]~=true then
+    if reference or content and face and not bodyFrames[face] then
         local position=reference and reference.portrait.position or content.icons[definition.type] or content.icons.attack
-        return control:SetAnchoredPosition(position[1],position[2])~=false
+        local y=position[2]
+        if reference then
+            local scale,offset=referencePortraitTransform(reference,bodyFrames[face] or 0)
+            y=y*scale+offset
+        end
+        return control:SetAnchoredPosition(position[1],y)~=false
     end
     return true
 end
@@ -209,9 +220,10 @@ end
 -- punctuation never starts a line and opening punctuation never ends one.
 -- Treating every glyph as a free break point under-counted lines, so long
 -- dynamic bodies (e.g. 格挡反击「（当前 N 点）」) passed fit and were clipped.
-local closing={['，']=1,['。']=1,['、']=1,['；']=1,['：']=1,['）']=1,['」']=1,['！']=1,['？']=1,['》']=1,
+local closing={['，']=1,['。']=1,['、']=1,['；']=1,['：']=1,['）']=1,['」']=1,['！']=1,['？']=1,['》']=1,['』']=1,
+    ['】']=1,['”']=1,['’']=1,['％']=1,
     [',']=1,['.']=1,[')']=1,[';']=1,[':']=1,['!']=1,['?']=1}
-local opening={['（']=1,['「']=1,['《']=1,['(']=1}
+local opening={['（']=1,['「']=1,['《']=1,['『']=1,['【']=1,['“']=1,['‘']=1,['(']=1}
 local function atoms(text)
     local out,glue={},false
     for ch in text:gmatch('[%z\1-\127\194-\244][\128-\191]*') do
@@ -355,13 +367,13 @@ local function bodyTypeWindows(box,height,y,content)
         part:SetLocalScale(1,scale,1)
     end
 end
-local function bodyFrame(box,compact)
-    if bodyFrames[box]==compact or not compact and bodyFrames[box]==nil then return end
-    bodyFrames[box]=compact
+local function bodyFrame(box,extra)
+    if bodyFrames[box]==extra or not extra and bodyFrames[box]==nil then return end
+    bodyFrames[box]=extra
     local card,S=Theme.layout.card,Theme.space
     local content
-    if not compact then content=card.v25Content end
-    local height=compact and card.longTextArt or card.art
+    if not extra then content=card.v25Content end
+    local height=extra and card.longTextArt-extra or card.art
     local y=card.size[2]/2-card.nameBand-height/2-S.border
     bodyArtParts(box,height,y,content);bodyTypeWindows(box,height,y,content)
     local typeY=card.size[2]/2-card.nameBand-height-card.typeLine/2-S.border
@@ -370,43 +382,119 @@ local function bodyFrame(box,compact)
 end
 -- Body budget keeps the reviewed 1.3x line step; wrapping itself now follows
 -- native kinsoku/Latin-run breaks (see lines above).
-local bodyLine,bodyAdvance=1.3,1
+local reading=Theme.layout.card.reading
 function M.fitBody(text,box,fitText)
     local fit=fitText or M.fit
-    return fit(text,Theme.font.card,box[1],box[2],bodyLine,bodyAdvance)
+    return fit(text,Theme.font.card,box[1],box[2],reading.lineScale,1)
 end
 local function bodyLayout(text,reference,fitText)
     local card=Theme.layout.card
     local box=reference and reference.body.size or card.textBox
     local font,fits=M.fitBody(text,box,fitText)
-    -- Official cards share fixed illustration/type/body slots. The legacy
-    -- long-text fallback shrinks only one card's picture into a narrow strip.
-    local compact=not fits and Theme.presentationProfile~='official-assets-first'
-    if compact then box=card.longTextBox;font,fits=M.fitBody(text,box,fitText)end
-    return box,font,fits,compact
+    if fits then return box,font,true end
+    if reference then
+        -- Give a long description extra lines inside the same card.
+        for _,height in ipairs(reading.referenceHeights) do
+            box={reading.referenceWidth,height}
+            font,fits=M.fitBody(text,box,fitText)
+            if fits then return box,font,true,height-reference.body.size[2] end
+        end
+    else
+        box=card.longTextBox
+        font,fits=M.fitBody(text,box,fitText)
+        if fits then return box,font,true,0 end
+        box={box[1],box[2]+reading.legacyExtraHeight}
+        font,fits=M.fitBody(text,box,fitText)
+        if fits then return box,font,true,reading.legacyExtraHeight end
+    end
+    return box,font,false,reference and box[2]-reference.body.size[2] or reading.legacyExtraHeight
+end
+local function referenceBodyFrame(box,reference,rise,parts)
+    if (bodyFrames[box] or 0)==rise then return end
+    local scale,y=referencePortraitTransform(reference,rise)
+    local chrome=box:GetChild('stsReferenceChrome')
+    local back=parts and parts.AbyssDeckBrowserBack or box:GetChild('stsReferenceBack')
+    local portraits=back:GetChild('portraits')
+    for _,part in ipairs({portraits,(chrome:GetChild('frame'))})do
+        part:SetAnchoredPosition(0,y)
+        part:SetLocalScale(1,scale,1)
+    end
+    local x,base=table.unpack(reference.type.position)
+    chrome:GetChild('plaqueFace'):SetAnchoredPosition(x,base+rise)
+    box:GetChild('type'):SetAnchoredPosition(x,base+rise)
+    for _,name in ipairs({'art','art_attack','art_skill','art_power','art_status','art_curse'})do
+        local ok,part=pcall(box.GetChild,box,name)
+        if ok and part then
+            local px,py=table.unpack(reference.portrait.position)
+            local fit=math.min(1,reference.portrait.viewport[2]*scale/reference.portrait.size[2])
+            part:SetAnchoredPosition(px,py*scale+y)
+            part:SetLocalScale(fit,fit,1)
+        end
+    end
+    local samples=nativePool(box)
+    if samples then
+        local width,height=table.unpack(reference.portrait.viewport)
+        local fit=math.min(width/samples.sizeDeltaX,height*scale/samples.sizeDeltaY)
+        local px,py=table.unpack(reference.portrait.position)
+        samples:SetAnchoredPosition(px,py*scale+y)
+        samples:SetLocalScale(fit,fit,1)
+    end
+    bodyFrames[box]=rise
 end
 local function bodyPosition(box,reference,compact)
-    if reference then return reference.body.position end
+    if reference then
+        return {reference.body.position[1],reference.body.position[2]+(compact or 0)/2}
+    end
     local card=Theme.layout.card
     local position=not compact and card.v25Content and card.v25Content.bodyPosition
     if position then return position end
     return {0,-card.size[2]/2+box[2]/2+(compact and Theme.space.xs or Theme.space.border)}
 end
-local function placeBody(control,box,reference,compact)
+local bodyStates=setmetatable({},{__mode='k'})
+local function placeBody(control,box,reference,compact,scale)
     if control.SetSizeDelta then
-        local sized=control:SetSizeDelta(box[1],box[2])~=false
+        local sized=control:SetSizeDelta(box[1]*scale,box[2]*scale)~=false
         local position=bodyPosition(box,reference,compact)
-        return control:SetAnchoredPosition(position[1],position[2])~=false and sized
+        local placed=control:SetAnchoredPosition(position[1],position[2])~=false
+        local old=bodyStates[control]
+        if control.SetLocalScale and (scale~=1 or old and old.scale~=1) then
+            placed=control:SetLocalScale(1/scale,1/scale,1)~=false and placed
+        end
+        return sized and placed
     end
     return true
 end
-function M.writeBody(control,text,face,fitText)
+local function focusedFit(text,box,fitText)
+    local scale=reading.focusScale
+    local fit=fitText or M.fit
+    return fit(text,math.floor(Theme.font.card*scale),box[1]*scale,box[2]*scale,reading.lineScale,1)
+end
+local function publishBody(control,text,face,fitText,referenceParts,focus)
     local reference=face and CardSkin.referenceGeometry(face)
     local box,font,fits,compact=bodyLayout(text,reference,fitText)
-    local placed=placeBody(control,box,reference,compact)
-    if face and not reference then bodyFrame(face,compact)end
-    control.text,control.fontSize=text,font
+    local scale=1
+    if not fits and focus then
+        font,fits=focusedFit(text,box,fitText)
+        if not fits then return false,false end
+        scale=reading.focusScale
+    end
+    local placed=placeBody(control,box,reference,compact,scale)
+    if reference then referenceBodyFrame(face,reference,compact or 0,referenceParts)
+    elseif face then bodyFrame(face,compact or false)end
+    control.adaptiveFontSize=false
+    control.text,control.fontSize=fits and text or '查看卡牌',font
+    bodyStates[control]={over=not fits,scale=scale}
     return fits,placed
+end
+function M.writeBody(control,text,face,fitText,referenceParts)
+    return publishBody(control,text,face,fitText,referenceParts,false)
+end
+function M.writeFocusedBody(control,text,face,fitText)
+    return publishBody(control,text,face,fitText,nil,true)
+end
+function M.bodyOverflows(control)
+    local state=bodyStates[control]
+    return state and state.over==true
 end
 local valueStyles = {
     up = { arrow = '↑', colourKey = 'cardValueIncrease' },

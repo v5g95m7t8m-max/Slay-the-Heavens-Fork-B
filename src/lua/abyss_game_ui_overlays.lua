@@ -155,10 +155,19 @@ local function canOpenDeck(openingCovered,self)
     return not openingCovered() and not deckBlocked(self)
         and (self.mode=='map' or self.mode=='battle' or self.mode=='node')
 end
+local function openCardFocus(self,read)
+    if self.mode~='battle' then return false end
+    local function current()
+        return self.battleUI:cardHelpReady(read,self.deckUI.focusRead==read)
+    end
+    return current() and self.deckUI:openCardFocus(self.run,read,current)
+end
 function M.openDeck(openingCovered,self)
-    return function(_,pileKind)
+    return function(_,pileKind,read)
             if not canOpenDeck(openingCovered,self) then return false end
-            if pileKind then
+            if read then
+                if not openCardFocus(self,read) then return false end
+            elseif pileKind then
                 if self.mode~='battle' or not self.deckUI:openPile(self.run,pileKind)then return false end
             elseif not self.deckUI:open(self.run)then return false end
             self.battleUI.selected = nil

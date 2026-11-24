@@ -3,6 +3,8 @@ local CardSkin=require('abyss_card_skin')
 local Combat = require("abyss_combat")
 local Theme = require("abyss_theme")
 local CardDisplay = require('abyss_card_display')
+local CardOrigin = require('abyss_card_origin_view')
+local CardKeywords = require('abyss_card_keywords')
 local OriginalDisplay = require('abyss_original_v4_display')
 local M = {}
 local Pointer = require('abyss_pointer_input')
@@ -100,7 +102,8 @@ local function pileCards(run, kind, presentation)
 end
 
 local function permanentOrChoiceCards(run,choice)
-    local catalog={cards={}}
+    local catalog={cards={},statuses={}}
+    for _,status in ipairs(run.data.statuses and run.data.statuses.statuses or {})do catalog.statuses[status.id]=status end
     for _,card in ipairs(run.data.cards.cards) do catalog.cards[card.id]=card end
     -- Permanent cards never acquire temporary hand cost/growth/status.
     if not choice then return Combat.copy(run.deck),catalog end
@@ -114,6 +117,36 @@ local function permanentOrChoiceCards(run,choice)
         end
     end
     return cards,catalog
+end
+
+local function focusPointer(deck,platform)
+    local token
+    local function current()
+        return deck.focusRead and token and token.generation==deck.generation
+    end
+    local function matching(event)
+        return current() and token.touch==(event and event.touchId)
+    end
+    return {
+        down=function(event)
+            if not deck.focusRead or Pointer.blocked(platform) then return end
+            if current() and not token.released and not matching(event) then return end
+            token={generation=deck.generation,touch=event and event.touchId}
+        end,
+        up=function(event)
+            if not matching(event) then return end
+            if Pointer.dragged(event,Theme.layout.cardDrag.threshold) then token=nil
+            else token.released=true end
+        end,
+        cancel=function(event)
+            if not event or matching(event) then token=nil end
+        end,
+        consume=function(event)
+            if not matching(event) or not token.released or Pointer.dragged(event,Theme.layout.cardDrag.threshold) then return false end
+            token=nil
+            return true
+        end,
+    }
 end
 
 function M.new(root, presentation, clickEvent, platform, onClose)
@@ -153,13 +186,17 @@ function M.new(root, presentation, clickEvent, platform, onClose)
     end
     local details,detailHit=root:GetChild('details'),root:GetChild('detailHit')
     local upgradePreview=root:GetChild('upgradePreview')
+    local cardFocus=root:GetChild('cardFocus')
+    local detailFace=cardFocus:GetChild('face')
+    local noteWidth,noteHeight=400,384
+    local function inDetail()return self.detailPages~=nil or self.cardDetail~=nil end
     local function closeLabel(value)
         for _,state in ipairs({'normal','hover','pressed','disabled'}) do
             root:GetChild('close'):GetChild('hit'):GetChild(state):GetChild('label').text=value
         end
     end
     local function canBrowse()
-        return self.visible == true and self.browseEnabled == true and not self.detailOnly and not self.detailPages and not self.cardDetail
+        return self.visible == true and self.browseEnabled == true and not self.detailOnly and not inDetail()
     end
     local deckSort,description,rarityTip=root:GetChild('deckSort'),root:GetChild('browserDescription'),root:GetChild('rarityTip')
     local function paintDeckSort()
@@ -227,69 +264,41 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         if keywords~=''then raw=raw..'\n'..keywords end
         return self:showText(definition.name..(upgraded and '+' or ''),raw)
     end
-    -- Always rebuild from the captured current instance, never from the last preview.
-    local function paintCardDetail()
-        local context=self.cardDetail
-        local instance=Combat.copy(context.instance)
-        if context.preview then Combat.upgrade(context.state,instance) end
-        local definition=Combat.cardDefinition(context.state,instance)
-        local display=assert(presentation[instance.cardId], 'missing detail presentation')
-        local text
-        if definition.originalV4 then
-            text=OriginalDisplay.describe(definition,instance.upgraded)
-            local keywords=OriginalDisplay.keywordDefinitions(definition,instance.upgraded)
-            if keywords~='' then text=text..'\n'..keywords end
-        elseif context.combat then
-            text=CardDisplay.combatText(display,definition,instance,Combat.cardPreview(context.state,instance),context.state)
-        else text=CardDisplay.permanentText(display,definition,instance) end
-        local originView=require('abyss_card_origin_view')
-        local keywords=originView.keywords(definition)
-        if keywords~=''then text=text..'\n'..keywords end
-        local provenance=originView.describe(self.run,context.instance,context.combat)
-        if provenance~=''then text=text..'\n\n'..provenance end
-        local suffix=instance.upgraded and ('+'..(definition.repeatable and tostring(instance.upgrades or 1) or '')) or ''
-        local mode=context.preview and '升级预览' or '当前'
-        local cost=definition.cost==-2 and '不可打出' or definition.costMode=='all_energy' and 'X' or tostring(definition.cost)
-        self:showText(display.name..suffix..' · '..mode,mode..' · '..(typeNames[definition.type] or definition.type)..' · 费用 '..cost..'\n\n'..text)
-        self.cardDetail=context
-        upgradePreview:SetVisible(Combat.canUpgrade(context.state,context.instance)==true)
-        for _,state in ipairs({'normal','hover','pressed','disabled'})do
-            upgradePreview:GetChild('hit'):GetChild(state):GetChild('label').text=context.preview and '查看当前' or '升级预览'
-        end
-        return true
-    end
-    function self.showCardDetails(_,instance)
-        if not self.visible or self.choiceToken or self.detailPages then return false end
-        -- Snapshot the whole battle as preview calculations can depend on other piles.
-        self.cardDetail={instance=Combat.copy(instance),state=Combat.copy(self.battle or {catalog=self.catalog}),combat=self.battle~=nil,preview=false}
-        return paintCardDetail()
-    end
-    function self.toggleUpgradePreview(_)
-        local context=self.cardDetail
-        if not self.visible or not self.detailPages or not context or self.choiceToken
-            or not Combat.canUpgrade(context.state,context.instance) then return false end
-        context.preview=not context.preview
-        return paintCardDetail()
-    end
-    function self.showText(_,title,raw)
-        if not self.visible or self.choiceToken then return false end
-        self.cardDetail=nil;upgradePreview:SetVisible(false)
-        for _,name in ipairs({'previous','next','pageHint'})do root:GetChild(name):SetVisible(false) end
+    local function paginate(raw,width,height)
         -- Bound each page using the shared viewport/font, counting a CJK codepoint
         -- as a full em. Do not truncate rules; every wrapped line stays reachable.
-        local columns=math.max(1,math.floor(Theme.layout.deckView.viewport[3]/Theme.font.reading)-2)
-        local rows=math.max(1,math.floor(Theme.layout.deckView.viewport[4]/Theme.layout.nativeText.lineHeight)-3)
+        local columns=math.max(1,math.floor(width/Theme.font.reading)-2)
+        local rows=math.max(1,math.floor(height/Theme.layout.nativeText.lineHeight)-3)
         local lines,line,n={},'',0
         for ch in raw:gmatch('[%z\1-\127\194-\244][\128-\191]*') do
             if ch=='\n' then lines[#lines+1]=line;line,n='',0
             else line=line..ch;n=n+1;if n>=columns then lines[#lines+1]=line;line,n='',0 end end
         end
         if line~='' then lines[#lines+1]=line end
-        self.detailPages={}
+        local pages={}
         for i=1,#lines,rows do
             local page={};for j=i,math.min(i+rows-1,#lines) do page[#page+1]=lines[j] end
-            self.detailPages[#self.detailPages+1]=table.concat(page,'\n')
+            pages[#pages+1]=table.concat(page,'\n')
         end
+        return pages
+    end
+    local function hideCardDetail()
+        if not self.cardDetail then return end
+        self.cardDetail=nil
+        cardFocus:SetVisible(false);upgradePreview:SetVisible(false)
+        CardDisplay.clearNativeArt(detailFace)
+    end
+    function self.showText(_,title,raw)
+        if not self.visible or self.choiceToken then return false end
+        hideCardDetail()
+        upgradePreview:SetVisible(false)
+        for _,name in ipairs({'previous','next','pageHint'})do root:GetChild(name):SetVisible(false) end
+        local viewport=Theme.layout.deckView.viewport
+        for _,control in ipairs({details,detailHit}) do
+            control:SetAnchoredPosition(viewport[1],viewport[2])
+            control:SetSizeDelta(viewport[3],viewport[4])
+        end
+        self.detailPages=paginate(raw,viewport[3],viewport[4])
         self.generation=self.generation+1;self.pending=false;self.pendingGrid=false;self.gridReady=nil
         if self.paged then pool:cancel() end
         liveFaces(CardDisplay.clearNativeArt)
@@ -446,6 +455,121 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         bindCard(control,hit,instance,text,fill)
         control:SetVisible(true)
     end
+    local function detailVersion(instance,display,state,battle)
+        local definition=Combat.cardDefinition(state,instance)
+        -- V4 combat tooltips retain printable rules in piles where no target is selected.
+        local text=cardBody(display,definition,instance,not definition.originalV4 and battle)
+        return {instance=instance,definition=definition,text=text}
+    end
+    local function cardNotes(context,version)
+        local definition,instance=version.definition,version.instance
+        local notes={}
+        if definition.originalV4 then
+            notes[#notes+1]=OriginalDisplay.describe(definition,instance.upgraded)
+            notes[#notes+1]=OriginalDisplay.keywordDefinitions(definition,instance.upgraded)
+        else
+            for _,tip in ipairs(CardKeywords.cardTips(context.statuses,definition,instance.upgraded,version.text) or {}) do
+                notes[#notes+1]=tip.name..' · '..tip.body
+            end
+        end
+        notes[#notes+1]=context.provenance
+        local text=table.concat(notes,'\n'):gsub('^%s+',''):gsub('%s+$','')
+        local pages=paginate(text,noteWidth,noteHeight)
+        if #pages==1 then pages[1]=text end
+        return pages
+    end
+    local function paintCardNotes(context)
+        context=context or self.cardDetail
+        local page=context.notePage
+        local pages=context.notes
+        details.text=pages[page] or ''
+        if #pages>1 then details.text=details.text..'\n\n下一页 · '..page..'/'..#pages end
+        details:SetVisible(#pages>0);detailHit:SetVisible(#pages>1)
+    end
+    local function paintCardDetail(context,version)
+        local definition=version.definition
+        local label=detailFace:GetChild('label')
+        local fits,accepted=CardDisplay.writeFocusedBody(label,version.text,detailFace,browserFit)
+        if not (fits and accepted) then return false end
+        CardDisplay.writeTitle(detailFace:GetChild('name'),context.display.name,version.instance.upgraded,
+            definition.repeatable and (version.instance.upgrades or 1) or nil,detailFace:GetChild('type'),typeNames[definition.type])
+        if Theme.cardSkin.text.body then label.fontColor=colour(Theme.cardSkin.text.body)end
+        detailFace:GetChild('name').fontColor=colour(Theme.cardSkin.text.title)
+        detailFace:GetChild('cost').text=definition.cost==-2 and '' or definition.costMode=='all_energy' and 'X' or tostring(definition.cost)
+        local last=context.painted
+        local art=detailFace:GetChild('art')
+        if not last or last.type~=definition.type then CardDisplay.writeArt(art,definition,picture,detailFace) end
+        local nativeArt=context.display.nativeArt
+        -- The hidden grid retains its artwork pools for the immediate return.
+        -- The inspector uses the normal fallback for incrementally built art.
+        if not last and nativeArt and not nativeArt.runtime then
+            CardDisplay.writeNativeArt(detailFace,definition,nativeArt,platform,art,context.instance.uid)
+        end
+        if not last or last.type~=definition.type or last.rarity~=definition.rarity or last.cost~=definition.cost then
+            paintDeckPalette(detailFace,definition)
+            CardSkin.apply(detailFace,definition,platform,{cost=definition.cost,baseCost=definition.cost,surfaceScope='deck',
+                templateKind=not last and Theme.presentationProfile=='official-assets-first' and 'attack' or nil})
+        end
+        context.painted=definition
+        version.notes=version.notes or cardNotes(context,version)
+        context.notes,context.notePage=version.notes,1
+        paintCardNotes(context)
+        for _,state in ipairs({'normal','hover','pressed','disabled'})do
+            upgradePreview:GetChild('hit'):GetChild(state):GetChild('label').text=context.preview and '查看当前' or '查看升级'
+        end
+        return true
+    end
+    function self.showCardDetails(_,instance)
+        if not self.visible or self.choiceToken or inDetail() then return false end
+        local state=self.battle or {catalog=self.catalog}
+        local current=Combat.copy(instance)
+        local display=assert(presentation[current.cardId],'missing detail presentation')
+        local context={instance=current,display=display,combat=self.battle~=nil,preview=false,statuses=state.catalog.statuses,
+            current=detailVersion(current,display,state,self.battle),provenance=self.focusRead and '' or CardOrigin.describe(self.run,current,self.battle~=nil)}
+        local upgraded=Combat.copy(current)
+        if not self.focusRead and Combat.upgrade(state,upgraded)then context.upgraded=detailVersion(upgraded,display,state,self.battle)end
+        if not paintCardDetail(context,context.current) then return false end
+        self.cardDetail=context
+        if self.paged then
+            pool:cancel();self.pendingGrid=false
+        elseif self.browserShell then
+            self.generation=self.generation+1
+            self.pending,self.pendingGrid,self.gridReady=false,false,nil
+        end
+        details:SetAnchoredPosition(360,30);details:SetSizeDelta(noteWidth,noteHeight)
+        detailHit:SetAnchoredPosition(360,30);detailHit:SetSizeDelta(noteWidth,noteHeight)
+        for _,name in ipairs({'previous','next','pageHint'})do root:GetChild(name):SetVisible(false)end
+        grid:SetVisible(false)
+        upgradePreview:SetAnchoredPosition(0,-245)
+        cardFocus:SetVisible(true);upgradePreview:SetVisible(context.upgraded~=nil)
+        closeLabel('返回');paintBrowse()
+        if onChanged then onChanged()end
+        return true
+    end
+    function self.openCardFocus(_,run,read,current)
+        if self.visible then return false end
+        local reward=read.reward
+        local instance=reward and {uid=1,cardId=reward.cardId,upgraded=reward.upgraded} or read.battle.hand[read.slot]
+        self.visible,self.run,self.catalog=true,run,read.battle.catalog
+        self.focusRead,self.focusCurrent=read,current
+        self.battle,self.closeOnOutside=not reward and read.battle or nil,true
+        self.generation=self.generation+1
+        if not self:showCardDetails(instance) then self:close();return false end
+        root:GetChild('title').text=''
+        root:GetChild('close'):SetVisible(true)
+        local hit=root:GetChild('close'):GetChild('hit')
+        hit.interactable,hit.raycastTarget=true,true
+        root:SetVisible(true);root:SetAsLastSibling()
+        return true
+    end
+    function self.toggleUpgradePreview(_)
+        local context=self.cardDetail
+        if not self.visible or not context or not context.upgraded then return false end
+        context.preview=not context.preview
+        if paintCardDetail(context,context.preview and context.upgraded or context.current) then return true end
+        context.preview=not context.preview
+        return false
+    end
     local function browserModel(instance)
         local battle=self.pileKind and self.battle
         local definition=Combat.cardDefinition(battle or {catalog=self.catalog},instance)
@@ -466,7 +590,7 @@ function M.new(root, presentation, clickEvent, platform, onClose)
                 definition.repeatable and (instance.upgrades or 1) or nil,face:GetChild('type'),typeNames[definition.type] or definition.type,browserFit)
             if not current() then return end
             if entry.bodyText~=model.text then
-                local _,accepted=CardDisplay.writeBody(face:GetChild('label'),model.text,face,browserFit)
+                local _,accepted=CardDisplay.writeBody(face:GetChild('label'),model.text,face,browserFit,entry.parts)
                 assert(accepted~=false,'deck browser body geometry rejected')
                 if not current() then return end
                 entry.bodyText=model.text
@@ -492,11 +616,7 @@ function M.new(root, presentation, clickEvent, platform, onClose)
     if pileGrid and platform.deckBrowser then
         local viewport=official and Theme.layout.deckView.pileViewport or Theme.layout.deckView.viewport
         pool=Browser.new(pileGrid,platform.deckBrowser,platform,clickEvent,viewport[4]/2-123,browserModel,paintBrowser,
-            function(instance)
-                local picked=self:showCardDetails(instance)
-                if picked and onChanged then onChanged() end
-                return picked
-            end)
+            function(instance)return self:showCardDetails(instance)end)
     end
     function self.syncRun(_,run)
         if browserRun==run then return end
@@ -742,7 +862,7 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         local complete,refreshing,painted=false,true,0
         self.pendingGrid=true
         local function ready()
-            if not self.visible or self.generation~=generation or self.detailPages then return true end
+            if not self.visible or self.generation~=generation or inDetail() then return true end
             local currentFirst,currentLast=visibleCardWindow(grid,#cards,gridColumns())
             complete=visibleCardsReady(cells,currentFirst,currentLast)
             self.pendingGrid=not complete
@@ -770,8 +890,9 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         ready()
     end
     function self.update(_, dt)
+        if self.focusRead and not self.focusCurrent() then return onClose() end
         if self.paged then
-            if not self.detailPages and self.pendingGrid then
+            if not inDetail() and self.pendingGrid then
                 require('abyss_page_reveal').registerSource(platform,'deckPanel')
                 pool:step()
                 local job=pool.job
@@ -785,8 +906,7 @@ function M.new(root, presentation, clickEvent, platform, onClose)
             end
             return
         end
-        if not self.visible then liveFaces();return end
-        if self.detailPages then liveFaces();return end
+        if not self.visible or inDetail() then liveFaces();return end
         if self.browserShell then liveFaces()
         else liveFaces(function(face)CardSkin.tick(face,dt or 0)end) end
         if not self.pending then return end
@@ -796,7 +916,7 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         liveFaces()
     end
     function self.stepPage(_,delta)
-        if not self.paged or self.detailPages then return false end
+        if not self.paged or inDetail() then return false end
         local page=self.pageIndex+delta
         if page<1 or page>self.pageCount then return false end
         self.pageIndex=page
@@ -822,7 +942,9 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         self.choiceToken,self.onPick,self.battle=nil,nil,nil
         self.pileKind,self.listTitle=nil,nil
         self.multiple,self.choiceSelected,self.optional=nil,nil,nil
-        self.detailPages,self.detailOnly,self.cardDetail=nil,nil,nil
+        hideCardDetail()
+        self.detailPages,self.detailOnly=nil,nil
+        self.focusRead,self.focusCurrent=nil,nil
         self.closeOnOutside=nil
         upgradePreview:SetVisible(false)
         if self.relicView then self.relicView:close();self.relicView=nil end
@@ -849,29 +971,42 @@ function M.new(root, presentation, clickEvent, platform, onClose)
     root.disableCursorEventPassthrough = true
     local blocker=root:GetChild('blocker')
     local outsideHeld,outsideReleased,outsideObserved
+    local focusOutside=focusPointer(self,platform)
     if cursor.CursorDown and cursor.CursorUp then
         blocker:AddCursorEventListener(cursor.CursorDown,function(event)
+            if self.focusRead then return focusOutside.down(event) end
             outsideObserved=true;outsideReleased=nil
             outsideHeld=self.visible and self.closeOnOutside and {generation=self.generation,touch=event and event.touchId} or nil
         end)
         blocker:AddCursorEventListener(cursor.CursorUp,function(event)
+            if self.focusRead then return focusOutside.up(event) end
             outsideReleased=outsideHeld and outsideHeld.touch==(event and event.touchId) and outsideHeld or nil
             outsideHeld=nil
         end)
         for _,event in pairs({cursor.CursorExit,cursor.CursorEndDrag})do
-            if event then blocker:AddCursorEventListener(event,function()outsideHeld,outsideReleased=nil,nil end)end
+            if event then blocker:AddCursorEventListener(event,function(pointer)
+                if self.focusRead then return focusOutside.cancel(pointer) end
+                outsideHeld,outsideReleased=nil,nil
+            end)end
         end
     end
     blocker:AddCursorEventListener(clickEvent,function(event)
         local token=outsideReleased;outsideHeld,outsideReleased=nil,nil
         if Pointer.blocked(platform) or not self.visible or not self.closeOnOutside then return true end
-        if outsideObserved or event and event.touchId~=nil then
+        if self.focusRead and cursor.CursorDown and cursor.CursorUp then
+            if not focusOutside.consume(event) then return true end
+        elseif outsideObserved or event and event.touchId~=nil then
             if not token or token.generation~=self.generation or token.touch~=(event and event.touchId) then return true end
         end
         onClose();return true
     end)
     local function nextPage()
-        if not self.visible or not self.detailPages then return false end
+        if not self.visible then return false end
+        local context=self.cardDetail
+        if context and #context.notes>1 then
+            context.notePage=context.notePage%#context.notes+1;paintCardNotes();return true
+        end
+        if not self.detailPages then return false end
         self.detailPage=self.detailPage%#self.detailPages+1;detailPage();return true
     end
     detailHit:AddCursorEventListener(clickEvent,function()
@@ -880,6 +1015,16 @@ function M.new(root, presentation, clickEvent, platform, onClose)
     end)
     function self.back(_)
         if not self.visible then return false end
+        if self.focusRead then return onClose() end
+        if self.cardDetail then
+            hideCardDetail();details:SetVisible(false);detailHit:SetVisible(false);grid:SetVisible(not self.paged)
+            closeLabel('关闭');paintBrowse()
+            if self.paged then browserRequest()
+            elseif self.browserShell then self.pending=true
+            else self:update(0) end
+            if onChanged then onChanged()end
+            return true
+        end
         if self.detailPages and not self.detailOnly then
             self.detailPages,self.cardDetail=nil,nil;upgradePreview:SetVisible(false);details:SetVisible(false);detailHit:SetVisible(false);grid:SetVisible(not self.paged)
             titleControl.text=self.listTitle;closeLabel('关闭');paintBrowse()
@@ -899,7 +1044,16 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         return onClose()
     end
     local close=root:GetChild('close'):GetChild('hit')
-    close:AddCursorEventListener(clickEvent,function()
+    local focusClose=focusPointer(self,platform)
+    if cursor.CursorDown and cursor.CursorUp then
+        close:AddCursorEventListener(cursor.CursorDown,focusClose.down)
+        close:AddCursorEventListener(cursor.CursorUp,focusClose.up)
+        for _,kind in pairs({cursor.CursorExit,cursor.CursorEndDrag})do
+            close:AddCursorEventListener(kind,focusClose.cancel)
+        end
+    end
+    close:AddCursorEventListener(clickEvent,function(event)
+        if self.focusRead and cursor.CursorDown and cursor.CursorUp and not focusClose.consume(event) then return true end
         local swallow=self.visible and self.browserShell
         if Pointer.blocked(platform)then return swallow or false end
         local result=self:back()

@@ -26,6 +26,7 @@ local reads,geometryWrites=0,0
 local function control(spec)
  local c={name=spec.name,visible=spec.visible~=false,children={},order={},text=spec.text and spec.text.content or'',fontSize=spec.text and spec.text.fontSize}
  c.position=spec.position;c.size=spec.size;c.rotation=spec.rotation or 0
+ if spec.size then c.sizeDeltaX,c.sizeDeltaY=table.unpack(spec.size) end
  c.scale={spec.scale and spec.scale[1] or 1,spec.scale and spec.scale[2] or 1,1}
  if spec.colour then
   local hex=spec.colour
@@ -105,14 +106,21 @@ end
 Skin.apply(box,definition('attack','common'),api,{cost=1,baseCost=1})
 assert(outer.imageColor.r==geo.r and outer.imageColor.g==geo.g,'returning to ordinary card must restore Geo')
 currentWell('attack',Theme.cardSkin.artWells.attack)
-local long=string.rep('对所有敌人造成伤害并施加易伤，然后抽牌。',8)
-local label=box:GetChild('label');local fits=Display.writeBody(label,long,box)
-assert(label.text==long and label.fontSize>=14 and not fits,'full text must remain intact when card space is exceeded')
+local long='造成18点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加2点。'
+local label=box:GetChild('label')
 local geometry=Theme.officialAssets.stsCardReference.geometry
-assert(label.size[1]==geometry.body.size[1]and label.size[2]==geometry.body.size[2])
-assert(label.position[2]==geometry.body.position[2])
-Display.writeBody(label,'短文',box);Display.writeBody(label,long,box)
-assert(label.text==long and label.position[2]==geometry.body.position[2]and reads==firstReads)
+local fits=Display.writeBody(label,long,box)
+assert(fits and label.text==long and label.fontSize>=14 and label.size[2]>geometry.body.size[2])
+assert(label.position[2]-label.size[2]/2==geometry.body.position[2]-geometry.body.size[2]/2,'bottom anchor changed')
+assert(portraits.scale[2]<1 and box:GetChild('type').position[2]>geometry.type.position[2])
+local overflow=string.rep(long,3)
+assert(not Display.writeBody(label,overflow,box) and Display.bodyOverflows(label),'ordinary overflow was not detected')
+assert(Display.writeFocusedBody(label,overflow,box) and label.text==overflow and label.fontSize>=14,
+ 'the existing full card lost its complete rules')
+assert(not Display.writeFocusedBody(label,string.rep(long,40),box),'unbounded fixed-font overflow was published')
+assert(Display.writeBody(label,'短文',box))
+assert(label.size[2]==geometry.body.size[2]and label.position[2]==geometry.body.position[2])
+assert(portraits.scale[2]==1 and box:GetChild('type').position[2]==geometry.type.position[2]and reads==firstReads)
 Display.writeTitle(box:GetChild('name'),'测试升级卡',true,2,box:GetChild('type'),'能力')
 assert(box:GetChild('name').text:find('测试升级卡',1,true))
 assert((box:GetChild('name').text..box:GetChild('type').text):find('＋2',1,true),'upgrade marker must stay accessible')

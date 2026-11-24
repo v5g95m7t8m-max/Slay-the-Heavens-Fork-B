@@ -125,6 +125,44 @@ local function powerLayout(rows)
     return columns, left, top, floor, width, P.minFont, scale
 end
 
+local function nativePowerBox(layer, index, geometry, entry)
+    local box = place(layer, "tip" .. index, geometry.x, geometry.y, geometry.width, entry.height)
+    place(box, "edge", 0, 0, geometry.width, entry.height)
+    place(box, "face", 0, 0, geometry.width - 2, entry.height - 2)
+    box:SetLocalScale(geometry.scale, geometry.scale, 1)
+    local copy = place(box, "copy", 0, 0, geometry.width - P.padding * 2, entry.height)
+    copy.fontSize, copy.minimumFontSize = geometry.font, geometry.font
+    copy.text = powerTitle .. entry.row.name .. "</color>\n" .. entry.row.body
+    box:SetVisible(true)
+end
+
+local function paintCardTips(panel, rows, anchor, beginCompact, finishCompact)
+    local layer=panel:GetChild("powerTips")
+    beginCompact(panel)
+    panel:GetChild("more"):SetVisible(false)
+    panel:GetChild("page"):SetVisible(false)
+    local edge=Theme.canvas.base[1]/2-Theme.canvas.safe.x
+    local top=Theme.canvas.base[2]/2-L.topBar.height-S.s
+    local floor=-Theme.canvas.base[2]/2+Theme.canvas.safe.y
+    local columns=powerColumns(rows,P.width,P.font,top-floor)
+    local gap=I.cardHoverGap
+    local right,left=anchor.x+anchor.halfW+gap,anchor.x-anchor.halfW-gap
+    local width=#columns*(P.width+P.gap)-P.gap
+    local direction=right+width<=edge or left-width<-edge and anchor.x<=0
+    local index=0
+    for column,items in ipairs(columns)do
+        local offset=(column-1)*(P.width+P.gap)+P.width/2
+        local x=direction and right+offset or left-offset
+        x=math.max(-edge+P.width/2,math.min(edge-P.width/2,x))
+        local y=math.min(top,math.max(anchor.y+anchor.halfH,floor+items.height))
+        for _,entry in ipairs(items.rows)do
+            index=index+1
+            nativePowerBox(layer,index,{x=x,y=y-entry.y-entry.height/2,width=P.width,font=P.font,scale=1},entry)
+        end
+    end
+    finishCompact(panel,layer,index,false)
+end
+
 function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, picture)
     local textStyles={}
     local function readingSize(control,name,font)
@@ -136,28 +174,25 @@ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, pi
         control.fontSize=font or original.font
         control.minimumFontSize=font and math.min(original.minimum,font) or original.minimum
     end
-    local function handAnchor(battle,info)
-        if not (info.transient and info.kind=='card')then return end
-        for slot,card in ipairs(battle.hand)do
-            if card.uid==info.uid then
-                local pose=self.cardPositions[card.uid]
-                if not pose then return end
-                local box=child('card'..slot)
-                local r=(box.localRotationZ or 0)*math.pi/180
-                local w,h=L.card.size[1]*(box.localScaleX or 1),L.card.size[2]*(box.localScaleY or 1)
-                return {x=pose[1],y=pose[2],halfW=(math.abs(math.cos(r))*w+math.abs(math.sin(r))*h)/2,
-                    halfH=(math.abs(math.cos(r))*h+math.abs(math.sin(r))*w)/2}
-            end
+    local function cardAnchor(info)
+        local slot=info.slot
+        local box=child('card'..slot)
+        local pose=self.cardPositions[info.uid]
+        if info.reward then
+            local anim=self.rewardView and self.rewardView.cards[slot]
+            if not anim then return end
+            local pick=L.rewardPick
+            pose={(slot-(#info.reward.cards+1)/2)*pick.step,pick.y+anim.lift+anim.rise}
         end
+        if not pose or box.visible==false then return end
+        local r=(box.localRotationZ or 0)*math.pi/180
+        local w,h=L.card.size[1]*(box.localScaleX or 1),L.card.size[2]*(box.localScaleY or 1)
+        return {x=pose[1],y=pose[2],halfW=(math.abs(math.cos(r))*w+math.abs(math.sin(r))*h)/2,
+            halfH=(math.abs(math.cos(r))*h+math.abs(math.sin(r))*w)/2}
     end
-    local function pageGeometry(battle, info, height, anchor, width, font)
+    local function pageGeometry(battle, info, height, width)
         local x, portrait
-        if anchor then
-            local right=anchor.x+anchor.halfW+I.cardHoverGap
-            local left=anchor.x-anchor.halfW-I.cardHoverGap
-            local limit=Theme.canvas.base[1]/2-Theme.canvas.safe.x
-            x=(anchor.x>Theme.canvas.base[1]/4 or right+width>limit) and left-width/2 or right+width/2
-        elseif info.index == 0 then
+        if info.index == 0 then
             x, portrait = L.player.position[1], L.player.portrait
             x = x + portrait / 2 + S.l + I.width / 2
         else
@@ -170,10 +205,10 @@ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, pi
         local top = Theme.canvas.base[2] / 2 - L.topBar.height - S.s
         local heroY=L.player.position[2]+UnitView.noticeLift(battle.player,L.player.portrait,L.player.position[2],true)
         local unitY = info.index == 0 and heroY or select(5,enemyPosition(battle,info.index)) or L.enemyRow.y
-        local cardTop=anchor and anchor.y+anchor.halfH or unitY+portrait/2
+        local cardTop=unitY+portrait/2
         local y = math.min(top - height / 2, cardTop - height / 2)
         y = math.max(-Theme.canvas.base[2] / 2 + Theme.canvas.safe.y + height / 2, y)
-        return {x = x, y = y, height = height, width=width,reading=font,line = L.nativeText.lineHeight, inner = width - I.pad * 2,
+        return {x = x, y = y, height = height, width=width,line = L.nativeText.lineHeight, inner = width - I.pad * 2,
             left = x - width / 2 + I.pad, right = x + width / 2 - I.pad,
             cursor = y + height / 2 - I.pad, sections = 0, rows = 0}
     end
@@ -321,26 +356,28 @@ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, pi
 
     local compact, shown = false, 0
     local staticFrame = {"shadow", "border", "plate", "accent", "rule"}
-    local function nativePowerBox(layer, index, geometry, entry)
-        local box = place(layer, "tip" .. index, geometry.x, geometry.y, geometry.width, entry.height)
-        place(box, "edge", 0, 0, geometry.width, entry.height)
-        place(box, "face", 0, 0, geometry.width - 2, entry.height - 2)
-        box:SetLocalScale(geometry.scale, geometry.scale, 1)
-        local copy = place(box, "copy", 0, 0, geometry.width - P.padding * 2, entry.height)
-        copy.fontSize, copy.minimumFontSize = geometry.font, geometry.font
-        copy.text = powerTitle .. entry.row.name .. "</color>\n" .. entry.row.body
-        box:SetVisible(true)
+    local function beginCompact(panel)
+        if compact then return end
+        for _, name in ipairs(staticFrame) do panel:GetChild(name):SetVisible(false) end
+        for _, name in ipairs({"title", "tag", "hpIcon", "summary", "blockIcon", "guard", "more", "hit", "page"}) do
+            panel:GetChild(name):SetVisible(false)
+        end
+        hideUnused(panel, {sections = 0, rows = 0})
+    end
+
+    local function finishCompact(panel,layer,index,dismiss)
+        for i = index + 1, shown do layer:GetChild("tip" .. i):SetVisible(false) end
+        compact, shown = true, index
+        layer:SetVisible(true)
+        panel.disableCursorEventPassthrough = false
+        panel:SetVisible(true)
+        panel:SetAsLastSibling()
+        child("statusDismiss"):SetVisible(dismiss)
     end
 
     local function paintPowers(panel, tip, rows, heroTop)
         local layer = panel:GetChild("powerTips")
-        if not compact then
-            for _, name in ipairs(staticFrame) do panel:GetChild(name):SetVisible(false) end
-            for _, name in ipairs({"title", "tag", "hpIcon", "summary", "blockIcon", "guard", "more", "hit", "page"}) do
-                panel:GetChild(name):SetVisible(false)
-            end
-            hideUnused(panel, {sections = 0, rows = 0})
-        end
+        beginCompact(panel)
         local columns, left, top, floor, width, font, scale = powerLayout(rows)
         local index = 0
         for column, items in ipairs(columns) do
@@ -351,13 +388,7 @@ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, pi
                 nativePowerBox(layer, index, {x=x, y=y-(entry.y+entry.height/2)*scale, width=width, font=font, scale=scale}, entry)
             end
         end
-        for i = index + 1, shown do layer:GetChild("tip" .. i):SetVisible(false) end
-        compact, shown = true, index
-        layer:SetVisible(true)
-        panel.disableCursorEventPassthrough = false
-        panel:SetVisible(true)
-        panel:SetAsLastSibling()
-        child("statusDismiss"):SetVisible(tip.touch == true)
+        finishCompact(panel,layer,index,tip.touch==true)
     end
 
     local function clearPowers(panel)
@@ -368,15 +399,27 @@ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, pi
         compact = false
     end
 
-    local function transientHand(info)return info and info.transient and info.kind=='card'end
-    local function positionContext(battle,info,positionOnly)
-        if positionOnly and not transientHand(info)then return nil,true end
-        local anchor=info and battle and handAnchor(battle,info)
-        if positionOnly and anchor and info.sideAnchor then
-            local prior=info.sideAnchor
-            if prior.x==anchor.x and prior.y==anchor.y and prior.halfW==anchor.halfW and prior.halfH==anchor.halfH then return anchor,true end
+    local function cardInfo(info)
+        return info and (info.kind=='card' or info.kind=='rewardCard')
+    end
+    local function renderCardTips(panel,battle,info,positionOnly)
+        local anchor=battle and cardAnchor(info)
+        local prior=info.sideAnchor
+        if positionOnly and prior and anchor and prior.x==anchor.x and prior.y==anchor.y
+            and prior.halfW==anchor.halfW and prior.halfH==anchor.halfH then return end
+        if not positionOnly then
+            self.powerTip=nil
+            local actor=detailActor(battle,info)
+            info.tips=actor and describeInfo(battle,info,actor)
         end
-        return anchor,false
+        info.sideAnchor=anchor
+        if info.tips and anchor then paintCardTips(panel,info.tips,anchor,beginCompact,finishCompact)
+        else
+            clearPowers(panel)
+            child("statusDismiss"):SetVisible(false)
+            panel:SetVisible(false)
+            if info.transient and not self:hasOverflowCard(info) then self.info=nil end
+        end
     end
     local function describedCard(battle,info)
         local actor = detailActor(battle, info)
@@ -409,33 +452,27 @@ function M.new(self, child, enemyPosition, describeInfo, paginate, tint, ink, pi
 
     return function(battle,positionOnly)
         local panel, info = child("statusInfo"), self.info
-        if not positionOnly and updatePowers(panel, battle, info) then return end
-        local anchor,skip=positionContext(battle,info,positionOnly)
-        if skip then return end
+        if cardInfo(info) then return renderCardTips(panel,battle,info,positionOnly) end
+        if positionOnly or updatePowers(panel,battle,info) then return end
         local card=describedCard(battle,info)
         if not card then
             self.info = nil
             panel:SetVisible(false)
             return
         end
-        if transientHand(info) and not anchor then
-            self.info=nil;panel:SetVisible(false);return
-        end
-        local width=anchor and I.cardHoverWidth or I.width
-        local font=anchor and I.cardHoverFont or nil
-        local pages = paginate(card,width,font)
+        local width=I.width
+        local pages = paginate(card,width)
         info.page = math.max(1, math.min(info.page or 1, #pages))
         info.pages = #pages
         local page = pages[info.page]
         local footer = footerText(info, pages)
-        local geometry = pageGeometry(battle, info, pageHeight(card, page, footer),anchor,width,font)
+        local geometry = pageGeometry(battle, info, pageHeight(card, page, footer),width)
         frame(panel, card, geometry)
         header(panel, card, geometry)
         summaryLine(panel, card, geometry)
         pageItems(panel, card, page, geometry)
         hideUnused(panel, geometry)
         finish(panel, info, geometry, footer)
-        info.sideAnchor=anchor
     end
 end
 

@@ -1403,6 +1403,13 @@
         116
       ],
       "longTextArt": 32,
+      "reading": {
+        "lineScale": 1.3,
+        "referenceWidth": 128,
+        "referenceHeights": [96, 116, 132],
+        "legacyExtraHeight": 16,
+        "focusScale": 1.9
+      },
       "title": {
         "position": [
           0,

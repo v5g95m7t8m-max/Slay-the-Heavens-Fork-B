@@ -29,13 +29,15 @@ for i,role in ipairs({'hutao','arlecchino','furina','raiden'})do
     local grid=path(root,'deckPanel/grid')
     local slot=assert(grid.items[0]);local before=F.Combat.copy(ui.run)
     assert(slot:GetChild('hit').click())
-    assert(ui.deckUI.detailPages and not grid.visible)
-    local text={}
-    for _=1,#ui.deckUI.detailPages do
-        text[#text+1]=path(root,'deckPanel/details').text
-        assert(path(root,'deckPanel/detailHit').click())
+    assert(path(root,'deckPanel/cardFocus').visible and not grid.visible)
+    local notes=ui.deckUI.cardDetail.notes
+    assert(#notes>0 and table.concat(notes):find('普攻',1,true))
+    for i,note in ipairs(notes)do
+        assert(path(root,'deckPanel/details').text:find(note,1,true)==1)
+        if #notes>1 then
+            assert(ui.deckUI.cardDetail.notePage==i and path(root,'deckPanel/detailHit').click())
+        end
     end
-    assert(table.concat(text):find('普攻',1,true))
     assert(ui.run.gold==before.gold and ui.run.hp==before.hp and #ui.run.deck==#before.deck)
     assert(path(root,'deckPanel/close/hit').click());assert(grid.visible and ui.deckUI.visible)
     assert(ui:closeDeck())

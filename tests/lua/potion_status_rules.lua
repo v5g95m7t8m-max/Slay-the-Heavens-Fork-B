@@ -63,12 +63,16 @@ test('S08 current poison detail updates amount and next tick without a stale val
     Actor.startTurn(s,s.enemies[1]);u:render()
     assert(info:GetChild('text2').text:find('5 点生命',1,true) and info:GetChild('note2').text:find('4 层',1,true))
 end)
-test('S07 card keywords retain battle-long versus temporary duration before play',function()
+test('S07 card faces share one keyword definition and retain printed duration before play',function()
     local h,u,p=H.setup({'inflame','flex'},{'cultist'})
     for slot,instance in ipairs(h.run.combat.hand) do
         u:openHelp(u:cardHelpSpec(slot),nil,false)
-        local tag=p:GetChild('statusInfo'):GetChild('tag1').text
-        assert(tag==(instance.cardId=='flex' and '本回合' or '本场战斗'),'keyword duration missing: '..instance.cardId)
+        local panel=p:GetChild('statusInfo')
+        local tip=panel:GetChild('powerTips'):GetChild('tip1'):GetChild('copy')
+        assert(tip.text:find(h.run.combat.catalog.statuses.strength.description,1,true))
+        local body=p:GetChild('card'..slot):GetChild('label').text
+        local temporary=body:find('本回合结束时移除',1,true)~=nil
+        assert(temporary==(instance.cardId=='flex'),'printed duration incorrect: '..instance.cardId)
     end
 end)
 test('S07 basic and upgraded printed cards name duration in turns, never intensity layers',function()

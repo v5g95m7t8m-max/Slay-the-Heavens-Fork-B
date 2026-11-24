@@ -103,7 +103,8 @@ function M.new(root, data, presentation, clickEvent, platform)
     end
     self.battleUI = BattleUI.new(child("battlePanel"), data, presentation, clickEvent,
         platform, { embedded = true, onChange = changed, inputCovered=battleEntryCovered,
-            onPile=function(kind)return self:openDeck(kind)end })
+            onPile=function(kind)return self:openDeck(kind)end,
+            onCardFocus=function(read)return self:openDeck(nil,read)end })
     self.mapUI = MapUI.new(child("mapPanel"), nil, Navigation.requestNodeEntry(self,platform,changed),
         clickEvent, { embedded = true, color = platform.color, imageSource = platform.imageSource,
         cursor = platform.cursorEvents, pointerBlocked = platform.pointerBlocked,
@@ -153,7 +154,6 @@ function M.new(root, data, presentation, clickEvent, platform)
             onPhase=function()self:refresh()end,onCancel=function()self.starting=false end})
     end
     if prologuePanel then prologuePanel:SetVisible(false) end
-
     self.openExit = Overlays.openExit(self,owner)
     self.openMenu = Overlays.openMenu(self,owner)
     self.closeExit = Overlays.closeExit(self,owner)

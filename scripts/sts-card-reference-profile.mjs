@@ -140,7 +140,7 @@ export const stsReferenceRuntimeGeometry=freeze({
  portrait:{position:anchor(stsAngerReference.anchors.portrait),size:[48,48],viewport:[120,82]},
  body:{position:[0,-57.5],size:[120,76]},
  frameProfiles:Object.fromEntries(['attack','skill','power'].map(kind=>[kind,frameGeometry(kind)])),
- typography:{policy:'native minimum retained; source 8/12 are analysis only; full text remains in the existing paged detail view'},
+ typography:{policy:'native minimum retained; source 8/12 are analysis only; long rules expand within the existing card face'},
 });
 function roundedSource(name,bounds,radius,colour){
  const [l,t,r,b]=bounds,k=.25;

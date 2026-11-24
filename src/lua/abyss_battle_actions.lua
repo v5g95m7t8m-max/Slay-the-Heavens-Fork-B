@@ -32,7 +32,7 @@ local function selectedPotionView(run,slot)
     return Run.potionView(run)[slot]
 end
 -- Explicit ports preserve the approved implementation without a shared constructor closure.
-function M.install(owner, _ownership, host, dependencies)
+function M.install(owner, ownership, host, dependencies)
     local R = L.rewardPick
     local function inputCovered()return host.options.inputCovered and host.options.inputCovered()end
     local function combatInputReady()
@@ -106,22 +106,23 @@ function M.install(owner, _ownership, host, dependencies)
             or help.spec.kind=='rewardCard' and not RewardOwner.ready(owner,help.spec)
     end
     local function helpPointerChanged(help)
-        return owner.gesture and owner.gesture.moving
-            or help.card and (help.card.input.held ~= help.card or not dependencies.cardReady(help.card))
+        if owner.gesture and owner.gesture.moving then return true end
+        local card=help.card
+        return card and (card.input.held~=card or card.browsed or not dependencies.cardReady(card))
     end
     local function fireHelp(help, dt)
         help.t = help.t + dt
         if help.t + 0.000001 >= L.statusInfo.delay then
             help.fired = true
-            if help.held and (help.spec.kind == "card" or help.spec.kind=='rewardCard') then
-                owner.gesture = nil
+            if help.held and help.card then
+                owner.gesture,owner.carry,owner.selected=nil,nil,nil
                 dependencies.cancelCardInputs()
-                owner.suppressClick = true
+                owner.suppressClick=help.card
+                owner.swallow={touch=help.touch}
+                ownership.releasedDragTouch=help.touch
+                help.spec.press=help.card
             end
-            -- A deliberate card hold opens a pageable reader; hover stays transient.
-            local heldCard=help.held and (help.spec.kind=='card' or help.spec.kind=='rewardCard')
-            if heldCard then owner.swallow={touch=help.touch}end
-            owner:openHelp(help.spec, help.source, not heldCard)
+            owner:openHelp(help.spec,help.source,not help.held or not help.card)
         end
     end
     local function updateHelp(dt)
@@ -168,8 +169,10 @@ function M.install(owner, _ownership, host, dependencies)
         dependencies.updateEnemyNames(dt)
         updateRewardCards(dt)
         host.cardView.update(dt)
-        if self.info and self.info.transient and self.info.kind=='card' then
-            host.renderInfo(self.run and self.run.combat,true)
+        local info=self.info
+        if info and (info.kind=='card' or info.kind=='rewardCard') then
+            if self:cardHelpReady(info) then host.renderInfo(info.battle,true)
+            else self:render(true) end
         end
     end
     function owner:setActive(active, suspend, deferRender)

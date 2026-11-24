@@ -20,15 +20,15 @@ end
 -- These events test our dispatch boundary, not the unavailable official Grid physics.
 grid.scrollProgress=.45
 assert(not hit.click(event(true,0,100)),'dragging click must not open card detail')
-assert(not h.deckUI.detailPages and grid.visible and grid.scrollProgress==.45)
+assert(not h.deckUI.cardDetail and grid.visible and grid.scrollProgress==.45)
 assert(not hit.click(event(false,0,100)),'released drag click must not open card detail')
-assert(not h.deckUI.detailPages and grid.scrollProgress==.45)
+assert(not h.deckUI.cardDetail and grid.scrollProgress==.45)
 local threshold=F.Theme.layout.cardDrag.threshold
 assert(not hit.click(event(false,threshold,0)),'exact threshold is a drag, not a tap')
 assert(not hit.click({dragging=true}),'native dragging flag works without position methods')
 assert(hit.listeners.drag==nil and hit.listeners.endDrag==nil,'detail must leave native grid drag routing unclaimed')
 assert(hit.click(event(false,threshold-1,0)),'small-motion tap must open detail')
-assert(h.deckUI.detailPages and not grid.visible)
+assert(h.deckUI.cardDetail and not grid.visible)
 assert(h.deckUI:back());h:update(0)
 assert(grid.scrollProgress==.45 and same(before,h.run))
 assert(h:closeDeck());assert(same(before,h.run))

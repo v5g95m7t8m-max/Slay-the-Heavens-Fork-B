@@ -34,9 +34,10 @@ test('release additions remain in raw Full and exact historical inventories reje
  assertIntegratedCurrent();
  const rawJs=discoverJs(),rawLua=readdirSync('tests/lua').filter(p=>p.endsWith('.lua')).map(p=>'tests/lua/'+p).sort();
  assertCurrentJsInventory(rawJs,integratedCiProof.inventory);
- // These five tests remain in current Full discovery. Only the authenticated
+ // These tests remain in current Full discovery. Only the authenticated
  // historical view may omit them; a missing live test is not a valid prior view.
- const liveLuaAdditions=['tests/lua/detail_latency.lua','tests/lua/potion_management_visual.lua',
+ const liveLuaAdditions=['tests/lua/card_body_catalog.lua','tests/lua/card_body_focus.lua',
+  'tests/lua/detail_latency.lua','tests/lua/potion_management_visual.lua',
   'tests/lua/shop_dismiss.lua','tests/lua/shop_entry.lua','tests/lua/traveler_power_tooltip.lua'];
  const liveLuaInventory=[...integratedCiProof.luaInventory,...liveLuaAdditions].sort();
  const historicalLua=(paths,read=readFileSync)=>{

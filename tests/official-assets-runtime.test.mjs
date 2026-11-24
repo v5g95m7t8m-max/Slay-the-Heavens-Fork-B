@@ -645,7 +645,7 @@ GameUI.new=function(root,data,presentation,event,platform)
 end
 local Gate=require('abyss_page_reveal')
 local F=H.F
-local host,ui,battle,_,tap,_,_,root=H.setup({'bludgeon'},{'acid_slime_s'})
+local host,ui,battle,event,tap,_,_,root=H.setup({'bludgeon'},{'acid_slime_s'})
 local gate=assert(host.pageReveal)
 local cover=root:GetChild('pageReveal')
 local rewards=battle:GetChild('rewardList')
@@ -688,8 +688,21 @@ local function expectReward(listVisible,pickerVisible)
  assert(battle.visible and not actor() and not map.visible and rewards.visible==listVisible and picker.visible==pickerVisible)
 end
 for _=1,4 do frame();expectReward(true,false)end
+host.run.rewards.cards[1]='perfected_strike'
+host.run.rewards.cardUpgrades={[1]=true}
 battle:GetChild('cardReward').click();expectReward(false,true)
 for _=1,4 do frame();expectReward(false,true)end
+local card=battle:GetChild('card1')
+local label=card:GetChild('label')
+local text=require('abyss_card_display')
+assert(label.text:find('提升3点伤害。',1,true)
+ and select(2,text.fitBody(label.text,{label.sizeDeltaX,label.sizeDeltaY})),
+ 'upgraded long reward body overflowed')
+event('card1','down',210);host:update(.36)
+assert(ui.info and ui.info.kind=='rewardCard' and not battle:GetChild('statusInfo').visible)
+event('card1','up',210);event('card1','click',210)
+assert(not ui.info and not host.run.rewards.cardResolved,'reading selected a reward')
+
 local count=#host.run.deck
 tap('card1',203);expectReward(true,false)
 for _=1,4 do frame();expectReward(true,false)end
@@ -1112,7 +1125,7 @@ local count,first=visible()
 assert(count==7 and host.deckUI.pageIndex==2)
 assert(first:GetChild('hit').click() and host.deckUI.cardDetail.instance.uid==211)
 assert(panel:GetChild('pileReturn'):GetChild('hit').click());settle()
-assert(grid.visible and host.deckUI.pageIndex==2 and visible()==7 and not host.deckUI.detailPages)
+assert(grid.visible and host.deckUI.pageIndex==2 and visible()==7 and not host.deckUI.cardDetail)
 assert(panel:GetChild('pileReturn'):GetChild('hit').click())
 assert(not host.deckUI.visible and host.mode=='node' and host.nodeUI.visible and host.run.nodeFlow.id==shop.id)
 assert(not grid.visible and visible()==0 and #grid:GetChildren()==10)
@@ -1173,12 +1186,13 @@ for _,origin in ipairs({0,1})do
   local late=grid.refreshCallback;local hit=first:GetChild('hit')
   grid.scrollProgress=.45
   assert(hit.listeners.drag==nil and hit.listeners.endDrag==nil)
-  assert(not hit.click({dragging=true}) and not deck.detailPages and grid.scrollProgress==.45)
+  assert(not hit.click({dragging=true}) and not deck.cardDetail and grid.scrollProgress==.45)
   assert(hit.click() and deck.cardDetail.instance.uid==uid and not grid.visible)
   assert(not panel:GetChild('deckSort').visible and not tool('cost'),'detail cannot sort the hidden list')
-  assert(panel:GetChild('details').text:find('左下角返回',1,true))
+  assert(panel:GetChild('cardFocus').visible and panel:GetChild('pileReturn').visible)
+  assert(not hit.click(),'hidden list receiver replaced the active detail')
   assert(panel:GetChild('pileReturn'):GetChild('hit').click());deck:update();grid:flush()
-  assert(not deck.detailPages and grid.visible and grid.scrollProgress==.45)
+  assert(not deck.cardDetail and grid.visible and grid.scrollProgress==.45)
   local fresh=grid.items[0];local freshUid=deck.bindings[fresh].uid
   late(fresh,origin+amount-1)
   assert(deck.bindings[fresh].uid==freshUid,'late list callback rebound the returned detail list')
@@ -1231,7 +1245,7 @@ local function permanent()
 end
 assert(deck:open(host.run));deck:update();permanent()
 assert(grid.items[3]:GetChild('hit').click())
-assert(not deck.cardDetail.combat and not panel:GetChild('details').text:find('131',1,true))
+assert(not deck.cardDetail.combat and not panel:GetChild('cardFocus'):GetChild('face'):GetChild('label').text:find('131',1,true))
 assert(deck:toggleUpgradePreview() and deck.cardDetail.preview and not deck.cardDetail.combat)
 assert(panel:GetChild('pileReturn'):GetChild('hit').click());deck:update();permanent()
 assert(not deck:setSort('name'))
@@ -1250,7 +1264,7 @@ assert(face:GetChild('cost').text=='0' and scopes[face]=='battle','pile lost tra
 assert(plain(grid.items[2]:GetChild('face'):GetChild('label').text):find('131',1,true),'pile lost temporary Rampage growth')
 stale(grid.items[0],3);assert(deck.bindings[grid.items[0]].uid==uid,'permanent callback rebound a combat pile')
 assert(grid.items[2]:GetChild('hit').click() and deck.cardDetail.combat)
-assert(panel:GetChild('details').text:find('131',1,true),'pile detail lost its current combat instance')
+assert(panel:GetChild('cardFocus'):GetChild('face'):GetChild('label').text:find('131',1,true),'pile detail lost its current combat instance')
 assert(panel:GetChild('pileReturn'):GetChild('hit').click());deck:update()
 assert(not tool('cost') and not tool('type') and order()=='201,202,203,204')
 local pileLate=grid.refreshCallback
@@ -1313,7 +1327,9 @@ local function visible()
 end
 for _,amount in ipairs({1,3,5,6,13})do
  host.run.combat.discard={}
- for i=1,amount do host.run.combat.discard[i]={uid=100+i,cardId='defend',upgraded=false} end
+ for i=1,amount do
+  host.run.combat.discard[i]={uid=100+i,cardId=i%10==1 and 'perfected_strike' or 'defend',upgraded=false}
+ end
  local before=C.copy(host.run)
  assert(deck:openPile(host.run,'discard'));settle()
  assert(grid.visible and visible()==math.min(10,amount) and not panel:GetChild('grid').visible)
@@ -1329,6 +1345,15 @@ for _,amount in ipairs({1,3,5,6,13})do
  for i,card in ipairs(deck.cards)do assert(card.uid==100+i,'default sort lost the actual pile UID') end
  local _,first=visible()
  local face=first:GetChild('face')
+ local label=face:GetChild('label')
+ local fit=require('abyss_card_display').fitBody
+ local instance=host.run.combat.discard[1]
+ local definition=C.cardDefinition(host.run.combat,instance)
+ local preview=C.cardPreview(host.run.combat,instance)
+ local expected=require('abyss_card_display').combatText(F.Presentation[instance.cardId],definition,instance,preview,host.run.combat)
+ assert(label.text==expected and label.text:find('提升2点伤害。',1,true)
+  and select(2,fit(label.text,{label.sizeDeltaX,label.sizeDeltaY})),
+  'component-bound pile face clipped its long body')
  local shared=sharedFace(face)
  assert(shared.front.visible~=false and shared.back.visible~=false and face:GetChild('stsReferenceCost'):GetChild('costMaterial').visible)
  for _,name in ipairs({'nativePlayableRim','glow','costHalo'})do assert(not face:GetChild(name).visible) end
@@ -1341,10 +1366,10 @@ for _,amount in ipairs({1,3,5,6,13})do
  local page=deck.pageIndex
  local _,current=visible()
  local hit=current:GetChild('hit')
- assert(not hit.click({dragging=true}) and not deck.detailPages)
+ assert(not hit.click({dragging=true}) and not deck.cardDetail)
  assert(hit.click() and deck.cardDetail.instance.uid==101+(page-1)*10)
  assert(panel:GetChild('pileReturn'):GetChild('hit').click());settle()
- assert(not deck.detailPages and grid.visible and deck.pageIndex==page)
+ assert(not deck.cardDetail and grid.visible and deck.pageIndex==page)
  assert(panel:GetChild('pileReturn'):GetChild('hit').click())
  assert(not grid.visible and visible()==0 and not panel:GetChild('pileChrome').visible)
  unchanged(host.run,before,'official pile inspection changed state or RNG')
@@ -1357,24 +1382,25 @@ assert(deck:close())
 `, 'OFFICIAL_PILE_FACE_PASS');
 });
 
-test('transient hand help sits beside the live card and restores full details and input ownership',t=>{
+test('card tips sit beside the lifted card and preserve actor details and input ownership',t=>{
  runOfficial(t,`
 local h,u,p,event=H.setup({'bash','bash','bash','bash','bash','bash','bash','bash','bash','bash'},{'cultist'})
 local theme=H.F.Theme;local battle=h.run.combat
 C.draw(battle,5);u:render();assert(#battle.hand==10)
 local before=C.copy(battle)
 local info=p:GetChild('statusInfo');local plate=info:GetChild('plate')
+local tip=info:GetChild('powerTips'):GetChild('tip1')
 for _,slot in ipairs({1,5,10})do
  local name='card'..slot;local box=p:GetChild(name)
  event(name,'enter',31);h:update(.36)
  assert(u.info and u.info.transient and info.visible,'real card hover must open transient help '..slot)
- assert(plate.sizeDeltaX==320,'hand hover must use the narrow side layout')
+ assert(tip.visible and tip.sizeDeltaX==theme.layout.powerTips.width,'hand hover must reuse the compact keyword tip')
  local pose=u.cardPositions[battle.hand[slot].uid];local r=box.localRotationZ*math.pi/180
  local half=(math.abs(math.cos(r))*theme.layout.card.size[1]*box.localScaleX+math.abs(math.sin(r))*theme.layout.card.size[2]*box.localScaleY)/2
- assert(plate.x+plate.sizeDeltaX/2<=pose[1]-half-8 or plate.x-plate.sizeDeltaX/2>=pose[1]+half+8,'transient tooltip covers raised card '..slot..' panel='..plate.x..' card='..pose[1]..' half='..half)
- assert(plate.x-plate.sizeDeltaX/2>=-640+theme.canvas.safe.x and plate.x+plate.sizeDeltaX/2<=640-theme.canvas.safe.x,'side tooltip escaped horizontal canvas bounds')
- assert(plate.y-plate.sizeDeltaY/2>=-360+theme.canvas.safe.y and plate.y+plate.sizeDeltaY/2<=360-theme.layout.topBar.height-theme.space.s,'side tooltip escaped vertical canvas bounds')
- assert(info:GetChild('text1').fontSize==20 and not info:GetChild('hit').visible and not info:GetChild('page').visible and not info.disableCursorEventPassthrough)
+ assert(tip.x+tip.sizeDeltaX/2<=pose[1]-half-8 or tip.x-tip.sizeDeltaX/2>=pose[1]+half+8,'transient tooltip covers raised card '..slot..' panel='..tip.x..' card='..pose[1]..' half='..half)
+ assert(tip.x-tip.sizeDeltaX/2>=-640+theme.canvas.safe.x and tip.x+tip.sizeDeltaX/2<=640-theme.canvas.safe.x,'side tooltip escaped horizontal canvas bounds')
+ assert(tip.y-tip.sizeDeltaY/2>=-360+theme.canvas.safe.y and tip.y+tip.sizeDeltaY/2<=360-theme.layout.topBar.height-theme.space.s,'side tooltip escaped vertical canvas bounds')
+ assert(tip:GetChild('copy').fontSize==theme.layout.powerTips.font and not info:GetChild('hit').visible and not info:GetChild('page').visible and not info.disableCursorEventPassthrough)
  local uid=battle.hand[slot].uid;local touch=70+slot
  event(name,'down',touch,pose[1],pose[2])
  local g=u.gesture
@@ -1386,8 +1412,8 @@ for _,slot in ipairs({1,5,10})do
  assert(not u.gesture and not u.carry and not u.selected,'cancelled hover-first drag retained capture')
  unchanged(battle,before,'hover-first cancelled drag spent combat resources')
  assert(u:openHelp(u:cardHelpSpec(slot),box:GetChild('hit'),false))
- assert(not u.info.transient and plate.sizeDeltaX==theme.layout.statusInfo.width,'explicit reader did not restore its full width')
- assert(info:GetChild('text1').fontSize==theme.font.reading and info:GetChild('hit').visible and info:GetChild('page').visible and info.disableCursorEventPassthrough,'explicit reader did not restore text or modal ownership')
+ assert(not u.info.transient and tip.visible and not plate.visible,'explicit read changed the tooltip presentation')
+ assert(not info:GetChild('hit').visible and not info:GetChild('page').visible and not info.disableCursorEventPassthrough)
  event(name,'down',touch+100,pose[1],pose[2])
  assert(not u.info and not u.gesture and u.swallow and u.swallow.touch==touch+100,'explicit card reader must swallow its closing Down')
  event(name,'up',touch+100);event(name,'click',touch+100)
@@ -1763,7 +1789,7 @@ unchanged(h.run.combat,before,'opening the compact exhaust entry changed combat'
 `, 'OFFICIAL_COMPACT_EXHAUST_PASS');
 });
 
-test('official automatic card help shows existing keywords only and preserves the explicit reader',t=>{
+test('official hover and deliberate read share genuine keyword tips',t=>{
  runOfficial(t,`
 local h,u,p,event=H.setup({'strike','bash','offering','corruption'},{'cultist'})
 local b=h.run.combat;local panel=p:GetChild('statusInfo');local before=C.copy(b)
@@ -1787,20 +1813,17 @@ event('card'..corruption,'exit',303)
 for _,entry in ipairs({{'bash','易伤'},{'offering','消耗'}})do
  local slot=hover(entry[1],310);local box=p:GetChild('card'..slot)
  assert(u.info and u.info.transient and panel.visible,'existing keyword disappeared')
- assert(panel:GetChild('name1').text==entry[2],'wrong keyword row '..entry[1]..': '..tostring(panel:GetChild('name1').text))
+ local group=panel:GetChild('powerTips')
+ local tip=group:GetChild('tip1')
+ local copy=tip:GetChild('copy').text
+ assert(tip.visible and copy:find(entry[2],1,true),'wrong keyword for '..entry[1])
  if entry[1]=='bash'then
-  assert(panel:GetChild('text1').text==b.catalog.statuses.vulnerable.description,'automatic keyword must use the generic existing definition')
-  assert(panel:GetChild('tag1').text=='','automatic keyword projected an applied duration')
+  assert(copy:find(b.catalog.statuses.vulnerable.description,1,true),'tooltip lost the generic definition')
  end
- assert(not panel:GetChild('title').visible and not panel:GetChild('tag').visible and not panel:GetChild('summary').visible and not panel:GetChild('rule').visible,'automatic keywords retained the empty reader header')
- assert(not panel:GetChild('name2').visible,'automatic help repeated complete effects or origin')
- assert(not panel:GetChild('hit').visible and not panel.disableCursorEventPassthrough,'automatic keywords captured input')
+ assert(not group:GetChild('tip2').visible and not panel:GetChild('title').visible and not panel:GetChild('summary').visible)
+ assert(not panel:GetChild('hit').visible and not panel.disableCursorEventPassthrough)
  assert(u:openHelp(u:cardHelpSpec(slot),box:GetChild('hit'),false))
- assert(panel:GetChild('title').visible and panel:GetChild('summary').visible and panel:GetChild('rule').visible,'explicit reader failed to restore its header')
- assert(panel:GetChild('plate').sizeDeltaX==H.F.Theme.layout.statusInfo.width and panel:GetChild('hit').visible and panel.disableCursorEventPassthrough)
- local complete=false
- for i=1,H.F.Theme.layout.statusInfo.rows do local row=panel:GetChild('name'..i);if row.visible and row.text:find('完整效果',1,true)then complete=true end end
- assert(complete,'explicit reader lost full effects')
+ assert(tip:GetChild('copy').text==copy and not panel:GetChild('page').visible,'deliberate read must use the same keyword only')
  event('card'..slot,'down',311)
  assert(not u.gesture and u.swallow and not u.info,'explicit close must swallow its first Down')
  event('card'..slot,'up',311);event('card'..slot,'click',311)
@@ -2076,4 +2099,17 @@ for _=1,40 do tick()end
 assert(not art.visible and landscape.visible and landscape.imageColor.a==255 and not shade.visible)
 print('OFFICIAL_SELECTION_ENTRANCE_PASS')
 `, 'OFFICIAL_SELECTION_ENTRANCE_PASS', {}, true, {experimentalCharacters:false});
+});
+
+test('release typography audits every card on official faces',t=>{
+ runOfficial(t,"dofile('tests/lua/card_body_catalog.lua')",
+  'OFFICIAL_CARD_BODY_CATALOG_PASS',{},true,true,output=>{
+   assert.match(output,/CARD_BODY_CATALOG_PASS 368 cards, 2944 versions, 9568 face checks/);
+  });
+});
+
+test('true overflow opens the existing full card on official faces',t=>{
+ runOfficial(t,"dofile('tests/lua/card_body_focus.lua')",'OFFICIAL_CARD_BODY_FOCUS_PASS',{},true,true,output=>{
+  assert.match(output,/CARD_BODY_FOCUS_PASS/);
+ });
 });

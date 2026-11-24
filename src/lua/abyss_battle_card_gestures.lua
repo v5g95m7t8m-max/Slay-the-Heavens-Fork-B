@@ -1,6 +1,7 @@
 -- Read state, issue Run commands. No damage/energy/outcome rules live in this view.
 local Theme = require("abyss_theme")
 local CardInput = require("abyss_card_input")
+local Pointer = require("abyss_pointer_input")
 local Combat = require("abyss_combat")
 local M = {}
 local L = Theme.layout
@@ -101,11 +102,24 @@ function M.install(owner, ownership, host, dependencies)
         end
         if not owner.gesture then owner.suppressClick = false end
     end
+    local function closeRead(event)
+        local press=owner.info and owner.info.press
+        if not press then return false end
+        if press.touch~=(event and event.touchId) then return true end
+        dependencies.closeInfo()
+        owner:render(true)
+        return false
+    end
+    local function foreignPotionDrag(event)
+        local aim=owner.potionAim
+        return aim and aim.moving and aim.touch~=(event and event.touchId)
+    end
     local function prepareDown(event)
         -- The popup owns dismissal as well as Use/Discard. A lower native
         -- callback must not close it before its own action receives this Down.
         if owner.potionMenu then return true end
-        if owner.potionAim and owner.potionAim.moving and owner.potionAim.touch~=(event and event.touchId) then return true end
+        if foreignPotionDrag(event) then return true end
+        if closeRead(event) then return true end
         retireInterruptedPress(event)
         ownership.pointerObserved = true
         owner.help=nil
@@ -132,7 +146,7 @@ function M.install(owner, ownership, host, dependencies)
     end
     local function swallowed(event)
         owner:closePowerTip()
-        if owner.potionMenu then return true end
+        if owner.potionMenu or owner.info and owner.info.press then return true end
         local swallow = owner.swallow
         if swallow and swallow.touch == (event and event.touchId) then owner.swallow = nil return true end
         local closed,automaticCard=dependencies.closeInfo()
@@ -295,10 +309,22 @@ function M.install(owner, ownership, host, dependencies)
         owner.suppressClick,owner.selected = g,action ~= 'cancel' and g.uid or nil
         finishReleaseAction(action,target)
     end
+    local function releaseRead(event,input,ended)
+        local info=owner.info
+        local press=info and info.press
+        if not press then return false end
+        if press.touch==(event and event.touchId) and (not input or input==press.input) then
+            ownership.releasedDragTouch=press.touch
+            dependencies.closeInfo()
+            if ended or Pointer.dragged(event,L.cardDrag.threshold) or not owner:openOverflowCard(info) then owner:render(true) end
+        end
+        return true
+    end
     local function release(event, input, ended)
         if owner.potionAim and owner.potionAim.moving and dependencies.releasePotionDrag then return dependencies.releasePotionDrag(event,input) end
         local g = owner.gesture
         local touch = event and event.touchId
+        if not g and releaseRead(event,input,ended) then return end
         if not g then releaseCardTap(event, input, ended) return end
         if touch ~= g.touch or input and input ~= g.input then return end
         if owner.help and owner.help.card == g then owner.help = nil end

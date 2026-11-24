@@ -110,6 +110,13 @@ function M.syncCardChoice(self)
         end
 end
 
+local function staleCardFocus(self)
+    local read=self.deckUI.focusRead
+    return read and not self.battleUI:cardHelpReady(read,true)
+end
+local function stalePile(deck,run)
+    return deck.pileKind and (run.phase~='combat' or run.combat~=deck.battle)
+end
 function M.closeStaleDeck(self)
     return function(run,inMenu)
             if self.deckUI.previewInfo then
@@ -118,8 +125,9 @@ function M.closeStaleDeck(self)
                 end
                 return
             end
+            if staleCardFocus(self) then self.deckUI:close();return end
             if self.deckUI.visible and (inMenu or run and run.phase=='ending_proceed' or self.battleUI.busy or self.deckUI.run ~= run
-            or self.deckUI.pileKind and (run.phase~='combat' or run.combat~=self.deckUI.battle))then self.deckUI:close()end
+            or stalePile(self.deckUI,run))then self.deckUI:close()end
         end
 end
 

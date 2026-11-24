@@ -32,8 +32,8 @@ local function nativeText(card,dynamic)
     if card.colorlessNative then return require('abyss_colorless_cards').describe(card,dynamic) end
 end
 local function emptyText(card)
-    if card.id=='dazed' then return '不能打出。虚无：回合结束时仍在手中则消耗。'
-    elseif card.id=='slimed' then return '消耗：打出后移出本场战斗。'
+    if card.id=='dazed' then return '不能打出。虚无。'
+    elseif card.id=='slimed' then return '消耗。'
     elseif card.id=='regret' then return '不能打出。回合结束时，失去与手牌张数相同的生命。'
     elseif card.id=='tactician' then return '不能打出。被主动弃掉时，获得 '..(card._upgraded and '2' or '1')..' 点能量。'
     elseif card.id=='reflex' then return '不能打出。被主动弃掉时，抽 '..(card._upgraded and '3' or '2')..' 张牌。'
@@ -42,7 +42,7 @@ local function emptyText(card)
         local damage=card.burnDamage
         if damage==nil then damage=card.endTurnDamage end
         return '不能打出。回合结束时受到 '..number(damage)..' 点伤害；格挡可以抵挡。'
-    elseif card.id=='void' then return '不能打出。抽到时失去 1 点能量。虚无：回合结束时仍在手中则消耗。'
+    elseif card.id=='void' then return '不能打出。抽到时失去 1 点能量。虚无。'
     elseif Curses.isImplemented(card) then
         local descriptions={
             injury='不能打出。',
@@ -53,7 +53,7 @@ local function emptyText(card)
             decay='不能打出。回合结束时受到 2 点伤害；格挡可以抵挡。',
             shame='不能打出。回合结束时，获得 1 回合脆弱。',
             writhe='固有。不能打出。',
-            clumsy='不能打出。虚无：回合结束时仍在手中则消耗。',
+            clumsy='不能打出。虚无。',
             normality='不能打出。在手牌中时，每回合最多打出 3 张牌。',
             parasite='不能打出。从牌组中永久移除时，最大生命值降低 3 点。',
             }
@@ -336,7 +336,7 @@ effects.gainStatusPower = function(e, value)
 end
 effects.growClaws = function(e, _value)
     local text
-    assert(e.value==2,'unsupported Claw growth');text='本场战斗所有利爪的基础伤害增加 2，包括本牌；已消耗的其他利爪不增长'
+    assert(e.value==2,'unsupported Claw growth');text='本场所有利爪基础伤害加 2（含本牌，其他已消耗牌除外）'
     return text
 end
 effects.stackBlock = function(e, value, _card, dynamic)
@@ -415,8 +415,8 @@ effects.gainWatcherFlowPower = function(e, value)
     elseif e.status=='energy_down' then text='从下回合起，每回合开始失去 '..value()..' 点能量'
     elseif e.status=='like_water' then text='回合结束的手牌处理之前，若处于平静，获得 '..value()..' 点固定格挡'
     elseif e.status=='study' then text='每回合结束时，将 '..value()..' 张未升级洞见随机插入抽牌堆'
-    elseif e.status=='wrath_next_turn' then assert(e.value==1,'invalid next Wrath marker');text='下个自身回合开始时进入愤怒，随后移除此状态'
-    elseif e.status=='draw_card_next_turn' then text='下个自身回合正常抽牌后，额外抽 '..value()..' 张牌，随后移除此状态'
+    elseif e.status=='wrath_next_turn' then assert(e.value==1,'invalid next Wrath marker');text='下回合开始进入愤怒'
+    elseif e.status=='draw_card_next_turn' then text='下回合正常抽牌后额外抽 '..value()..' 张牌'
     elseif e.status=='vigor' then text='下一张攻击的每次普通伤害增加 '..value()..' 点'
     elseif e.status=='collect' then text='接下来 '..value()..' 次恢复能量时，各生成 1 张奇迹+'
     else error('unknown Watcher flow Power') end
@@ -424,7 +424,7 @@ effects.gainWatcherFlowPower = function(e, value)
 end
 effects.applyWatcherFlowPower = function(e, value)
     local text
-    if e.status=='block_return' then text='给目标施加格挡返还：此后其每次受到普通攻击时，给予你 '..value()..' 点固定格挡；完全格挡也触发'
+    if e.status=='block_return' then text='施加以手拒之：此后目标受其他角色普通攻击时，你获 '..value()..' 点固定格挡（含伤害0）'
     elseif e.status=='mark' then text='给目标施加 '..value()..' 层印记'
     else error('unknown Watcher flow debuff') end
     return text
@@ -510,7 +510,7 @@ effects.gainMantra = function(_e, value)
     return '获得 '..value()..' 层真言'
 end
 effects.gainDevotion = function(_e, value)
-    return '获得 '..value()..' 层供奉：从下回合起，每回合抽牌后获得等量真言；没有真言且供奉达到 10 层时，直接进入神格'
+    return '获得 '..value()..' 层供奉。下回合起抽牌后获等量真言，无真言且供奉达10层时直接进入神格'
 end
 effects.scry = function(_e, value)
     return '占卜 '..value()..'：查看牌堆顶牌，选择任意张弃掉'
@@ -579,7 +579,7 @@ end
 local function baseText(card,prefix,out)
     local text=prefix..table.concat(out,'；')..'。'
     if card.id=='sentinel' then text=text..'本牌被消耗时，获得 '..(card._upgraded and '3' or '2')..' 点能量。'
-    elseif card.id=='eviscerate' then text=text..'本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。'
+    elseif card.id=='eviscerate' then text=text..'本回合每主动弃 1 张牌，本牌少费 1（最低 0）。'
     elseif card.id=='perseverance' then text=text..'每次保留时，本牌本场战斗格挡增加 '..(card._upgraded and '3' or '2')..'。'
     elseif card.id=='windmill_strike' then text=text..'每次保留时，本牌本场战斗伤害增加 '..(card._upgraded and '5' or '4')..'。'
     elseif card.id=='sands_of_time' then text=text..'每次保留时，本牌本场战斗费用降低 1，最低 0。' end
@@ -600,11 +600,11 @@ local function growthText(card,text)
     return text
 end
 local function keywordText(card,text)
-    if card.shuffleBackIntoDrawPile then assert(card.id=='tantrum' and card.shuffleBackIntoDrawPile==true,'unknown shuffle-back flag');text=text..'打出后将原牌随机插回抽牌堆。' end
+    if card.shuffleBackIntoDrawPile then assert(card.id=='tantrum' and card.shuffleBackIntoDrawPile==true,'unknown shuffle-back flag');text=text..'将原牌随机插回抽牌堆。' end
     if card.selfRetain then text=text..'保留。' end
-    if card.innate then text=text..'先天：开局优先抽到。' end
+    if card.innate then text=text..'先天。' end
     if card.exhaust then text=text..'消耗。' end
-    if card.ethereal then text=text..'虚无：回合结束时仍在手中则消耗。' end
+    if card.ethereal then text=text..'虚无。' end
     return text
 end
 fragments = function(card,dynamic,path)

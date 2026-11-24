@@ -122,7 +122,8 @@ check('FINAL_CONTENT_GEOMETRY',function()
   local fill=well:GetChild(kind=='skill' and 'vertical' or kind=='power' and 'arch' or 'upper').imageColor
   local expected=H.F.Theme.cardSkin.artWells[kind]
   assert(fill.r==expected.r and fill.g==expected.g and fill.b==expected.b,'wrong final source well colour')
-  Display.writeBody(label,string.rep('完整正文不能丢失。',40),face)
+  local long='完整规则需要说明效果触发的时点。玩家手牌中的这张牌可以在下一回合获得额外格挡，够长的正文继续自然换行。'
+  assert(Display.writeBody(label,long,face) and label.text==long)
   assert(label.sizeDeltaY==H.F.Theme.layout.card.longTextBox[2],'long-text fallback was removed')
   for name,window in pairs(spec.windows)do
    local group=face:GetChild('skin'):GetChild(name)

@@ -9,6 +9,7 @@ import {authenticateInputRetirement,beforeDeckBrowserBackflow,beforePotionBackfl
 import {actorFocusAdded,deckPagesAdded,assertActorFocusInventory,assertDevelopBackflowCurrent,assertStasisUpgradeAdded,authenticateDevelopBackflow,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 import test from 'node:test';
 import {addedEntranceModules,beforeUiEntrance,entranceInventory,entrancePredecessor} from './helpers/ui-entrance-source.mjs';
+import {cardReadingOwns} from './helpers/card-reading-backflow-source.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync,mkdtempSync,mkdirSync,writeFileSync,existsSync,linkSync,unlinkSync,rmSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -210,8 +211,9 @@ test('combined epoch authenticates the complete current production tree',()=>{
   for(const checkpoint of new Set([beforePotion,beforeBrowser])){
    if(checkpoint===latest)continue;
    assert.throws(()=>beforeCurrentProductionSource(path,checkpoint,read),{message:'fresh current production owner: '+path});
+   const stage=cardReadingOwns(path)?'card reading':'deck/potion backflow';
    assert.throws(()=>beforeCurrentProductionSource(path,latest,owner=>owner===path?checkpoint:read(owner)),
-    {message:'combined linked owner identity: '+path+' during deck/potion backflow validation'});
+    {message:'combined linked owner identity: '+path+' during '+stage+' validation'});
   }
   if(latest.replaceAll('\r\n','\n')===previous)continue;
   for(const invalid of [previous,latest+'\n',null]){

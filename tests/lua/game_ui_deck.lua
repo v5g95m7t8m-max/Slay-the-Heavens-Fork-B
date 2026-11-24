@@ -46,9 +46,9 @@ test("deck overlay reads permanent UID and upgraded text and never changes the r
     assert(not hit.click({dragging=true}),'scroll drag must not open detail')
     assert(not hit.click({dragging=false,GetPressUIPos=function()return 100,100 end,
         GetUIPos=function()return 100,180 end}),'released scroll must not open detail')
-    assert(not ui.deckUI.detailPages and grid.visible and grid.scrollProgress==.4)
+    assert(not ui.deckUI.cardDetail and grid.visible and grid.scrollProgress==.4)
     assert(hit.click(),'ordinary tap still opens read-only detail')
-    assert(ui.deckUI.detailPages and not grid.visible)
+    assert(ui.deckUI.cardDetail and not grid.visible)
     assert(closeDeck(root));ui:update(0)
     assert(grid.visible and grid.scrollProgress==.4,'detail return must retain native scroll position')
     assert(ui.deckUI.bindings[first].uid == ui.run.deck[1].uid and first:GetChild("uid").text == "")

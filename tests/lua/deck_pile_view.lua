@@ -26,14 +26,14 @@ local function checkDetailAndScroll(host,root,grid)
     assert(not hit.click({dragging=true}),'pile drag must not open detail')
     assert(not hit.click({dragging=false,GetPressUIPos=function()return 100,100 end,
         GetUIPos=function()return 100,180 end}),'released pile drag must not open detail')
-    assert(not host.deckUI.detailPages and grid.visible and grid.scrollProgress==.35)
+    assert(not host.deckUI.cardDetail and grid.visible and grid.scrollProgress==.35)
     assert(hit.click(),'ordinary pile tap must open detail')
-    assert(host.deckUI.detailPages and not grid.visible)
+    assert(host.deckUI.cardDetail and not grid.visible)
     assert(host.deckUI.cardDetail.instance.uid==uid and host.deckUI.cardDetail.combat,
         'pile detail must use the selected combat instance')
     assert(root:GetChild('deckPanel'):GetChild('close'):GetChild('hit').click())
     host.deckUI:update()
-    assert(not host.deckUI.detailPages and grid.visible and grid.scrollProgress==.35,
+    assert(not host.deckUI.cardDetail and grid.visible and grid.scrollProgress==.35,
         'detail return must preserve the native scroll offset')
     assert(host.deckUI.bindings[grid.items[0]].uid==uid,'detail return changed selected pile UID')
     assert(#host.deckUI.cards==#order,'detail return changed the pile view count')
