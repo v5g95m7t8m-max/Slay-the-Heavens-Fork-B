@@ -75,7 +75,9 @@ end
 function Control:SetVisible(value) assert(type(value) == "boolean"); self.visible = value end
 function Control:SetSizeDelta(width, height) NativeContract.sizeDelta(width,height); self.size = {width, height}; self.sizeDeltaX, self.sizeDeltaY = width, height end
 function Control:SetLocalScale(x, y, z) self.scale = {x, y, z}; self.localScaleX, self.localScaleY = x, y end
-function Control:SetAnchoredPosition(x, y) self.x, self.y = x, y end
+function Control:SetAnchoredPosition(x, y)
+    self.x, self.y, self.anchoredPositionX, self.anchoredPositionY = x, y, x, y
+end
 function Control:SetImage(...)
     assert(select("#", ...) == 2, "SetImage expects exactly source and id")
     local source, id = ...
@@ -119,7 +121,8 @@ end
 local function control(spec, parent)
     local self = { name = spec.name, kind=spec.kind, children = {}, visible = spec.visible ~= false,
         text = spec.text and spec.text.content or "", parent = parent, raycastTarget = true,
-        sizeDeltaX = spec.size and spec.size[1], sizeDeltaY = spec.size and spec.size[2] }
+        sizeDeltaX = spec.size and spec.size[1], sizeDeltaY = spec.size and spec.size[2],
+        anchoredPositionX = (spec.position or {})[1] or 0, anchoredPositionY = (spec.position or {})[2] or 0 }
     if spec.kind~='cursorArea' then self.interactable=true end
     self.GetChild = Control.GetChild
     self.AddKeyEventListener = Control.AddKeyEventListener
@@ -255,6 +258,14 @@ local function click(root, panel, button)
         advanceShop(root.ui)
     end
     local box = panel == "mapPanel" and mapControl(root:GetChild(panel), button) or root:GetChild(panel)
+    if panel=='nodePanel' and not box:GetChild('shopView'):GetChild('goods') then
+        button=button:gsub('^shopView/goods/','shopView/')
+    elseif panel=='nodePanel' then
+        button=button:gsub('^shopView/(%a+)',function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
+    end
     if panel ~= "mapPanel" then for part in button:gmatch("[^/]+") do box = assert(actorControl(box,part), button) end end
     local target = box.click and box or box:GetChild("hit")
     local parent = target

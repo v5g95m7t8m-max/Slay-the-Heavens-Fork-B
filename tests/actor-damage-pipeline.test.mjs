@@ -28,14 +28,17 @@ test('Actor and Focus replay exact predecessor bytes and reject changed linked o
     assert.throws(()=>assertActorFocusInventory([...paths,added],read),/complete current Actor\/Focus Lua module inventory/);
     assert.equal(beforeDevelopBackflow(added,read(added)),read(added));
   }
-  const crlf=source=>source.replaceAll('\n','\r\n');
+  const crlf=source=>source.replace(/\r?\n/g,'\r\n');
   for(const [path,{before}] of Object.entries(archive.files)){
     const live=read(path);
     const prior=path===config?stasis.files[config].before.source:before.source;
-    assert.equal(authenticateDevelopBackflow(path,live,read),prior);
+    assert.equal(authenticateDevelopBackflow(path,live,read),live.includes('\r\n')?crlf(prior):prior);
     assert.equal(authenticateDevelopBackflow(path,crlf(live),owner=>crlf(read(owner))),crlf(prior));
     assert.throws(()=>assertDevelopBackflowCurrent(path,before.source),/fresh current production owner/);
     assert.equal(authenticateDevelopBackflow(path,live+'\n',()=>assert.fail('unknown bytes must not read owners')),live+'\n');
+    const doubleCr=live.replace(/\r?\n/g,'\r\r\n');
+    assert.notEqual(doubleCr,live,'double CR negative must change bytes');
+    assert.equal(authenticateDevelopBackflow(path,doubleCr,()=>assert.fail('double CR source must not read owners')),doubleCr);
     for(const owner of [...Object.keys(archive.files),...Object.keys(archive.added)]){
       const stale=archive.files[owner]?.before.source??read(owner)+'\n';
       assert.throws(()=>authenticateDevelopBackflow(path,live,p=>p===owner?stale:read(p)),/linked owner identity/);
@@ -60,7 +63,7 @@ test('Actor and Focus replay exact predecessor bytes and reject changed linked o
     assert.throws(()=>authenticateDevelopBackflow(config,read(config),path=>path===owner?stale:read(path)),/linked owner identity/);
   }
   const stasisPath='src/lua/abyss_act2_stasis.lua';
-  assert.equal(authenticateDevelopBackflow(stasisPath,read(stasisPath),read),stasis.files[stasisPath].before.source);
+  assert.equal(authenticateDevelopBackflow(stasisPath,read(stasisPath),read),read(stasisPath).includes('\r\n')?crlf(stasis.files[stasisPath].before.source):stasis.files[stasisPath].before.source);
   assert.throws(()=>authenticateDevelopBackflow(stasisPath,read(stasisPath),path=>path===config?stasisConfig:read(path)),/linked owner identity/);
 });
 test('a Bias tick ignores the legacy optional turn API and consumes one Artifact',()=>{

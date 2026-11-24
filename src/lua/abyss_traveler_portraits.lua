@@ -422,6 +422,7 @@ local function enabled(flags,key)
     return type(flags)=='table' and flags[key]==true
 end
 local function selectionFallback(panel,details,official)
+    if official and details:GetChild('infoMotion') then return {details:GetChild('portraits')} end
     return official and {panel:GetChild('v25Background'),details:GetChild('portraits')}
         or {details:GetChild('portraits'):GetChild('traveler_ironclad')}
 end
@@ -470,7 +471,9 @@ function M.new(stage,report,flags,cardTemplates)
     end
     local function selectionHost(panel)
         local host
-        if official then host=assert(panel:GetChild('lumineSelectionBackground'),'missing approved selection background host')
+        if official then
+            host=assert(panel:GetChild('lumineSelectionBackground'),'missing approved selection background host')
+            host=host:GetChild('figure') or host
         else host=details and details:GetChild('officialSelectionFigure')end
         return host
     end
@@ -578,6 +581,12 @@ function M.new(stage,report,flags,cardTemplates)
             fallbackVisibility[control]={visible=visible,phase=phase,setter=setter}
         end
     end
+    local function clearPortraitPlaceholder()
+        local note=details:GetChild('portraitNote')
+        local old=note.text
+        local painted=old:gsub(' · 肖像待补','')
+        if painted~=old then note.text=painted end
+    end
     local function paint()
         if destroyed or painting then return end
         painting=true
@@ -595,9 +604,7 @@ function M.new(stage,report,flags,cardTemplates)
                     end
                 end
             end
-            if row.name=='selection' and ready then
-                local note=details:GetChild('portraitNote');note.text=note.text:gsub(' · 肖像待补','')
-            end
+            if row.name=='selection' and ready then clearPortraitPlaceholder() end
             if row.lastPhase~=s.phase then row.lastPhase=s.phase;if report then pcall(report,'ABYSS_PORTRAIT '..row.name..' phase='..s.phase..' owned='..s.owned..' reason='..tostring(s.reason))end end
         end
         painting=false
@@ -643,13 +650,14 @@ function M.new(stage,report,flags,cardTemplates)
         end
         return wanted
     end
-    function self.sync(_,mode,characterOpen,stopped,character,preloadSelection)
+    function self.sync(_,mode,characterOpen,stopped,character,preloadSelection,retainedCharacter)
         if busy or destroyed then return false end
         busy=true;local token=epoch
         -- V25 and official pages open selection artwork on demand. The legacy host's warm
         -- hint must not allocate hidden figures during its title screen.
         if profile or official then preloadSelection=false end
         local wanted=presentationTargets(mode,characterOpen,stopped,character,preloadSelection)
+        if characterOpen and not stopped and retainedCharacter=='ironclad' then wanted.selection=true end
         for _,row in ipairs(rows)do
             -- Competition hides the one-role legacy roster; its V25 badge has
             -- its own official symbol and does not consume this avatar drawing.

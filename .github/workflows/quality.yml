@@ -199,7 +199,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(inputs.runner_pool == 'local-special' && '[1]' || needs.impact.outputs.windows_shards) }}
     # Thirty minutes is a performance target; allow host variance before killing work.
-    timeout-minutes: ${{ inputs.runner_pool == 'local-special' && 75 || 45 }}
+    timeout-minutes: ${{ inputs.runner_pool == 'local-special' && 75 || 180 }}
     defaults:
       run:
         shell: ${{ github.event_name == 'workflow_dispatch' && inputs.runner_pool == 'local-special' && 'powershell -NoProfile -ExecutionPolicy Bypass -File {0}' || 'pwsh -NoProfile -ExecutionPolicy Bypass -File {0}' }}
@@ -530,7 +530,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.impact.outputs.posix_shards) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

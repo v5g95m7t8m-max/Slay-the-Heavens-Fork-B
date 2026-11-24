@@ -1,3 +1,4 @@
+import { assertCurrentUiEntrance, entrancePredecessor } from './ui-entrance-source.mjs';
 import {assertCurrentDevelopUiSource,readRetiredController,retiredControllerPath} from './input-retirement-source.mjs';
 import {assertDevelopBackflowCurrent,authenticateDevelopBackflow,developBackflowOwns} from './develop-release-backflow-source.mjs';
 import {beforeSlimeSplitReceipt,slimeSplitSourcePaths} from './slime-split-source.mjs';
@@ -84,6 +85,7 @@ function beforeAdmissionReceipt(path,source,read){
 // The old timing/production receipts continue to replay their exact source view.
 // Unknown bytes are left visible and both current owners are checked on every projection.
 export function beforeCharacterPreparationSource(path, source, read = readRaw) {
+  ({source,read}=entrancePredecessor(path,source,read));
   source=authenticateDevelopBackflow(path,source,read);
   const readBackflow=read;
   read=owner=>authenticateDevelopBackflow(owner,
@@ -138,7 +140,13 @@ const currentContinuationOwners = new Set([
 ]);
 
 export function beforeCurrentProductionSource(path, source, read = readRaw) {
-  assertCurrentDevelopUiSource(path,source,read);
+  assertCurrentUiEntrance(path,source);
+  const entranceInput=source;
+  ({source,read}=entrancePredecessor(path,source,read));
+  // The entrance owner was freshly authenticated before restoring its older view.
+  // That predecessor predates the current develop cover and is not a live owner.
+  if(path!=='src/lua/abyss_game_ui_view.lua'||source===entranceInput)
+    assertCurrentDevelopUiSource(path,source,read);
   if(developBackflowOwns(path)){
     assertDevelopBackflowCurrent(path,source);
     return beforeCharacterPreparationSource(path,source,read);

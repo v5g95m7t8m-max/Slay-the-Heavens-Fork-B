@@ -34,7 +34,7 @@ local function renderPendingScreen(ctx,self,view)
   self.renderRun,self.renderMap,self.nodeId=self.run,self.map,nil
   self.view={phase=self.run.phase,node={type='relic_pending',complete=false},pendingRelic=view};self.actions={}
   ctx.shopSelection:clear();ctx.roomMotion:cancel();ctx.merchant:setVisible(false)
-  ctx.showShopRoom(false,false)
+  ctx.suspendShop();ctx.showShopRoom(false,false)
   ctx.renderTopBar(nil);ctx.child('title').text='遗物效果'
   for _,name in ipairs({'shopView','campView','pickerView','eventView','treasureView'})do ctx.show(ctx.child(name),name=='eventView')end
   local event=ctx.child('eventView')

@@ -9,6 +9,7 @@ import {beforeCombatEvents,beforeDevelopUiBackflows,beforePotionBackflow,readRet
 import {beforeActionButtons} from './action-buttons-source.mjs';
 import {beforeDeckPages} from './develop-release-backflow-source.mjs';
 import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
+import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 import {stsStylePriorRuntime} from './sts-style-prior-runtime.mjs';
 
 const hash=(bytes,algorithm='sha256')=>createHash(algorithm).update(bytes).digest('hex');
@@ -71,6 +72,14 @@ export function beforeCalibrationReplay(path,source){
 const copierPath='tests/helpers/copy-integration-source-closure.mjs';
 const historicalStsEntry='tests/helpers/historical-sts-style-entry.mjs';
 export function beforeCurrentHistoricalStsSource(path,source){
+ if(Buffer.isBuffer(source)){
+  const text=source.toString('utf8'),prior=beforeCurrentHistoricalStsSource(path,text);
+  return prior===text?source:Buffer.from(prior);
+ }
+ // New exact integration tests first continue to the entrance witness's reviewed input.
+ if(['tests/integration-source-epoch.test.mjs','tests/helpers/combined-epoch/source-epoch-runtime.mjs',
+  'tests/session-menu-navigation.test.mjs','tests/tiny-house-pending-ui.cases.mjs'].includes(path))source=beforeCurrentReplayFixes(path,source);
+ source=beforeUiEntranceWitness(path,source);
  if(path===copierPath)return beforeCurrentReplayCopier(path,source);
  if(path!==historicalStsEntry)return beforeCurrentReplayFixes(path,source);
  if(!matches(source,{
@@ -85,9 +94,27 @@ export function beforeCurrentHistoricalStsSource(path,source){
  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
 export function beforeCurrentReplayCopier(path,source){
- if(path!==copierPath||!matches(source,{
+ if(path===copierPath&&matches(source,{
+  sha256:'9c0b358a3b75b59ebe7218f988297661b71a42b47d20e34a3b9734a2c0a71a10',gitBlob:'143ce2350c049fa4fe641e86dc34b18d094a8c73',
+ })){
+  const prior=lf(source).replace(/const entranceFiles=Object.freeze\(\{\n[\s\S]+?\n\}\);\n/,'')
+   .replace('Object.entries(entranceFiles)','Object.entries(currentReplayFiles)');
+  assert.equal(hash(prior),'98ff5c37986a48db7ec6257a537193a57156cbdcce8e20cf48f5d206ff64aa40','exact merged entrance copier predecessor');
+  source=source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+ }
+ if(path===copierPath&&matches(source,{
+  sha256:'69eb9c5241f43631e1e341747b0565a92b0e348ba7a9c3e9ea4479a524e98d91',gitBlob:'e39d70be38e7a42b6078c656d4624ed71d448ee5',
+ })){
+  const prior=lf(source).replace(/const entranceFiles=Object.freeze\(\{\n[\s\S]+?\n\}\);\n/,'')
+   .replace('Object.entries(entranceFiles)','Object.entries(currentReplayFiles)');
+  assert.equal(hash(prior),'f606b9a16cf0800cdec7f8a781aaab7deca6f05e08937a3488fef86a54b6742b','exact entrance copier predecessor');
+  source=source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+ }
+ if(path!==copierPath||!(matches(source,{
+  sha256:'f606b9a16cf0800cdec7f8a781aaab7deca6f05e08937a3488fef86a54b6742b',gitBlob:'a796a1ddf69bd0a3c19e21eb7be78d21f498e720',
+ })||matches(source,{
   sha256:'98ff5c37986a48db7ec6257a537193a57156cbdcce8e20cf48f5d206ff64aa40',gitBlob:'dfe81edcd36a45f8ffed7d42c849b7755708463b',
- }))return source;
+ })))return source;
  const text=lf(source);
  const block='const currentReplayFiles=Object.freeze({\n';
  const start=text.indexOf(block),end=text.indexOf('const inside=',start);
@@ -100,7 +127,7 @@ export function beforeCurrentReplayCopier(path,source){
 }
 
 function matchesCurrentReceipt(path,source,expected){
- source=beforeCurrentReplayFixes(path,source);
+ source=beforeCurrentReplayFixes(path,beforeUiEntranceWitness(path,source));
  if(matches(source,expected))return true;
  const ui=beforeDevelopUiBackflows(path,source);
  const actions=beforeActionButtons(path,ui);
@@ -142,7 +169,7 @@ export function readCalibrationReceiptInput(path,digest,read,readCurrent=readFil
  if(!Object.hasOwn(row.before,digest))return fallback();
  if(row.current===null)assert.throws(()=>readCurrent(path,'utf8'),{code:'ENOENT'},'retired receipt input reappeared: '+path);
  else{
-  const raw=beforeCurrentReplayFixes(path,beforeCurrentReplayCopier(path,readCurrent(path,'utf8')));
+  const raw=beforeCurrentHistoricalStsSource(path,readCurrent(path,'utf8'));
   let current=raw;
   if(path==='tests/helpers/combined-epoch/source-epoch-runtime.mjs'||path==='tests/helpers/copy-integration-source-closure.mjs'||
      path==='tests/helpers/round3-catalog-source-inverse.mjs'){

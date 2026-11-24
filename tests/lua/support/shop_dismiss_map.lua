@@ -13,6 +13,10 @@ h:refresh();assert(h.mapUI:choose(routes.at(h.map,path[#path]).id))
 assert(h.mode=='node' and h.run.nodeFlow.type=='shop')
 local panel=r:GetChild('nodePanel')
 local function get(root,path)
+        path = path:gsub('^shopView/(%a+)', function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
  for name in path:gmatch('[^/]+')do root=assert(root:GetChild(name),path)end
  return root
 end

@@ -180,7 +180,13 @@ function boundJson(record,root){
  return JSON.parse((record.path.endsWith('.gz')?gunzipSync(bytes):bytes).toString('utf8'));
 }
 function requireCurrentObserver(report){
- assert.equal(report.identity?.runnerSha256,digest(readFileSync(new URL('./replay-ui-outcome.mjs',import.meta.url))),'Replay belongs to a different runner contract');
+ const runner=digest(readFileSync(new URL('./replay-ui-outcome.mjs',import.meta.url)));
+ // The entrance successor adds pooled-info paths to the page oracle. Frozen
+ // diagnosis captures retain their original observer identity and old layout;
+ // this exact reviewed pair does not certify the successor UI on a device.
+ const priorDiagnosis=runner==='9b06ae457410bb4c67b783058b43bc4f88f42e1464793027f755c93b84d0061b'
+  &&report.identity?.runnerSha256==='3d63b6d51bf17495da622bd47626569045c845be77f4b8882cf28e8b21d4a13c';
+ assert(priorDiagnosis||report.identity?.runnerSha256===runner,'Replay belongs to a different runner contract');
  assert.equal(report.identity?.conditionsProducerSha256,digest(readFileSync(new URL('./ui-outcome-identity.mjs',import.meta.url))),'Replay belongs to a different condition producer');
 }
 

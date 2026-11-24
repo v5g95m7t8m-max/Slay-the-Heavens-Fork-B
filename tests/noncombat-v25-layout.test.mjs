@@ -178,7 +178,10 @@ test('official generated selection retires the legacy full-screen shade above it
  assert.equal(shade.visible,false,'ready artwork must not inherit the old full-screen backdrop shade');
  assert.equal(child(panel,'blocker').kind,'cursorArea','retire paint only; retain the selection input barrier');
  assert.equal(child(panel,'v25Background').visible,true,'the controller still owns its loading fallback');
- assert.deepEqual(parts(child(panel,'v25Background')).map(n=>n.name),['landscape'],'loading and failure show the unshaded fallback image');
+ const fallback=child(panel,'v25Background');
+ assert.deepEqual(parts(fallback).map(n=>n.name),['landscape','selectionShade']);
+ assert.notEqual(child(fallback,'landscape').visible,false,'loading retains the fallback landscape');
+ assert.equal(child(fallback,'selectionShade').visible,false,'the new transition layer starts hidden; loading remains unshaded');
  assert.deepEqual(readArtFeatures(directory),officialAssetFlags);
 });
 
@@ -194,6 +197,8 @@ local panel=root:GetChild('characterPanel');panel:SetVisible(true)
 local art=panel:GetChild('lumineSelectionBackground')
 local legacy=panel:GetChild('officialBackdropVeil')
 local fallback=panel:GetChild('v25Background')
+local landscape,transition=fallback:GetChild('landscape'),fallback:GetChild('selectionShade')
+local motion=require('abyss_character_entrance').new(panel,{color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end},function()end)
 local Asset=require('abyss_traveler_portrait_assets')
 Asset.imagePrefabId,Asset.containerPrefabId,Asset.selectionHalfImagePrefabId=41,73,99
 Enum={ImageSource={StaticReference='static'},ImageType={Stretch=23},ImageFillHorizontalType={Right=1}}
@@ -221,18 +226,23 @@ local function scope(label)
  if legacy.visible then covered[#covered+1]=label end
 end
 portraits:sync('menu',true,false,'ironclad');scope('building')
+assert(fallback.visible and landscape.visible and not transition.visible,'loading fallback is effectively unshaded')
 for _=1,600 do portraits:tick();if portraits:readyForPage('menu',true,'ironclad','characterPanel')then break end end
 assert(portraits:readyForPage('menu',true,'ironclad','characterPanel'))
-assert(portraits:status().selection.phase=='ready' and art.visible and not fallback.visible)
+motion:show({id='ironclad'},true)
+motion:update(1)
+assert(portraits:status().selection.phase=='ready' and art.visible and art:GetChild('figure').visible and not landscape.visible and not transition.visible and transition.imageColor.a==0)
 scope('ready')
 local total=created
-portraits:sync('menu',false,false,'ironclad');assert(not art.visible and fallback.visible);scope('paused')
+portraits:sync('menu',false,false,'ironclad');motion:pause(true)
+assert(not art.visible and fallback.visible and landscape.visible and not transition.visible and landscape.imageColor.a==255 and transition.imageColor.a==0);scope('paused')
 portraits:sync('menu',true,false,'ironclad');portraits:tick()
-assert(art.visible and not fallback.visible and created==total and destroyed==0);scope('reentry')
+motion:pause(false)
+assert(art.visible and not landscape.visible and not transition.visible and created==total and destroyed==0);scope('reentry')
 assert(panel:GetChild('blocker').visible,'input barrier was removed with legacy paint')
-assert(portraits:release());rejectCreation=true
+assert(portraits:release());motion:hide();rejectCreation=true
 portraits:sync('menu',true,false,'ironclad');portraits:tick()
-assert(portraits:status().selection.phase=='failed' and not art.visible and fallback.visible)
+assert(portraits:status().selection.phase=='failed' and not art.visible and fallback.visible and landscape.visible and not transition.visible)
 scope('failed')
 portraits:onEngineDestroy();portraits:tick();scope('destroyed')
 assert(#covered==0,'inherited full-screen shade covers the approved selection art: '..table.concat(covered,','))

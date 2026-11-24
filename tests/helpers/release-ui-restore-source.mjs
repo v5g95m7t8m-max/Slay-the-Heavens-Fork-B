@@ -5,6 +5,7 @@ import {authorizeRefinedReleaseProduction,beforeRefinedReleaseProduction} from '
 import {inputRetirementStsFixtureSource} from './input-retirement-sts-binding.mjs';
 import {beforeStsFadeCi} from './sts-fade-ci-source.mjs';
 import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
+import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
@@ -70,7 +71,9 @@ const pileReturnLayout={
  gitBlob:'6c9ce59b446f0dd9b8d5f9ffb3c2303e0320195d',
 };
 function recordingRuntimeInput(path,source){
- source=beforeCurrentReplayFixes(path,source);
+ // Production owners must remain raw for the entrance cohort's fresh identity check.
+ if(path.startsWith('src/')||path==='config/architecture.json')return source;
+ source=beforeCurrentReplayFixes(path,beforeUiEntranceWitness(path,source));
  if(path!==officialRuntimePath||!matches(source,currentOfficialRuntime))return source;
  return beforeStsFadeCi(path,inputRetirementStsFixtureSource(path,source));
 }

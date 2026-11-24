@@ -15,8 +15,7 @@ const rawRead=p=>readFileSync(p,'utf8').replaceAll('\r\n','\n');
 const actorRead=currentDefectActorReader(rawRead);
 const read=p=>{
  const source=rawRead(p);
- const before=p==='src/lua/abyss_combat_queued_play.lua'
-  ?sourceEpoch.preCombinedSource(p,source,{target:'pr618',readSource:rawRead}):source;
+ const before=sourceEpoch.preCombinedSource(p,source,{target:'pr618',readSource:rawRead});
  return preDefectActorSource(p,before,{readSource:actorRead});
 };
 const before=JSON.parse(gunzipSync(readFileSync('tests/fixtures/watcher-actor-before.json.gz')));

@@ -193,9 +193,9 @@ test('current raw production retains the exact power-view owner and complete rel
  const expected=current.targets.develop.files[file].source;
  assert.equal(currentEpoch.preCombinedSource(file,source,{target:'develop',readSource:raw}),expected);
  const admittedReads=[...reads];
- assert.equal(admittedReads.length,460);
+ assert.equal(admittedReads.length,480);
  assert.equal(createHash('sha256').update(JSON.stringify(admittedReads)).digest('hex'),
-  '6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51','exact current owner read order');
+  'ad1c81a8f757224fa6520ca74d2a9b682f24925d2689141bc4b2eb1066d6a7fd','exact current owner read order');
  let prior=-1;
  for(const path of [...current.owners,...currentProductionRereads]){
   prior=admittedReads.indexOf(path,prior+1);

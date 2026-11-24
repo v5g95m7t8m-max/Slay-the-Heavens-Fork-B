@@ -39,6 +39,9 @@ test('historical map deck replay authenticates every current Lua owner before re
   if(p===other)throw Error('missing fixture');
   return read(p,'utf8');
  }),/(?:map deck|combined) linked owner missing: src\/lua\/abyss_deck_ui\.lua/);
+ const doubleCr=current.replace(/\r?\n/g,'\r\r\n');
+ assert.notEqual(doubleCr,current,'double CR negative must change bytes');
+ assert.equal(beforeMapDeckSource(path,doubleCr,()=>assert.fail('double CR source must not read owners')),doubleCr);
  const drift=current+'\n';
  assert.equal(beforeMapDeckSource(path,drift,()=>assert.fail('unknown source read another owner')),drift);
 });

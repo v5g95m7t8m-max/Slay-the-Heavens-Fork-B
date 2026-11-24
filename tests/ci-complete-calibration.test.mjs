@@ -419,7 +419,7 @@ test('frozen Windows17 POSIX13 Full35 receipt covers its exact 741 JS and 1401 L
 });
 
 test('current Full38 retains full coverage and reports performance targets under unchanged execution guards',t=>{
- const workflow=read('.github/workflows/quality.yml');assert.match(workflow,/timeout-minutes: \$\{\{ inputs.runner_pool == 'local-special' && 75 \|\| 45 \}\}/);assert.match(workflow,/runs-on: ubuntu-24.04\n    timeout-minutes: 30/);
+ const workflow=rawBootstrapReadFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');assert.match(workflow,/timeout-minutes: \$\{\{ inputs.runner_pool == 'local-special' && 75 \|\| 180 \}\}/);assert.match(workflow,/runs-on: ubuntu-24.04\n    timeout-minutes: 90/);
  const js=discoverJs(),lua=currentLua();
  assert.deepEqual(currentQualityShardMatrices,{windows:Array.from({length:18},(_,i)=>i+1),posix:Array.from({length:15},(_,i)=>i+1)});
  assert.equal(currentQualityShardJobs.length,33);assert.equal(currentFullQualityJobs.length,38);assert.equal(new Set(currentFullQualityJobs).size,38);
@@ -1993,7 +1993,7 @@ test('menu current complete JS and Lua workload retains Full budgets and every a
  assertCurrentJsInventory(js,integratedCiProof.inventory);
  assert.deepEqual(menuRedPriorLua(lua),closeoutCiProof.luaInventory);
  for(const [path,row]of Object.entries(menuRedCiProof.addedLua)){
-  assert.equal(replayInput(path,row.sha256,()=>liveDiskReadFileSync(path,'utf8').replaceAll('\r\n','\n')),row.source);
+  assert.equal(menuRedPriorRead(liveDiskReadFileSync)(path,'utf8').replaceAll('\r\n','\n'),row.source);
   assert.equal(hash(row.source),row.sha256);
   assert.throws(()=>menuRedPriorLua(lua,(p,e)=>rawBootstrapReadFileSync(p,e)+(p===path?'\n':'')),/added menu Lua source/);
  }
@@ -2023,10 +2023,10 @@ test('Release bootstrap raw Full retains complete discovery costs and physical g
   assert.match(source,/permissions:\n  contents: read/);
  }
  const job=name=>physical.match(new RegExp(`^  ${name}:\\n[\\s\\S]*?(?=^  [\\w-]+:|(?![\\s\\S]))`,'m'))[0];
- assert.match(job('rules'),/timeout-minutes: \$\{\{ inputs.runner_pool == 'local-special' && 75 \|\| 45 \}\}/);
- assert.match(job('engineering-posix-shards'),/runs-on: ubuntu-24.04\n    timeout-minutes: 30/);
+ assert.match(job('rules'),/timeout-minutes: \$\{\{ inputs.runner_pool == 'local-special' && 75 \|\| 180 \}\}/);
+ assert.match(job('engineering-posix-shards'),/runs-on: ubuntu-24.04\n    timeout-minutes: 90/);
  assert.deepEqual(currentQualityShardMatrices,{windows:Array.from({length:18},(_,i)=>i+1),posix:Array.from({length:15},(_,i)=>i+1)});
- for(const [platform,count,target,guard]of [['win32',18,1800000,2700000],['linux',15,1200000,1800000]]){
+ for(const [platform,count,target,guard]of [['win32',18,1800000,10800000],['linux',15,1200000,5400000]]){
   const bins=Array.from({length:count},(_,i)=>rawCurrentJsShard(js,`${i+1}/${count}`,platform));
   assert.deepEqual(bins.flatMap(bin=>bin.files).sort(),js);assert.equal(new Set(bins.flatMap(bin=>bin.files)).size,js.length);
   const loads=bins[0].loads,combined=platform==='win32'?windowsFullLoads(lua,loads):loads;

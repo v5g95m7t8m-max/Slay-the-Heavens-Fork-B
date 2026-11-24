@@ -124,7 +124,10 @@ export function inspectPage(session,name,{componentMode,templates,staticRoots,le
  function check(category,id,value,detail){assert(['controls','templates','text'].includes(category),'Unknown page check category');checks.push({category,id,passed:!!value,...(detail?{detail}:{})});}
  const page=target(all,paths[name]);check('controls','panel-visible',page.visible);
  if(name==='menu')check('controls','selection-closed',!target(all,paths.character).visible);
- const text=name==='menu'?['start/label']:['details/name','details/stats','details/gold','details/deckTitle','details/deckSummary','details/relic'];
+ const details=all.filter(row=>row.visible&&row.path.startsWith(page.path+'/details/infoMotion/')
+  &&/\/infoMotion\/info\d+$/.test(row.path)).at(-1);
+ const fields=['name','stats','gold','deckTitle','deckSummary','relic'];
+ const text=name==='menu'?['start/label']:fields.map(field=>`${details?details.path.slice(page.path.length+1):'details'}/${field}`);
  for(const path of text){const row=target(all,paths[name]+'/'+path);check('text','text:'+path,row.visible&&typeof row.node.text==='string'&&row.node.text.trim());}
  for(const path of name==='menu'?[paths.open]:[paths.close,'stage/characterPanel/confirm/hit']){
   const row=target(all,path);check('controls','input:'+path,row.visible&&row.node.interactable!==false);

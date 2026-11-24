@@ -117,7 +117,7 @@ function M.install(ctx)
                 return false, "swiped"
             end
             local function releasedActionOwned()
-                if input and input.observed then
+                if input and (input.observed or ctx.shopPointerOpened and name:match('^shopView/')) then
                     local gesture = input.released
                     local touch = event and event.touchId
                     -- Click follows Up. Keep its original action until consumption, not

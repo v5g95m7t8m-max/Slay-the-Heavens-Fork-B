@@ -42,6 +42,10 @@ local function setup(kind,linked,extraCards,source)
     ui:setVisible(true)
     if kind=="shop" then assert(root:GetChild("merchant"):GetChild("talk"):GetChild("hit").listeners.click());advanceShop(ui) end
     local function get(key)
+        key = key:gsub('^shopView/(%a+)', function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
         local box=root for part in key:gmatch("[^/]+") do box=assert(box:GetChild(part),key) end
         return box
     end

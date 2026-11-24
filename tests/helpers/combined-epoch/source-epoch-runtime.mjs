@@ -1,3 +1,4 @@
+import { entrancePredecessor } from '../ui-entrance-source.mjs';
 import {beforeDevelopBackflow,configSourceTokens,isSessionRelicSuccessor,assertCurrentSessionRelicOwner,bindDevelopBackflow} from '../develop-release-backflow-source.mjs';
 import {beforeInputRetirementReader,retiredControllerPath} from '../input-retirement-source.mjs';
 import {authorizeRebasedDevelop,beforeRebasedCi} from '../rebased-release-source.mjs';
@@ -133,11 +134,16 @@ export function createSourceEpochProjector(input,{root=process.cwd(),allowConfig
  function requireTarget(target){assert(Object.hasOwn(proof.targets,target),'unknown source target');return proof.targets[target];}
  function rawReader(reader){return readers.get(reader)?.raw??reader;}
  function preCombinedSource(path,source,{target,readSource=readLive}={}){
+  const destination=requireTarget(target);
+  const liveInput=source;
+  const isLiveReader=liveReaders.has(rawReader(readSource));
+  const projected=entrancePredecessor(path,source,rawReader(readSource),{allowConfigLayout});
+  source=projected.source;readSource=projected.read;
   const rawInput=source,backflow=beforeDevelopBackflow(path,source,{allowConfigLayout}),rebased=beforeRebasedCi(path,backflow);
   const reconciled=beforeSlimeSplitSource(path,rebased),mapPrior=beforeCardFeedbackOwner(path,beforeSts1MapSource(path,reconciled)),guidePrior=beforeReleaseGuideSource(path,mapPrior);
   const inputSource=beforePc13RewardCover(path,beforeM05ShopSource(path,beforeTinyHouseIntegratedSource(path,guidePrior)));
   source=inputSource;
-  const destination=requireTarget(target),current=proof.current[path],before=destination.files[path];
+  const current=proof.current[path],before=destination.files[path];
   const sessionSuccessor=isSessionRelicSuccessor(path,rawInput,{allowConfigLayout});
   source=projectTinyHouseUiSource(path,projectV2UiHudSource(path,projectPotionPointerSource(path,source,current),current),current);
   source=projectLumineSource(path,projectPotionTextSource(path,projectSelectorSource(path,projectFatalBgmSource(path,source,current),current),current),current);
@@ -145,12 +151,12 @@ export function createSourceEpochProjector(input,{root=process.cwd(),allowConfig
   // materializer. Unknown/original/foreign bytes never authorize owner reads.
   // A registered Develop successor can still need projection when this target
   // records the same precursor as the current receipt.
-  if(typeof source!=='string'||!current||!before||(backflow===rawInput&&reconciled===rebased&&current.sha256===before.sha256)||(sourceHash(source)!==current.sha256&&(!allowConfigLayout||path!=='config/architecture.json'||!sameConfigLayout(source))))return rawInput;
+  if(typeof source!=='string'||!current||!before||(backflow===rawInput&&reconciled===rebased&&current.sha256===before.sha256)||(sourceHash(source)!==current.sha256&&(!allowConfigLayout||path!=='config/architecture.json'||!sameConfigLayout(source))))return rawInput??liveInput;
   assert.equal(typeof readSource,'function','linked owner reader');
   const readRaw=rawReader(readSource);
   // An exact frozen input can be replayed against its owner cohort. Live
   // Develop successors and the default live reader require current owners.
-  const historicalOwners=!liveReaders.has(readRaw)&&backflow===rawInput
+  const historicalOwners=!isLiveReader&&backflow===rawInput
    &&(sourceHash(rawInput)===current.sha256||(path==='config/architecture.json'&&sameConfigLayout(rawInput)))?proof.current:undefined;
   const backflowReader=bindDevelopBackflow(readRaw,historicalOwners);
   backflowReader.authenticate(path,rawInput,{allowConfigLayout});

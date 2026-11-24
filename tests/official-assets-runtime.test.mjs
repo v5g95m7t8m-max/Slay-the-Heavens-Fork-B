@@ -28,12 +28,12 @@ local function sameColour(actual,expected,label)
  end
 end
 `;
-function runOfficial(t,body,marker,overrides={},official=true){
+function runOfficial(t,body,marker,overrides={},official=true,buildOptions={}){
  const root=resolve('.artifacts/test-tmp');mkdirSync(root,{recursive:true});
  const directory=mkdtempSync(join(root,'official-runtime-'));
  t.after(()=>rmSync(directory,{recursive:true,force:true}));
  buildLuaData('data',join(directory,'abyss_data.lua'));
- buildUI(directory,undefined,{officialAssets:official,nativePageLifecycle:official});
+ buildUI(directory,undefined,{officialAssets:official,nativePageLifecycle:official,...buildOptions});
  const modules=readdirSync(directory).filter(name=>name.endsWith('.lua')).map(name=>name.slice(0,-4));
  for(const name of ['abyss_data','abyss_ui_layout','abyss_ui_templates','abyss_theme','abyss_ui_profile'])assert(modules.includes(name));
  const layout=JSON.parse(readFileSync(join(directory,'game-ui.json'),'utf8'));
@@ -1879,8 +1879,9 @@ end
 assert(tap(page:GetChild('merchant'):GetChild('talk'):GetChild('hit'),809))
 dofile('tests/lua/support/shop_timeline.lua')(host.nodeUI)
 assert(host.nodeUI.shopOpen and not host.nodeUI.shopBusy and shopView.visible,'the real shop shelf must finish preparing and sliding')
-local a=assert(shopView:GetChild('relic1')):GetChild('hit')
-local b=assert(shopView:GetChild('relic2')):GetChild('hit')
+local goods=assert(shopView:GetChild('goods'))
+local a=assert(goods:GetChild('relic1')):GetChild('hit')
+local b=assert(goods:GetChild('relic2')):GetChild('hit')
 local route=assert(page:GetChild('runRoute')):GetChild('hit')
 local back=assert(root:GetChild('mapPanel'):GetChild('previewBack')):GetChild('hit')
 local run,map,flow=host.run,host.map,host.run.nodeFlow
@@ -2023,4 +2024,56 @@ for i=1,2 do
  drain();assert(not card.visible,'completed flight retained played card')
 end
 `, 'OFFICIAL_PLAY_FLASH_PASS');
+});
+
+test('official selection only exposes the ready native backdrop and quantizes its two alpha layers',t=>{
+ runOfficial(t,`
+local F=H.F
+local Gate=require('abyss_page_reveal')
+local root=F.Viewport.apply(F.control({children=F.Layout}),1280,720)
+local pending=true
+local native={sync=function()end,tick=function()end,
+ status=function()return {selection={phase='ready'}}end}
+local host=F.GameUI.new(root,F.Data,F.Presentation,'click',{
+ characterProfile='production',portraits=native,prologue=true,imageSource='static',
+ color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end,
+ presentationReady=function(intent)return not intent.character or not pending end,
+})
+local panel=root:GetChild('characterPanel')
+local art=panel:GetChild('lumineSelectionBackground')
+local landscape=panel:GetChild('v25Background'):GetChild('landscape')
+local shade=panel:GetChild('v25Background'):GetChild('selectionShade')
+local pool=panel:GetChild('details'):GetChild('infoMotion')
+local function tick()
+ host:update(1/60)
+ if host.pageReveal:step(Gate.intent(host),1/60)then host:refresh()end
+ host.pageReveal:paint(true)
+end
+for _=1,30 do tick()end
+assert(host:start());tick()
+assert(#pool:GetChildren()==1 and not art.visible)
+assert(panel:GetChild('traveler'):GetChild('hit').click())
+art:GetChild('figure'):SetVisible(true) -- only the adapter's internal host is ready
+assert(not art.visible and not panel:GetChild('confirm').visible and host.pageReveal.alpha==0)
+pending=false;tick()
+assert(art.visible and panel:GetChild('confirm').visible and not host.pageReveal:covered())
+local a,d=0,.8
+local function byte(n)return math.floor(n*255+.5)end
+for _=1,22 do
+ a=a+(1-a)*12/60
+ d=d+(1-d)*8/60
+ if 1-a<.01 then a=1 end
+ if 1-d<.003 then d=1 end
+ local b=(1-a)*d
+ local l=(1-a)*(1-d)/(1-b)
+ assert(math.abs(shade.imageColor.a-byte(b))<=1)
+ assert(math.abs(landscape.imageColor.a-byte(l))<=1)
+ tick()
+end
+assert(not shade.visible and not landscape.visible and art.visible)
+assert(host:closeCharacters())
+for _=1,40 do tick()end
+assert(not art.visible and landscape.visible and landscape.imageColor.a==255 and not shade.visible)
+print('OFFICIAL_SELECTION_ENTRANCE_PASS')
+`, 'OFFICIAL_SELECTION_ENTRANCE_PASS', {}, true, {experimentalCharacters:false});
 });

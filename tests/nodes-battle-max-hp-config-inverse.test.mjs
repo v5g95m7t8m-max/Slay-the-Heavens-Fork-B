@@ -187,8 +187,8 @@ test('current architecture admission rereads its complete raw owner closure and 
  const accepted=project();assert.equal(hash(accepted),sourceEpoch.proof.targets.develop.files[path].sha256,'the declared current target, not the ancient candidate');assert.notEqual(accepted,raw);
  // Pin the complete raw trace, including the three backflow freshness guards.
  const admittedReads=[...reads];
- assert.equal(admittedReads.length,460,'complete fresh raw closure size');
- assert.equal(hash(JSON.stringify(admittedReads)),'6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51','exact current admission order');
+ assert.equal(admittedReads.length,480,'complete fresh raw closure size');
+ assert.equal(hash(JSON.stringify(admittedReads)),'ad1c81a8f757224fa6520ca74d2a9b682f24925d2689141bc4b2eb1066d6a7fd','exact current admission order');
  let position=-1;
  for(const owner of priorReadOrder){
   position=admittedReads.indexOf(owner,position+1);

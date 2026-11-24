@@ -344,11 +344,27 @@ const currentReplayFiles=Object.freeze({
  'tests/fixtures/sts-fade-ci-source.json':'be33c862d5b8d8d3f3d40a70228c9eba52c8391e0425b77df07a04297e8bfdb6',
  'tests/fixtures/sts-ui-closeout-ci.json':'d9855569eb08eeb059fa50ec036d65fe7d28050b10bde7b6a5626c081fe02ac0',
 });
+const entranceFiles=Object.freeze({
+ ...currentReplayFiles,
+ 'tests/helpers/m7-core-final-source-inverse.mjs':'8e0d432cd1ecf668bad14a614a61772e495e13cce67ab0168babcaac5bfda1e6',
+ 'tests/helpers/release-ui-restore-source.mjs':'d2f34bef11ae4cb35c5df68556afc37d3de8d4ce7268a988bcef8fc39495b47a',
+ 'tests/helpers/current-replay-fix-sources.mjs':'bfef80da2fc30501c3b2e82cd14bdb8130e4a089f2db231ff2587804fa83a08b',
+ 'tests/helpers/character-preparation-source.mjs':'ae3b89b99224cf8bb86b8e569e6488db68ac2d30bf1233ed6652c90808df1984',
+ 'tests/helpers/develop-release-backflow-source.mjs':'4ac2a7c073d78f0029d85e9834f6063a4a797f215a529e349bdfc4f19ab5484c',
+ 'tests/helpers/native-fixture-replay-source.mjs':'5a9de41dfd4ee6d5438c24c9c7c9f068eeaeba66bc6fc8abec16d9c08d32864b',
+ 'tests/helpers/native-flow-fixture-source.mjs':'303770de22647a8eea4090cefa8e75cafa9c8643a2048441698ed8c02633a732',
+ 'tests/helpers/ui-entrance-source.mjs':'55bbaca21af744a48dff1c5b445160b993bcf0862f813ce328a630408247e315',
+ 'tests/helpers/exact-fixture-hunks.mjs':'83f9cb15d9d745c86c555a77875b6b2bfc283a12ec380bcd2af518aa6526a935',
+ 'tests/fixtures/ui-entrance-source.json.gz':'7ac3f53b242819cdb569c0a1ebf60de0605b72297a1072ea612bfeb11b0597c9',
+ 'tests/helpers/combined-epoch/source-epoch-runtime.mjs':'e4d3f37edd23a2040290b1091540d17776fe6f7f7a129f4c31e48e71a8f9a0c0',
+ [runtime]: 'e4d3f37edd23a2040290b1091540d17776fe6f7f7a129f4c31e48e71a8f9a0c0',
+ [closeout]: '4f559399c631fbd0fd25ea7f1ceb8f3b8c6643e167f0116d9f151e12ee0a0ecb',
+});
 const inside=(root,path)=>{const r=relative(root,path);return r!==''&&!isAbsolute(r)&&r!=='..'&&!r.startsWith('../')&&!r.startsWith('..\\');};
 export function copyIntegrationSourceClosure(directory,{sourceRoot=process.cwd()}={}){
  const destination=realpathSync.native(directory);
  assert.notEqual(destination,realpathSync.native(sourceRoot),'isolated helper copy destination');
- for(const [path,sha]of Object.entries(currentReplayFiles)){
+ for(const [path,sha]of Object.entries(entranceFiles)){
   assert((path.startsWith('tests/helpers/')||path.startsWith('tests/fixtures/'))&&!path.split('/').includes('..'),'fixed helper path');
   const source=join(sourceRoot,path),content=integrationClosureBytes(path,readFileSync(source));assert.equal(hash(content),sha,'fresh helper copy identity: '+path);
   const target=join(directory,path);mkdirSync(dirname(target),{recursive:true});

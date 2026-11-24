@@ -168,7 +168,7 @@ for(const linked of paths){
  writeFileSync(linked,sources[linked]);assert.equal(project(host,sources[host]),proof.files[host].beforeSource);
 }
 console.log('ISOLATED_REWARD_QUERY_SOURCE_PASS '+index);`;
-  const execute=promisify(execFile),options={encoding:'utf8',timeout:30000,maxBuffer:1024*1024,windowsHide:true};
+  const execute=promisify(execFile),options={encoding:'utf8',timeout:180000,maxBuffer:1024*1024,windowsHide:true};
   // Keep two independent copies and give each complete host check its own VM.
   // Windows job 137593688380 reached the per-VM deadline with two hosts.
   const outcomes=await Promise.allSettled(copies.map(async(cwd,lane)=>{

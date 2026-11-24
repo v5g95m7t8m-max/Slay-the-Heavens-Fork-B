@@ -18,7 +18,7 @@ local function button()
  return c
 end
 local start,quit=button(),button()
-local ctx={start=start,menu=control('menu'),owner={mode='menu',motion={},potionUI={visible=false}},platform={color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end}}
+local ctx={start=start,menu=control('menu'),owner={mode='menu',motion={},potionUI={localPanel=false,visible=false}},platform={color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end}}
 ctx.menu.children.titleQuit=quit
 V25.button(start,true);V25.button(quit,true)
 V25.animateMenu(ctx,0)

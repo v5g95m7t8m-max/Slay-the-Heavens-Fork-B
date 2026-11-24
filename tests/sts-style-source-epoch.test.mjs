@@ -1,6 +1,7 @@
 import {actorFocusAdded,assertActorFocusInventory,deckPagesAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 import {pointerInputPath,readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 import {beforeCharacterPreparationSource} from './helpers/character-preparation-source.mjs';
+import {entranceInventory} from './helpers/ui-entrance-source.mjs';
 import {assertCurrentJsInventory,beforeInputRetirementTestInventory,beforeShopEntryInventory} from './helpers/fork-preflight-source.mjs';
 import test from 'node:test';
 import {integratedRead,integratedCiProof,integratedPriorInventory,assertIntegratedCurrent} from './helpers/integrated-ci-source.mjs';
@@ -118,7 +119,7 @@ test('real style source retains the complete CI-repair and every older target wh
  const actual=['config/architecture.json',...readdirSync('src/lua').filter(n=>n.endsWith('.lua')).map(n=>'src/lua/'+n)].sort();
  assert(Object.hasOwn(p.current,retiredControllerPath),'the archived controller must remain available to historical targets');
  const previous=Object.keys(p.current).filter(path=>path!==retiredControllerPath);
- assert.deepEqual([...previous,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort(),actual);
+ assert.deepEqual([...previous,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort(),entranceInventory(actual,read));
  assertActorFocusInventory(actual.filter(path=>path!=='config/architecture.json'),read);
  for(const [path,row]of Object.entries(before.current))assert.deepEqual(p.targets.stsStylePrior.files[path],row,path+' complete prior');
  for(const [name,target]of Object.entries(before.targets))for(const [path,row]of Object.entries(target.files))assert.deepEqual(p.targets[name].files[path],row,name+'/'+path);

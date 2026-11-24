@@ -200,8 +200,15 @@ test('Act1 current source enters the unchanged historical chain and rereads ever
   changed=undefined;reads=[];assert.equal(preRelicQuerySource(file,source,{readSource}),before);
   if(!admittedReads){
    // Keep the complete current trace and the ordered original contract.
-   assert.equal(reads.length,446);
-   assert.equal(createHash('sha256').update(JSON.stringify(reads)).digest('hex'),'5dad58d855f93d4169fa5877eff635d77f2c0b99af76f12e8f5cb68a4d659a4f');
+   assert.equal(reads.length,466);
+   assert.equal(createHash('sha256').update(JSON.stringify(reads)).digest('hex'),'049af1e21af40d804c1201c01f79da465c7ee0a2b1c4a2544a0c4c3cd1da0500');
+   const entranceBytes=readFileSync('tests/fixtures/ui-entrance-source.json.gz');
+   assert.equal(createHash('sha256').update(entranceBytes).digest('hex'),'7ac3f53b242819cdb569c0a1ebf60de0605b72297a1072ea612bfeb11b0597c9');
+   const entranceOwners=Object.keys(JSON.parse(gunzipSync(entranceBytes)).files);
+   assert.equal(entranceOwners.length,20);
+   assert.deepEqual(reads.slice(1,21),entranceOwners,'complete current entrance cohort');
+   assert.equal(createHash('sha256').update(JSON.stringify([reads[0],...reads.slice(21)])).digest('hex'),
+    '5dad58d855f93d4169fa5877eff635d77f2c0b99af76f12e8f5cb68a4d659a4f','unchanged complete original Act1 order');
    let position=-1;
    for(const owner of priorReadOrder){
     position=reads.indexOf(owner,position+1);

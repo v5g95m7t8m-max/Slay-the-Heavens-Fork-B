@@ -1,3 +1,4 @@
+import { entrancePredecessor } from './ui-entrance-source.mjs';
 // One exact current production closure; original slices and archives stay immutable.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -60,6 +61,8 @@ const proof=sourceEpoch.proof;
 // Snapshot consumers must first authenticate every live current owner. This is
 // per invocation; neither live reads nor authorization are cached.
 export function sourceSlice(path,source,target,readSource=p=>readFileSync(p,'utf8')){
+ const entrance=entrancePredecessor(path,source,readSource);
+ source=entrance.source??source;readSource=entrance.read;
  assert(Object.hasOwn(proof.targets,target),'known closeout source slice');
  const row=Object.hasOwn(proof.current,path)?proof.current[path]:null;
  if(!row||typeof source!=='string')return source;

@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {exactSourceMatches} from './source-fingerprint.mjs';
+import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 
 const archive=readFileSync(new URL('./native-flow-fixture-source.json.gz',import.meta.url));
 assert.equal(createHash('sha256').update(archive).digest('hex'),'5709c250f1411a9edbdaa6669bf0d39bfecc824841684b7948eba3297d5aea35','exact native flow fixture archive');
@@ -31,6 +32,7 @@ for(const [path,{before,after}] of Object.entries(files)){
 
 export function beforeNativeFlowFixture(path,source,{requireCurrent=false}={}){
  if(!Object.hasOwn(files,path))return source;
+ source=beforeUiEntranceWitness(path,source);
  const {before,after}=files[path];
  const current=exactSourceMatches(source,after);
  if(requireCurrent)assert(current,'fresh complete native flow fixture: '+path);

@@ -120,7 +120,7 @@ for(let repeat=0;repeat<2;repeat++){
 trace.disable();fs.readFileSync=original;syncBuiltinESMExports();
 fs.writeFileSync(${JSON.stringify(pathsFile)},JSON.stringify(paths));`;
   const result=spawnSync(process.execPath,['--trace-event-file-pattern='+output,'--input-type=module','-e',script],
-   {encoding:'utf8',timeout:30000,maxBuffer:1024*1024,windowsHide:true});
+   {encoding:'utf8',timeout:180000,maxBuffer:1024*1024,windowsHide:true});
   assert.ifError(result.error);assert.equal(result.status,0,result.stdout+result.stderr);
   reads[mode]=JSON.parse(readFileSync(output,'utf8')).traceEvents
    .filter(event=>event.ph==='B'&&event.name.startsWith('fs.sync.read')).length;

@@ -28,6 +28,10 @@ local function setup(relicSeed)
     assert(ui.swipeEnabled and ui.pageCount == 1)
     assert(not ui:setPage(2))
     local function hit(key)
+        key = key:gsub('^shopView/(%a+)', function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
         local box = root:GetChild("nodePanel")
         for part in key:gmatch("[^/]+") do box = assert(box:GetChild(part)) end
         return box:GetChild("hit")
@@ -91,7 +95,8 @@ test("old leave hold cannot execute after exit cancel and fresh input works", fu
     emit("back", "up", 11)
     assert(not emit("back", "click", 11))
     assert(not host.run.nodeFlow.complete and ui.page == 1)
-    assert(tap("back", 22));host:update(.31);assert(host.run.nodeFlow.complete)
+    assert(tap("back", 22));assert(not host.run.nodeFlow.complete)
+    host:update(.7);assert(tap("back", 23) and host.run.nodeFlow.complete)
 end)
 
 test("old relic hold cannot buy after exit cancel and fresh input works", function()

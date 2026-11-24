@@ -410,8 +410,12 @@ function M.syncPortraits(platform,self)
             if self.characterOpen then
                 character=self.characterSelection.info and self.characterSelection.info.id
             elseif self.run then character=self.run.character or 'ironclad'end
+            local gate=self.pageReveal
+            local retained=self.selectionMotion and gate and gate.published and gate.published.page=='characterPanel'
+                and gate.published.character
             platform.portraits:sync(self.mode,self.characterOpen,self.settlementRequested or self.settlementBusy,character,
-                self.mode=='menu' and not self.characterOpen)
+                self.mode=='menu' and not self.characterOpen,retained)
+            return retained
         end
 end
 
@@ -469,7 +473,12 @@ function M.refreshForeground(characterPanel,self,platform,exitEntry,exitEntryVis
         characterPanel:SetVisible(self.characterOpen==true and not self.deckUI.visible)
         if self.characterOpen and not self.deckUI.visible then
             PageReveal.registerSource(platform,'characterPanel')
-            CharacterView.render(characterPanel,self.characterSelection,platform)
+            if self.selectionMotion then
+                if not self.selectionChromeReady then
+                    CharacterView.prepare(characterPanel,self.characterSelection,platform)
+                    self.selectionChromeReady=true
+                end
+            else CharacterView.render(characterPanel,self.characterSelection,platform) end
             characterPanel:SetAsLastSibling()
         end
     end
@@ -592,11 +601,27 @@ local function finishReveal(self,platform,roomPainted)
     PageReveal.registerSource(platform,intent.page)
     if self.pageReveal then
         self.pageReveal:finish(intent,roomPainted)
-        if self.pageReveal.localOnly and self.pageReveal:covered()then
+        if not self.selectionMotion and self.pageReveal.localOnly and self.pageReveal:covered()then
             CharacterView.render(self.root:GetChild('characterPanel'),self.characterSelection,platform,false)
         end
     end
 end
+local function publishCharacter(self,platform,syncPortraits,retained)
+    local motion=self.selectionMotion
+    if not motion then return end
+    if not self.characterOpen then self.selectionChromeReady=nil;motion:hide();return end
+    local paused=self.deckUI.visible or self.exitOpen or self.sessionPaused or self.settlementBusy
+    motion:pause(paused == true)
+    if paused then return end
+    local gate=self.pageReveal
+    if gate and not gate:publishedIntent(PageReveal.intent(self)) then return end
+    PageReveal.registerSource(platform,'characterPanel')
+    local panel=self.root:GetChild('characterPanel')
+    local info=self.characterSelection.info
+    if retained=='ironclad' and (not info or info.id~='ironclad') then syncPortraits() end
+    CharacterView.render(panel,self.characterSelection,platform,true,motion)
+end
+
 -- Sorting has already painted the deck projection. Keep its publication and
 -- resource cleanup boundary without repainting the covered battle/map/room.
 function M.deckChanged(self,owner,platform,changed)
@@ -664,9 +689,10 @@ function M.refresh(self,finishRunFlow,syncOpening,selectMode,syncOfficialBattleS
             present()
             refreshForeground()
             if self.easterEgg then self.easterEgg:refresh()end
-            syncPortraits()
+            local retained=syncPortraits()
             CardSkin.endFrame(surfaceFrame,surfaceScopes(self))
             finishReveal(self,platform,self.nodeUI.visible and not self.nodeUI.pendingOwner)
+            publishCharacter(self,platform,syncPortraits,retained)
             paintReveal(self)
             openingForeground(covering)
         end

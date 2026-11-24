@@ -182,8 +182,8 @@ test('the full current facade freshly checks every original owner including afte
  const epoch=actorCurrentEpoch,proof=epoch.proof,p=actorPaths[0],source=read(p);
  const project=readSource=>epoch.preCombinedSource(p,source,{target:'develop',readSource});
  const expected=proof.targets.develop.files[p].source;
- assertRawActorClosure(project,expected,[...proof.owners,...currentProductionRereads],460,
-  '6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51');
+ assertRawActorClosure(project,expected,[...proof.owners,...currentProductionRereads],480,
+  'ad1c81a8f757224fa6520ca74d2a9b682f24925d2689141bc4b2eb1066d6a7fd');
 });
 test('capability config layout accepts only an input spelling and still binds exact raw owners',()=>{
  const p=actorPaths[0],source=actorRaw(p),old=actorProof.targets.prior.files[p].source;
@@ -239,8 +239,24 @@ test('Actor entry authenticates the complete raw current closure before exposing
  for(const owner of actorPaths)for(const key of ['source','sha256','gitBlob'])
   assert.equal(proof.targets.pr618.files[owner][key],actorProof.current[owner][key]);
  const project=readSource=>preM7FinalSource(p,source,{readSource});
- const admittedReads=assertRawActorClosure(project,beforeUtility(),proof.owners,1338,
-  '2d2695fc540981ef4a663d36bb70d7af6548c232f2a07f742426fcd0a588fda5');
+ const admittedReads=assertRawActorClosure(project,beforeUtility(),proof.owners,1443,
+  '1e104db373ce2e1fdcb5c806685240db6bfc851f95ca2514b8a011d2d6981ffe');
+ // Each of the three Actor reads now authenticates the actual current anchor,
+ // adding this exact nested Actor/Stasis closure before the unchanged scan.
+ const anchorReads=[
+  ...Array(4).fill('config/architecture.json'),
+  ...['actor','focus','stances','actor_artifact','stance_damage','act2_stasis','combat',
+   'warrior_status_cards','blood_for_blood_cost','card_upgrade'].map(name=>'src/lua/abyss_'+name+'.lua'),
+  'config/architecture.json',
+ ];
+ const priorReads=[];
+ for(let offset=0;offset<admittedReads.length;offset+=481){
+  const cohort=admittedReads.slice(offset,offset+481);
+  assert.deepEqual(cohort.slice(21,36),anchorReads,'exact current-anchor addition');
+  priorReads.push(...cohort.slice(0,21),...cohort.slice(36));
+ }
+ assert.equal(priorReads.length,1398);
+ assert.equal(hash(JSON.stringify(priorReads)),'5f3ab63b052ddc6e263f47ebda67168b3691d8f719a83f853a9af3df0d53f564','complete original Actor order is unchanged');
  // Supplying just the old three-owner snapshot is never permission to bypass
  // the real current owners, even though it matches the old Actor verifier.
  assert.throws(()=>preM7FinalSource(p,source,{readSource:actorRaw}),/combined linked owner identity/);

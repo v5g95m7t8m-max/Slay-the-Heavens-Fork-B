@@ -12,6 +12,7 @@ import {sourceEpoch as currentEpoch} from './helpers/combined-epoch/source-epoch
 import {ciRepairSourceEpoch} from './helpers/closeout-source-epoch.mjs';
 import {beforeInputRetirementReader,pointerInputPath,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 import {beforeCurrentProductionSource} from './helpers/character-preparation-source.mjs';
+import {addedEntranceModules,entranceInventory} from './helpers/ui-entrance-source.mjs';
 import {actorFocusAdded,deckPagesAdded,assertActorFocusInventory,assertDevelopBackflowCurrent,assertStasisUpgradeAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 const file='src/lua/abyss_watcher_attack_cards.lua';
 const queued='src/lua/abyss_combat_queued_play.lua';
@@ -63,7 +64,8 @@ test('current Watcher SCC analysis includes exact release additions and every or
  const raw=discoverSources(),sources=Object.fromEntries(Object.entries(raw).map(([p,s])=>[p.split('/').at(-1).slice(0,-4),s]));
  assertActorFocusInventory(Object.keys(raw),read);
  const historicalRead=beforeInputRetirementReader(read);
- const historical={...raw,[retiredControllerPath]:historicalRead(retiredControllerPath)};
+ const historical=Object.fromEntries(entranceInventory(Object.keys(raw),read).map(path=>[path,raw[path]]));
+ historical[retiredControllerPath]=historicalRead(retiredControllerPath);
  delete historical[pointerInputPath];
  const prior=Object.keys(ciRepairSourceEpoch.proof.current).filter(p=>p.startsWith('src/lua/')).sort();
  const added=Object.keys(historical).filter(p=>!Object.hasOwn(ciRepairSourceEpoch.proof.current,p)).sort();
@@ -74,7 +76,7 @@ test('current Watcher SCC analysis includes exact release additions and every or
  const recorded=Object.keys(currentEpoch.proof.current).filter(p=>p.startsWith('src/lua/'));
  assert.equal(recorded.length,352,'complete predecessor inventory');
  assert.deepEqual(Object.keys(historical).sort(),[...recorded,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded].sort());
- assert.equal(Object.keys(raw).length,357,'complete raw current inventory');
+ assert.equal(Object.keys(raw).length,357+addedEntranceModules.length,'complete raw current inventory');
  for(const [path,source]of Object.entries(historical)){
   if(deckPagesAdded.includes(path))continue; // Authenticated by the exact live inventory above.
   if(actorFocusAdded.includes(path)){

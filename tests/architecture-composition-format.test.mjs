@@ -1,4 +1,4 @@
-import {historicalTest as test} from './helpers/historical-baseline-inputs.mjs';
+import {historicalTest as test,readHistoricalBaselineSource} from './helpers/historical-baseline-inputs.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -8,7 +8,8 @@ import {
 } from './helpers/pr323-accepted-source-inverse.mjs';
 
 const path='config/architecture.json';
-const source=readFileSync(path,'utf8').replaceAll('\r\n','\n');
+const currentPolicy=JSON.parse(readFileSync(path,'utf8'));
+const source=readHistoricalBaselineSource(path).replaceAll('\r\n','\n');
 const hash=text=>createHash('sha256').update(text).digest('hex');
 
 test('architecture layout whitespace projects to the same immutable complete historical bytes',()=>{
@@ -32,9 +33,13 @@ test('whitespace permission never hides changed tokens, duplicate keys, array or
  const reordered=structuredClone(policy);
  assert.ok(reordered.deferredImports.length>1,'array order negative control has distinct actual entries');
  reordered.deferredImports.reverse();
- const missingScore=structuredClone(policy);delete missingScore.layers.abyss_run_score;
- const missingScoring=structuredClone(policy);delete missingScoring.layers.abyss_run_scoring;
- const wrongScoring=structuredClone(policy);wrongScoring.layers.abyss_run_scoring='ui';
+ // Run scoring postdates the immutable baseline. Keep its removal/wrong-owner
+ // negative controls on actual current input, rather than deleting absent keys.
+ assert(Object.hasOwn(currentPolicy.layers,'abyss_run_score')&&Object.hasOwn(currentPolicy.layers,'abyss_run_scoring'));
+ const missingScore=structuredClone(currentPolicy);delete missingScore.layers.abyss_run_score;
+ const missingScoring=structuredClone(currentPolicy);delete missingScoring.layers.abyss_run_scoring;
+ const wrongScoring=structuredClone(currentPolicy);wrongScoring.layers.abyss_run_scoring='ui';
+ for(const variant of [missingScore,missingScoring,wrongScoring])assert.notEqual(JSON.stringify(variant),JSON.stringify(currentPolicy));
  const first=JSON.stringify(key),value=JSON.stringify(policy.layers[key]);
  const compact=JSON.stringify(policy);
  const variants=[JSON.stringify(changed),JSON.stringify(unknown),JSON.stringify(reordered),

@@ -56,6 +56,7 @@ export function nodeLayout(theme = nativeTheme) {
   const controls = [
     plate('backdrop', layout.backdrop, color.backdrop),
     shopRoom(theme),
+    hidden(plate('shopShade', [0, 0, ...theme.canvas.base], '#000000')),
     // Below every shelf/footer; unlike a button this background is not focusable.
     {name:'shopDismiss',kind:'cursorArea',position:[0,0],size:[...theme.canvas.base],focusable:false},
     // TopPanel reuse: same dark band, copper hairline and title wings as the map header

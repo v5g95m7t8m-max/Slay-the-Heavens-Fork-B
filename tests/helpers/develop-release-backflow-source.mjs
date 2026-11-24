@@ -1,3 +1,4 @@
+import { beforeUiEntrance, entranceInventory, entrancePredecessor, entranceReader } from './ui-entrance-source.mjs';
 // Exact Develop predecessors for historical replay. Live builds read current sources.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
@@ -198,6 +199,7 @@ function currentRecentBackflowOwner(path,source){
  return matches(source,roomEntry.files[path].after);
 }
 export function assertDevelopBackflowCurrent(path,source){
+ source=beforeUiEntrance(path,source);
  source=beforeDevelopUiBackflows(path,source);
  const priorActions=beforeActionButtons(path,source);
  if(actionButtonsOwns(path)&&!recentBackflowOwns(path)&&!priorDevelopBackflowOwns(path)){
@@ -227,6 +229,7 @@ export function assertStasisUpgradeAdded(path,source){
  assert(Object.hasOwn(stasis.added,path)&&matches(source,stasis.added[path]),'fresh Stasis upgrade module: '+path);
 }
 export function assertActorFocusInventory(paths,read=path=>readFileSync(path,'utf8')){
+ paths=entranceInventory(paths,read);
  const expected=[...actorFocus.luaBefore,...actorFocusAdded,...deckPagesAdded];
  assert(expected.includes(retiredControllerPath),'exact controller predecessor in Actor/Focus Lua inventory');
  assert.deepEqual([...paths].sort(),[...expected.filter(path=>path!==retiredControllerPath),pointerInputPath].sort(),'complete current Actor/Focus Lua module inventory');
@@ -249,10 +252,11 @@ function mapRoomOwnerError(path){
 }
 function recentBackflowOwnerReader(read,historicalOwners){
  let epoch;
+ const readEntrancePrior=entranceReader(read);
  return path=>{
   // A frozen cohort must expose its original Controller identity or absence.
   const controller=path===retiredControllerPath&&(!historicalOwners||epoch==='current')?readRetiredController(read):undefined;
-  const source=controller?controller.source:read(path);
+  const source=controller?controller.source:readEntrancePrior(path);
   if(!recentBackflowOwns(path))return source;
   const current=(!controller||controller.restored)&&currentRecentBackflowOwner(path,source);
   const binding=historicalOwners&&Object.hasOwn(historicalOwners,path)?historicalOwners[path]:undefined;
@@ -318,6 +322,7 @@ function beforeSessionRelic(path,source,options){
  return source.includes('\r\n')?before.replaceAll('\n','\r\n'):before;
 }
 export function beforeDevelopBackflow(path,source,options){
+ source=beforeUiEntrance(path,source);
  source=predecessor(roomEntry.files,path,beforeDeckPages(path,source,options));
  source=beforeRelicDetail(path,source);
  return beforePriorDevelopBackflow(path,beforeSessionRelic(path,source,options));
@@ -328,6 +333,7 @@ export function assertCurrentSessionRelicOwner(path,source){
  }
 }
 export function authenticateDevelopBackflow(path,source,read,options){
+ ({source,read}=entrancePredecessor(path,source,read));
  return authenticateDevelopBackflowWithReaders(path,source,read,recentBackflowOwnerReader(read),options);
 }
 function readBackflowOwner(read,path){

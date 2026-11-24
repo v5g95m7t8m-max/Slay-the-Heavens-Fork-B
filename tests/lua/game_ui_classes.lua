@@ -24,7 +24,10 @@ for _,id in ipairs({'hutao','arlecchino','furina','raiden','ironclad','silent','
     assert(info and info.id==id and not ui.run and not ui.map and calls==0 and ui.seed==1)
     if traveler then assert(info.name=='旅行者','all traveler elements share the player-facing name')end
     local panel=root:GetChild('characterPanel')
-    assert(panel:GetChild('details'):GetChild('name').text==info.name)
+    local details=panel:GetChild('details')
+    local layers=details:GetChild('infoMotion')
+    local active=layers and layers:GetChild('info1') or details
+    assert(active:GetChild('name').text==info.name)
     assert(panel:GetChild('confirm'):GetChild('hit').interactable)
     for i,value in ipairs(Select.characters)do
         assert(panel:GetChild(i==5 and 'traveler' or 'character'..i):GetChild('selected').visible==(value==(traveler and 'traveler' or id)))

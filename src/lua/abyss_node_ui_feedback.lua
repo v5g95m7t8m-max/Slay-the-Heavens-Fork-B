@@ -62,7 +62,7 @@ local function referenceShop(ctx, box, look, hover)
         for _, state in ipairs({'normal','hover','pressed','disabled','selected'}) do box:GetChild(state):SetVisible(false) end
         box:GetChild('v25GoodsFocus'):SetVisible(hover or look.selected == true)
     end
-    if layout.shop.referenceRemovalBorder and box == ctx.child('shopView'):GetChild('removal') then
+    if layout.shop.referenceRemovalBorder and box == ctx.shopControl('removal') then
         ctx.tint(box:GetChild('border'), layout.shop.referenceRemovalBorder)
     end
 end

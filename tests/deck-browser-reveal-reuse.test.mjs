@@ -208,6 +208,7 @@ for i,kind in ipairs({'draw','discard','exhaust'})do
  F.Combat.cardPreview=preview
 end
 assert(pilePreviews==0,'pile faces attempted to simulate playing out-of-hand cards')
+
 print('DECK_REUSE_PASS')`);
 
  // Exercise the actual bootstrap readiness closure, not a replacement predicate.
@@ -338,4 +339,81 @@ assert(Run.transaction(run,function(staged)staged.nodeFlow.id=nil;staged.nodeFlo
 assert(F.Nodes.chooseEvent(run,'reward_1'));host:refresh()
 assert(run.nodeFlow.event.stage=='neow_choose_card'and host.nodeUI.picker=='neow_card'and host.pageReveal:covered(),'real card picker incorrectly used the pure-text shortcut')
 settle();print('DECK_REUSE_PASS')`);
+});
+
+test('managed covered battle paints preserve callback ordering, commands and phase changes',t=>{
+ const base=resolve('.artifacts/test-tmp');mkdirSync(base,{recursive:true});const out=mkdtempSync(join(base,'deck-callbacks-'));t.after(()=>rmSync(out,{recursive:true,force:true}));
+ buildLuaData('data',join(out,'abyss_data.lua'));buildUI(out,undefined,{officialAssets:true});
+ const preloads=readdirSync(out).filter(n=>n.endsWith('.lua')).map(n=>`package.preload[${luaString(n.slice(0,-4))}]=assert(loadfile(${luaString(join(out,n).replaceAll('\\','/'))}))`).join('\n');
+ lua(`package.path='src/lua/?.lua;tests/lua/?.lua;'..package.path
+${preloads}
+local G=require('abyss_game_ui');local make=G.new;local host,root;local Art=require('abyss_card_art_runtime')
+G.new=function(root,data,presentation,event,p)
+ p.presentationReady=function(intent)return (intent.page~='deckPanel' or not(host.deckUI.pending or host.deckUI.calibrating or host.deckUI.pendingGrid)) and Art.presentationReady(intent.page)end
+ p.presentationPage=function(page)Art.setPresentationPage(page)end
+ return make(root,data,presentation,event,p)
+end
+local F=dofile('tests/lua/support/game_ui_fixture.lua');local Gate=require('abyss_page_reveal')
+local function tick()host:update(1/60);Art.update();host.pageReveal:step(Gate.intent(host));host:refresh()end
+local function settle()for _=1,5 do tick()end;assert(not host.pageReveal:covered())end
+-- A managed deck still commits the first battle paint before arbitrary native
+-- page callbacks. Only the redundant paint of the same hidden combat is skipped.
+local Run=require('abyss_run');local Surfaces=require('abyss_monster_surfaces')
+local function managedBattle()
+ host,root=F.fixture();settle();assert(F.start(host));settle()
+ assert(Run.startCombat(host.run,'cultist_solo'));host:refresh();settle()
+ return root:GetChild('battlePanel'),F.actorControl(root:GetChild('battlePanel'),'enemy1')
+end
+do
+ local panel,actor=managedBattle();local rm,vm={},{};local reached=false
+ local start=panel:GetChild('start');local paint=start.SetVisible
+ local page=root:GetChild('mapPanel');local visibility=page.SetVisible
+ start.SetVisible=function()error(rm)end
+ page.SetVisible=function()reached=true;error(vm)end
+ local ok,why=pcall(host.openDeck,host)
+ assert(not ok and why==rm and not reached,'managed deck delayed its first native paint')
+ start.SetVisible=paint
+ ok,why=pcall(host.refresh,host)
+ assert(not ok and why==vm and reached and actor.alive and not actor.visible,
+  'managed deck page failure left its suspended actor visible')
+ page.SetVisible=visibility;host:refresh();assert(host:closeDeck());settle()
+end
+local function attack(run)
+ for _,instance in ipairs(run.combat.hand)do
+  if F.Combat.cardDefinition(run.combat,instance).type=='attack' and F.Combat.canPlay(run.combat,instance.uid,1)then return instance.uid end
+ end
+ error('managed callback fixture needs a playable attack')
+end
+do
+ local panel,actor=managedBattle();local run=host.run;local battle=run.combat
+ battle.enemies[1].hp=250;host:refresh();local uid=attack(run);local energy=battle.energy
+ local page=root:GetChild('mapPanel');local visibility=page.SetVisible;local fired=false
+ page.SetVisible=function(self,value)
+  visibility(self,value)
+  if not fired then fired=true;assert(Run.play(run,uid,1))end
+ end
+ local render=host.battleUI.render;local paints=0
+ host.battleUI.render=function(self,...)paints=paints+1;return render(self,...)end
+ assert(host:openDeck());assert(fired and paints==2 and run.phase=='combat' and battle.energy<energy)
+ assert(host.deckUI.visible and actor.alive and not actor.visible,'successful callback uncovered a retained actor')
+ page.SetVisible=visibility;assert(host:closeDeck())
+ assert(actor.alive and actor.visible and panel:GetChild('energy').text==string.format('%d/%d',battle.energy,energy),
+  'uncover lost the native callback command or displayed stale battle energy')
+ host.battleUI.render=render;settle()
+end
+do
+ local panel,actor=managedBattle();local run=host.run;local battle=run.combat
+ battle.enemies[1].hp=1;battle.enemies[1].block=0;host:refresh();local uid=attack(run)
+ local page=root:GetChild('mapPanel');local visibility=page.SetVisible;local fired=false
+ page.SetVisible=function(self,value)
+  visibility(self,value)
+  if not fired then fired=true;assert(Run.play(run,uid,1));assert(run.phase=='reward')end
+ end
+ local render=host.battleUI.render;local paints=0
+ host.battleUI.render=function(self,...)paints=paints+1;return render(self,...)end
+ assert(host:openDeck());assert(fired and paints==2,'changed combat phase lost its final native paint')
+ assert(not actor.alive and Surfaces.get(panel):find(battle.enemies[1].id)==nil,'reward transition retained the old combat actor')
+ page.SetVisible=visibility;host.battleUI.render=render
+end
+print('DECK_REUSE_PASS')`);
 });

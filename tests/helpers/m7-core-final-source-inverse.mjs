@@ -9,6 +9,7 @@ import {sourceEpoch} from './combined-epoch/source-epoch.mjs';
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {beforeCombatEvents,isCurrentInputRetirementSource} from './input-retirement-source.mjs';
+import {beforeUiEntrance} from './ui-entrance-source.mjs';
 const live=p=>readFileSync(new URL('../../'+p,import.meta.url),'utf8');
 const actorTarget=sourceEpoch.proof.targets.pr618,actorAnchor='config/architecture.json';
 // This real preserved PR contains the exact three-owner Actor after-image.
@@ -23,7 +24,10 @@ function actorReader(raw){
   // This closure is called only after the old verifier recognizes its exact
   // source. Authenticate every current raw owner on each read, before exposing
   // any old byte. Never cache permission or use a projected reader downstream.
-  sourceEpoch.preCombinedSource(actorAnchor,sourceEpoch.proof.current[actorAnchor].source,{target:'pr618',readSource:raw});
+  const source=raw(actorAnchor);
+  assert(isCurrentInputRetirementSource(actorAnchor,beforeUiEntrance(actorAnchor,source)),'combined linked owner identity: '+actorAnchor);
+  assert.equal(sourceEpoch.preCombinedSource(actorAnchor,source,{target:'pr618',readSource:raw}),
+   actorTarget.files[actorAnchor].source,'exact current Actor admission target');
   assert(Object.hasOwn(defectActorEpoch.proof.current,path),'known Actor owner');
   return actorTarget.files[path].source;
  };
@@ -34,7 +38,7 @@ export function currentDefectActorReader(raw){
  if(typeof raw!=='function')return raw;
  return path=>{
   const source=raw(actorAnchor);
-  assert(isCurrentInputRetirementSource(actorAnchor,source),'combined linked owner identity: '+actorAnchor);
+  assert(isCurrentInputRetirementSource(actorAnchor,beforeUiEntrance(actorAnchor,source)),'combined linked owner identity: '+actorAnchor);
   assert.equal(sourceEpoch.preCombinedSource(actorAnchor,source,{target:'pr618',readSource:raw}),
    actorTarget.files[actorAnchor].source,'exact current Actor admission target');
   assert(Object.hasOwn(defectActorEpoch.proof.current,path),'known Actor owner');
@@ -46,7 +50,9 @@ export function preM7FinalSource(path,source,{readSource=live}={}){
  const input=source;
  // Authenticate the post-Actor combat backflow against real disk owners before
  // passing an older source to the independently frozen Actor verifier.
- const actorInput=path==='src/lua/abyss_combat_queued_play.lua'&&beforeCombatEvents(path,input)!==input
+ const actorAdmission=(path==='src/lua/abyss_combat_queued_play.lua'&&beforeCombatEvents(path,input)!==input)
+  ||path===actorAnchor;
+ const actorInput=actorAdmission
   ?sourceEpoch.preCombinedSource(path,input,{target:'pr618',readSource}):input;
  source=preDefectActorSource(path,actorInput,{readSource:actorReader(readSource)});
  const utility=preDefectUtilitySource(path,source);if(utility!==source)return utility;

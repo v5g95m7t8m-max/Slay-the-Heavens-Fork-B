@@ -76,7 +76,7 @@ test('shop inventory admission and shared counter use actual five-slot capacity'
  assert(Nodes.enter(h.run,h.map,path[#path]));h.run.gold=1000;h:refresh();assert(F.click(r,'nodePanel','merchant/talk'));advanceShop(h);counter(r,4,5)
  local offer;for _,v in ipairs(h.run.nodeFlow.potions)do if not v.unavailable then offer=v;break end end;assert(offer)
  local gold=h.run.gold
- local tile=r:GetChild('nodePanel'):GetChild('shopView'):GetChild('potion'..offer.slot):GetChild('hit')
+ local tile=r:GetChild('nodePanel'):GetChild('shopView'):GetChild('goods'):GetChild('potion'..offer.slot):GetChild('hit')
  assert(tile.click());eq(h.run.potions[5],nil);eq(h.run.gold,gold);assert(not offer.sold);counter(r,4,5)
  local cancelled=h.nodeUI.actions.confirm.handler
  assert(r:GetChild('nodePanel'):GetChild('back'):GetChild('hit').click());eq(cancelled(),false)

@@ -94,14 +94,18 @@ for _, kind in ipairs({'shop', 'event', 'camp'}) do
     assert(not host.mapUI:choose(id), 'hidden map accepted a second click')
     assert(not host.pageReveal:covered(), 'a hidden map click invalidated the room')
     if kind == 'shop' then
-        assert(not host.nodeUI.actions['shopView/card1'], 'painted the hidden shop shelf')
-        local hit = merchantHit(root:GetChild('nodePanel'))
+        local room=root:GetChild('nodePanel')
+        local shelf=room:GetChild('shopView')
+        local prepared=assert(host.nodeUI.actions['shopView/card1'],'first merchant tap lacked a prepared quote')
+        assert(not shelf.visible and not host.nodeUI:press('shopView/card1'),'hidden shelf accepted input')
+        local hit = merchantHit(room)
         assert(not hit.click(staleTap), 'a covered touch opened the published shop')
         local freshTap = {touchId=2}
         pressAndRelease(hit, freshTap)
         assert(hit.click(freshTap), 'fresh touch did not open the shop')
+        assert(shelf.visible and not shelf:GetChild('card1').visible,'opening frame published a product')
         finishShelf(host.nodeUI)
-        assert(host.nodeUI.actions['shopView/card1'], 'opened shop did not paint the shelf')
+        assert(host.nodeUI.actions['shopView/card1']==prepared and shelf:GetChild('card1').visible)
     elseif kind == 'event' then
         assert(host.nodeUI.actions['eventView/option1'].enabled)
     else

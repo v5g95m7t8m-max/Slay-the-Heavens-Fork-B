@@ -193,19 +193,33 @@ function M.new(cover,ready,onIntent,frames,motion)
         local sameVeil=cover:GetChild('veil')==veil
         return alive and sameVeil and paintToken==ticket and gate.epoch==epoch and frame==(gate.localFrame or frames.size or frames.full)
     end
+    local function paintBlockerInput(blocker,limited,ticket)
+        local editing=gate:allowsCharacterEdit()
+        local blocked=not (limited or editing)
+        if cover.disableCursorEventPassthrough~=blocked then cover.disableCursorEventPassthrough=blocked end
+        if gate.epoch~=ticket then return false end
+        if blocker and motion and motion.characterLocal then
+            local raycast=not editing
+            if blocker.raycastTarget~=raycast then blocker.raycastTarget=raycast end
+        end
+        return gate.epoch==ticket
+    end
+    local function paintBlocker(frame)
+        local limited=gate.intent and gate.intent.deckPaged and gate.localFrame and gate.state~='failed'
+        local blockerFrame=limited and frame or frames.size or frames.full
+        local ticket=gate.epoch
+        local blocker=cover:GetChild('blocker')
+        if gate.epoch~=ticket or not paintBlockerInput(blocker,limited,ticket) then return false end
+        if not blocker or blockerFrame==paintedBlocker then return true end
+        if blocker:SetAnchoredPosition(blockerFrame[1],blockerFrame[2])==false or gate.epoch~=ticket then return false end
+        if blocker:SetSizeDelta(blockerFrame[3],blockerFrame[4])==false or gate.epoch~=ticket then return false end
+        paintedBlocker=blockerFrame
+        return true
+    end
     local function paintFrame()
         if not frames then return true end
         local frame=gate.localFrame or frames.size or frames.full
-        local limited=gate.intent and gate.intent.deckPaged and gate.localFrame and gate.state~='failed'
-        local blockerFrame=limited and frame or frames.size or frames.full
-        if blockerFrame~=paintedBlocker then
-            local ticket=gate.epoch
-            cover.disableCursorEventPassthrough=not limited
-            local blocker=cover:GetChild('blocker')
-            if blocker:SetAnchoredPosition(blockerFrame[1],blockerFrame[2])==false or gate.epoch~=ticket then return false end
-            if blocker:SetSizeDelta(blockerFrame[3],blockerFrame[4])==false or gate.epoch~=ticket then return false end
-            paintedBlocker=blockerFrame
-        end
+        if not paintBlocker(frame) then return false end
         if frame==paintedFrame then return true end
         paintToken=paintToken+1;local ticket,epoch=paintToken,gate.epoch
         paintedFrame=nil -- a partial native write invalidates every old promise
@@ -227,13 +241,24 @@ function M.new(cover,ready,onIntent,frames,motion)
         paintFrame()
     end
     function gate:covered()return self.state~='visible' end
+    function gate:publishedIntent(intent)
+        return self.state=='visible' and same(intent,self.published)
+    end
+    function gate:allowsCharacterEdit()
+        return motion and motion.characterLocal and self.state=='preparing' and self.localOnly
+            and self.published and self.published.page=='characterPanel'
+    end
+    local function usesLocalSelection(intent)
+        return motion and intent.page=='characterPanel'
+            and (motion.characterLocal or gate.published and gate.published.page=='characterPanel')
+    end
     local function requestTransition(intent)
         local entry=gate.entry
         if entry and (gate.departure or entry.destination and not sameOwner(entry.destination,intent))then gate.entry=nil end
         gate.roomEntry=entersMapRoom(gate.published,intent) or gate.roomEntry and sameOwner(gate.intent,intent)
         gate.localFrame=localFrame(intent,gate.intent)
         gate.painting=nil
-        gate.localOnly=motion and gate.published and gate.published.page=='characterPanel' and intent.page=='characterPanel'
+        gate.localOnly=usesLocalSelection(intent)
         local exiting=motion and gate.published and not gate.localFrame and not gate.localOnly
             and (gate.published.page~=intent.page or not sameBase(intent,gate.published)) and gate.state=='visible'
         gate.epoch=gate.epoch+1;gate.intent=intent;gate.state=exiting and 'fadingOut' or 'preparing';gate.armed=nil;gate.error=nil

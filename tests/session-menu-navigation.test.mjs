@@ -1,6 +1,7 @@
 import {developReleaseBackflowRead} from './helpers/develop-release-backflow-predecessors.mjs';
 import {actorFocusAdded,assertActorFocusInventory,deckPagesAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 import {beforeCharacterPreparationSource} from './helpers/character-preparation-source.mjs';
+import {entranceInventory} from './helpers/ui-entrance-source.mjs';
 import {beforeInputRetirementReader,pointerInputPath,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 import {beforeAuthenticatedReleaseGuideSource,releaseGuideSourcePaths} from './helpers/release-guide-backflow-source.mjs';
 import test from 'node:test';
@@ -144,7 +145,7 @@ test('menu source continuation retains the complete release corpus and rejects n
  const paths=Object.keys(sourceEpoch.proof.current).sort();
  assert.equal(paths.length,352);
  const later=['src/lua/abyss_power_membership.lua',...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath];
- assert.deepEqual(['config/architecture.json',...luaPaths].sort(),[...paths.filter(path=>path!==retiredControllerPath),...later].sort());
+ assert.deepEqual(entranceInventory(['config/architecture.json',...luaPaths].sort(),readLive),[...paths.filter(path=>path!==retiredControllerPath),...later].sort());
  assert.throws(()=>readLive(retiredControllerPath),{code:'ENOENT'});
  const readCurrentInput=beforeInputRetirementReader(readLive);
  assert.ok(readCurrentInput(retiredControllerPath));

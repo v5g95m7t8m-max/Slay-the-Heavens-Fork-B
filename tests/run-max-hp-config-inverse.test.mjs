@@ -189,8 +189,8 @@ test('current Run architecture admission uses its declared target and rereads ev
  // The exact trace also includes 14 action-button, 20 combat/event, and 9
  // deck/potion freshness reads, in addition to the prior ordered closure.
  const admittedReads=[...reads];
- assert.equal(admittedReads.length,460,'complete fresh raw closure size');
- assert.equal(hash(JSON.stringify(admittedReads)),'6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51',
+ assert.equal(admittedReads.length,480,'complete fresh raw closure size');
+ assert.equal(hash(JSON.stringify(admittedReads)),'ad1c81a8f757224fa6520ca74d2a9b682f24925d2689141bc4b2eb1066d6a7fd',
   'complete fresh raw closure in admission order on the current Develop sources');
  let retainedPosition=-1;
  const retainedReadPositions=priorReadOrder.map(owner=>{

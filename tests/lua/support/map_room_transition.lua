@@ -114,11 +114,15 @@ for _,kind in ipairs({'camp','shop','event','combat','elite','boss','treasure'})
         assert(F.click(root,'nodePanel','confirm'));settle()
         assert(host.mode=='map' and host.mapUI.navigationEnabled and not panel.active)
     elseif kind=='shop' then
-        assert(not host.nodeUI.actions['shopView/card1'],'entry drew the hidden shelf')
-        local talk=root:GetChild('nodePanel'):GetChild('merchant'):GetChild('talk'):GetChild('hit')
+        local room=root:GetChild('nodePanel')
+        local shelf=room:GetChild('shopView')
+        local prepared=assert(host.nodeUI.actions['shopView/card1'],'merchant room did not prepare a quote')
+        assert(not shelf.visible and not host.nodeUI:press('shopView/card1'),'hidden shelf accepted input')
+        local talk=room:GetChild('merchant'):GetChild('talk'):GetChild('hit')
         assert(tap(talk,5))
+        assert(shelf.visible and not shelf:GetChild('card1').visible,'opening frame published a product')
         dofile('tests/lua/support/shop_timeline.lua')(host)
-        assert(host.nodeUI.actions['shopView/card1'],'accepted merchant tap did not populate shelf')
+        assert(host.nodeUI.actions['shopView/card1']==prepared and shelf:GetChild('card1').visible)
     elseif host.mode=='battle' then
         finishBattle(host,root,settle,kind)
     end

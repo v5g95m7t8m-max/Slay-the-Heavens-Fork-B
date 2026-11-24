@@ -68,6 +68,15 @@ function M.install(ctx)
     ctx.skinFaces={}
 
     ctx.artFaces={}
+    local shopInspection = setmetatable({}, {__mode='k'})
+    local shopArt = setmetatable({}, {__mode='k'})
+    function ctx.reuseShopFace(box)
+        ctx.inspectCards[box] = shopInspection[box]
+        ctx.artFaces[box] = true
+        -- Quote reuse skips copy/frame/price work, but an explicit render must
+        -- reconcile native ownership after clear, rejection or metadata changes.
+        if shopArt[box] then shopArt[box]() end
+    end
 
     function ctx.fillCard(box, id, upgraded, look)
         look = look or {}
@@ -77,6 +86,7 @@ function M.install(ctx)
         local instance=look.instance or {cardId=id,upgraded=upgraded==true}
         definition=Combat.cardDefinition({catalog={cards={[id]=definition}}},instance)
         ctx.inspectCards[box]=definition.originalV4 and {definition=definition,upgraded=instance.upgraded} or nil
+        if look.shop then shopInspection[box] = ctx.inspectCards[box] end
         if look.inspectOnly then box:GetChild('hit'):SetVisible(definition.originalV4~=nil) end
         local kind = Theme.icon.cardArt[definition.type] and definition.type or "status"
         local function writeCardCopy()
@@ -107,6 +117,7 @@ function M.install(ctx)
             else CardDisplay.clearNativeArt(box)end
             ctx.tint(box:GetChild("artPlate"), look.dim and C.panelSunken or C.cardType[kind] or C.panelRaised)
         end
+        shopArt[box] = writeCardArt
         writeCardArt()
         local covered=look.veil or look.stamp~=nil
         local reason=look.reason or look.stamp or '当前不可选择'

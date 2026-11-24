@@ -1,6 +1,8 @@
 -- Shop subview: render the Nodes quote and register actions on the node controller.
 -- Transactions and gesture ownership stay with abyss_node_ui / abyss_nodes.
 local Run = require("abyss_run")
+local Shop = require('abyss_shop')
+local Purge = require('abyss_purge_candidates')
 local Theme = require("abyss_theme")
 local number = require("abyss_numbers").integer
 local C = Theme.color
@@ -109,15 +111,11 @@ function M.new(controller, ui)
         end, name, '', offerNotice("card", offer, name), availability.attention)
     end
 
-    local function renderCardSlot(shop, view, offers, i, flow, shelf)
-        local offer = offers[(self.page - 1) * SHOP_PAGE + i]
-        local box, price = shop:GetChild("card" .. i), shop:GetChild("price" .. i)
-        show(box, offer ~= nil) show(price, offer ~= nil)
-        if not offer then return end
-        local availability = offerState(offer)
+    local selectedCards = {}
+    local function paintCardSlot(box, price, offer, availability, selected)
         fillCard(box, offer.id, offer.upgraded==true, { dim = offer.sold or availability.poor or offer.unavailable,
             veil = offer.sold, stamp = cardStamp(offer), reason = cardStamp(offer) or availability.poor and '金币不足' or nil,
-            selected = selection:isSelected('shopView/card' .. i), templateKind = 'attack' })
+            selected = selected, templateKind = 'attack', shop = true })
         if offer.unavailable then writeMissingCard(box, offer) end
         fillPrice(price, offer.price, availability.price)
         if offer.sale and not offer.sold and not offer.unavailable then
@@ -126,7 +124,21 @@ function M.new(controller, ui)
             price:GetChild('value'):SetAnchoredPosition(frame[1],frame[2])
             price:GetChild('value'):SetSizeDelta(frame[3],frame[4])
         end
-        bindCard(view, flow, shelf, i, offer, availability)
+    end
+
+    local function renderCardSlot(view, i, paint)
+        local offer = view.node.cards[i]
+        local box, price = ui.product("card" .. i), ui.product("price" .. i)
+        if paint then show(box, offer ~= nil);show(price, offer ~= nil) end
+        if not offer then return end
+        local availability = offerState(offer)
+        local selected = selection:isSelected('shopView/card' .. i) == true
+        if paint or selectedCards[i] ~= selected then
+            paintCardSlot(box, price, offer, availability, selected)
+            selectedCards[i] = selected
+        else ui.reuseCard(box) end
+        local flow = self.run.nodeFlow
+        bindCard(view, flow, flow.cards, i, offer, availability)
     end
 
     local function cardFooter(shop)
@@ -153,16 +165,18 @@ function M.new(controller, ui)
         if not node.removeAvailable then removalPrice:GetChild("value").text = "已使用" end
     end
 
-    local function renderRemoval(shop, node)
-        local removal, removalPrice = shop:GetChild("removal"), shop:GetChild("removalPrice")
+    local function renderRemoval(node, paint)
+        local removal, removalPrice = ui.product("removal"), ui.product("removalPrice")
         local poor = node.removeAvailable and self.run.gold < node.removePrice
         local open = node.removeAvailable and #node.purgeCards > 0 and not poor
         local reason = removalReason(node)
-        state(removal, open)
-        if Theme.layout.nativeNode.shop.referenceRemovalName then removal:GetChild('name').text=Theme.layout.nativeNode.shop.referenceRemovalName end
-        removal:GetChild("description").text = removalDescription(node)
-        ink(removal:GetChild("name"), open and removalInk or C.textMuted)
-        renderRemovalPrice(removalPrice, node, poor)
+        if paint then
+            state(removal, open)
+            if Theme.layout.nativeNode.shop.referenceRemovalName then removal:GetChild('name').text=Theme.layout.nativeNode.shop.referenceRemovalName end
+            removal:GetChild("description").text = removalDescription(node)
+            ink(removal:GetChild("name"), open and removalInk or C.textMuted)
+            renderRemovalPrice(removalPrice, node, poor)
+        end
         action("shopView/removal", open, function()
             self.mode, self.picker, self.pickPage, self.selected, self.notice = "picker", "remove", 1, nil, ""
             self:render() return true
@@ -194,27 +208,24 @@ function M.new(controller, ui)
         end, name, relicText(offer.id), offerNotice("relic", offer, name), availability.attention)
     end
 
-    local function renderRelicSlot(shop, offers, i)
-        local offer = offers[(self.relicPage - 1) * RELIC_PAGE + i]
-        local tile, price = shop:GetChild("relic" .. i), shop:GetChild("relicPrice" .. i)
-        show(tile, offer ~= nil) show(price, offer ~= nil)
+    local function renderRelicSlot(offers, i, paint)
+        local offer = offers[i]
+        local tile, price = ui.product("relic" .. i), ui.product("relicPrice" .. i)
+        if paint then show(tile, offer ~= nil);show(price, offer ~= nil) end
         if not offer then return end
         local availability = offerState(offer)
-        writeRelic(tile, offer, availability)
-        fillPrice(price, offer.price, availability.price)
+        if paint then
+            writeRelic(tile, offer, availability)
+            fillPrice(price, offer.price, availability.price)
+        end
         bindRelic(i, offer, availability)
     end
 
-    local function renderRelics(shop, offers)
-        local relicPages = 1
-        for i = 1, RELIC_PAGE do
-            renderRelicSlot(shop, offers, i)
-        end
-        pageArrows(shop, "relic", self.relicPage, relicPages)
-        action("shopView/relicPrevious", self.relicPage > 1, function()
-            self.relicPage, self.notice = self.relicPage - 1, "" self:render() return true end)
-        action("shopView/relicNext", self.relicPage < relicPages, function()
-            self.relicPage, self.notice = self.relicPage + 1, "" self:render() return true end)
+    local function renderRelics(shop, offers, paint)
+        for i = 1, RELIC_PAGE do renderRelicSlot(offers, i, paint) end
+        if paint then pageArrows(shop, "relic", 1, 1) end
+        action("shopView/relicPrevious", false)
+        action("shopView/relicNext", false)
     end
 
     local function potionDescription(offer, full)
@@ -241,54 +252,88 @@ function M.new(controller, ui)
         end, definition and definition.name or '', potionText(offer.id), offerNotice("potion", offer, nil, full), availability.attention)
     end
 
-    local function renderPotionSlot(shop, i, offer)
-        local tile, price = shop:GetChild('potion' .. i), shop:GetChild('potionPrice' .. i)
-        local definition = find(self.run.data.potions.potions, offer.id)
-        local full = Run.potionCount(self.run) >= Run.potionCapacity(self.run)
+    local function renderPotionSlot(i, offer, paint, full)
+        local tile, price = ui.product('potion' .. i), ui.product('potionPrice' .. i)
+        if paint then show(tile, offer ~= nil);show(price, offer ~= nil) end
+        if not offer then return end
         local availability = offerState(offer, full)
-        writePotion(tile, offer, definition, availability, full)
-        fillPrice(price, offer.price, availability.price)
+        if paint then
+            local definition = find(self.run.data.potions.potions, offer.id)
+            writePotion(tile, offer, definition, availability, full)
+            fillPrice(price, offer.price, availability.price)
+        end
         bindPotion(i, offer, availability, full)
     end
 
-    local function renderPotions(shop, offers)
-        for i, offer in ipairs(offers) do renderPotionSlot(shop, i, offer) end
-    end
-
     local shop = ui.child('shopView')
-    local function begin()
+    local goods = shop:GetChild('goods') or shop
+    local categories = {'cards', 'relics', 'potions'}
+    local previousRun, previousNode, previousQuote, bound
+    local function quote(hasPurgeCandidates)
+        local run = self.run
+        local flow = run.nodeFlow
+        local fields = {run.gold, Run.potionCount(run), Run.potionCapacity(run),
+            tostring(hasPurgeCandidates), Shop.removePrice(run), tostring(flow.removalUsed)}
+        for _, category in ipairs(categories) do
+            fields[#fields + 1] = category
+            for _, offer in ipairs(flow[category]) do
+                for _, key in ipairs({'id','price','sold','unavailable','upgraded','rarity','type','color','sale'}) do
+                    fields[#fields + 1] = tostring(offer[key])
+                end
+            end
+        end
+        return table.concat(fields, ':')
+    end
+    local function matchesQuote(quoted)
+        return previousRun == self.run and previousNode == self.run.nodeFlow.id and previousQuote == quoted
+    end
+    local function captureBindings(view, flow)
+        local offers, shelves = {}, {}
+        for _, category in ipairs(categories) do
+            local shelf = flow[category]
+            shelves[category], offers[category] = shelf, {}
+            for slot, offer in ipairs(shelf) do offers[category][slot] = offer end
+        end
+        return {view = view, actions = self.actions, flow = flow, shelves = shelves, offers = offers}
+    end
+    local function sameOffers(category, shelf)
+        if bound.shelves[category] ~= shelf then return false end
+        local offers = bound.offers[category]
+        if #offers ~= #shelf then return false end
+        for slot, offer in ipairs(shelf) do if offers[slot] ~= offer then return false end end
+        return true
+    end
+    local function current()
+        local flow = self.run.nodeFlow
+        if not bound or bound.view ~= self.view or bound.actions ~= self.actions or bound.flow ~= flow then return false end
+        for _, category in ipairs(categories) do
+            if not sameOffers(category, flow[category]) then return false end
+        end
+        return matchesQuote(quote(Purge.any(self.run)))
+    end
+    local function render(view, node)
+        local quoted = quote(#node.purgeCards > 0)
+        local paint = not matchesQuote(quoted)
         selection:begin()
         self.pageCount, self.page, self.relicPage = 1, 1, 1
-    end
-
-    local function finish(node)
-        cardFooter(shop)
-        renderRemoval(shop, node)
-        renderRelics(shop, node.relics or {})
-        renderPotions(shop, node.potions or {})
+        for i = 1, SHOP_PAGE do renderCardSlot(view, i, paint) end
+        if paint then cardFooter(shop) end
+        renderRemoval(node, paint)
+        renderRelics(goods, node.relics, paint)
+        local full = Run.potionCount(self.run) >= Run.potionCapacity(self.run)
+        for i = 1, #Theme.layout.nativeNode.shop.potions.columns do
+            renderPotionSlot(i, node.potions[i], paint, full)
+        end
         selection:paint(0)
+        previousRun, previousNode, previousQuote = self.run, self.run.nodeFlow.id, quoted
+        bound = captureBindings(view, self.run.nodeFlow)
         return ''
     end
 
-    local function card(view, node, i)
-        local flow = self.run.nodeFlow
-        renderCardSlot(shop, view, node.cards or {}, i, flow, flow.cards)
+    local function invalidate()
+        previousRun, previousNode, previousQuote, bound = nil, nil, nil, nil
     end
-
-    local function render(view, node)
-        if not self.shopOpen then return '' end
-        begin()
-        for i = 1, SHOP_PAGE do card(view, node, i) end
-        return finish(node)
-    end
-
-    local function prepare(view, step)
-        if step == 1 then begin() end
-        if step <= SHOP_PAGE then card(view, view.node, step);return false end
-        finish(view.node)
-        return true
-    end
-    return render, prepare
+    return render, current, invalidate
 end
 
 return M

@@ -14,6 +14,7 @@ import {preRound3CatalogSource as currentProject,prepareRound3CatalogModuleRetir
 import {sourceEpoch} from './helpers/combined-epoch/source-epoch.mjs';
 import {actorFocusAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 import {beforeInputRetirementReader,pointerInputPath,retiredControllerPath} from './helpers/input-retirement-source.mjs';
+import {addedEntranceModules} from './helpers/ui-entrance-source.mjs';
 import {gameUiExtractionProof} from './helpers/epochs/develop/tests/helpers/game-ui-extraction-source-inverse.mjs';
 import {coreLifecycleSourceProof} from './helpers/epochs/develop/tests/helpers/core-lifecycle-source-inverse.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
@@ -131,7 +132,7 @@ test('current catalog hosts retain authenticated intermediate epochs and freshly
   'config/architecture.json':gameUiExtractionProof.files['config/architecture.json'],
   'src/lua/abyss_combat.lua':coreLifecycleSourceProof.files['src/lua/abyss_combat.lua'],
  };
- const addedOwners=['scripts/deck-ui-layout.mjs',...stasisUpgradeAddedPaths,...actorFocusAdded,pointerInputPath];
+ const addedOwners=['scripts/deck-ui-layout.mjs',...stasisUpgradeAddedPaths,...actorFocusAdded,pointerInputPath,...addedEntranceModules];
  assert.throws(()=>readLive(retiredControllerPath),{code:'ENOENT'});
  const retiredSource=beforeInputRetirementReader(readLive)(retiredControllerPath);
  const paths=[...Object.keys(sourceEpoch.proof.current),...addedOwners].filter(path=>path!==retiredControllerPath);

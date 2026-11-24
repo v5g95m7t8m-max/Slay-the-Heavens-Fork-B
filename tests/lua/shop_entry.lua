@@ -23,6 +23,16 @@ local function control(spec, parent, writes)
         assert(not self.listeners[event], "duplicate listener") self.listeners[event]=fn
     end
     for _, child in ipairs(spec.children or {}) do box.children[child.name]=control(child,box,writes) end
+    local text = spec.text and spec.text.content
+    setmetatable(box, {
+        __index = function(_, field) if field == 'text' then return text end end,
+        __newindex = function(self, field, value)
+            if field == 'text' then
+                text = value
+                writes[self] = (writes[self] or 0) + 1
+            else rawset(self, field, value) end
+        end,
+    })
     return box
 end
 local function setup(touchScreen)
@@ -43,11 +53,16 @@ local function setup(touchScreen)
             local found=spec.children and find(spec.children) if found then return found end
         end
     end
-    local writes={}
+    local writes,cues={},{}
     local root=control(assert(find(Layout)),nil,writes)
-    local ui=UI.new(root,run,map,Presentation,"click",nil,{cursorEvents=cursor,color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end,touchScreen=function() return touchScreen==true end})
+    local ui=UI.new(root,run,map,Presentation,"click",nil,{cursorEvents=cursor,color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end,touchScreen=function() return touchScreen==true end,
+        sound=function(cue)cues[#cues+1]=cue end})
     ui:setVisible(true)
     local function get(key)
+        key = key:gsub('^shopView/(%a+)', function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
         local box=root for part in key:gmatch("[^/]+") do box=assert(box:GetChild(part),key) end
         return box
     end
@@ -67,53 +82,116 @@ local function setup(touchScreen)
         assert(tap("shopView/removal",22)) assert(tap("pickerView/card1",22))
         assert(ui.mode=="picker" and ui.selected)
     end
-    return ui,get,emit,tap,picker,run,writes
+    return ui,get,emit,tap,picker,run,writes,cues
+end
+
+local function near(value, expected, limit)
+    assert(math.abs(value-expected) <= limit, tostring(value)..' ~= '..tostring(expected))
+end
+local function reference(value, target, k, snap)
+    value = value + (target-value)*k/60
+    return math.abs(value-target) < snap and target or value
+end
+
+for _,hz in ipairs({30,60,120}) do
+    local ui,get,_,tap,_,_,writes=setup(false)
+    ui:resize(1920,1080)
+    local rug,goods,back,shade=get('shopView'),get('shopView/goods'),get('back'),get('shopShade')
+    local face=get('shopView/card1/name')
+    local resting=math.min(back.x,-510)
+    assert(tap('merchant/talk',1))
+    local x,p,previous=-400,1080,1080
+    x=reference(x,0,9,1)
+    near(rug.y,720,.0001)
+    near((back.x-resting)*1.5,x,.1)
+    assert(shade.imageColor.a==math.floor(2/60*255+.5))
+    assert(not goods.visible and not get('shopView/card1').visible)
+    local initialCopies=writes[face]
+    local sample=0
+    for frame=1,hz*1.5 do
+        ui:update(1/hz)
+        local sourceFrame=frame*60/hz
+        if sourceFrame%1==0 then
+            for _=sample+1,sourceFrame do
+                previous,p=p,reference(p,0,5,.5)
+                x=reference(x,0,9,1)
+            end
+            sample=sourceFrame
+            near(rug.y*1.5,p,.1)
+            near((rug.y+goods.y)*1.5,previous,.1)
+            near((back.x-resting)*1.5,x,.1)
+            near(shade.imageColor.a,math.floor(math.min(.85,(sample+1)*2/60)*255+.5),1)
+        end
+    end
+    assert(p==0 and x==0 and previous==0 and get('shopRoom').visible)
+    assert(writes[face]==initialCopies and goods.visible)
+    print('SHOP_TIMING '..hz..'Hz rugWrites='..writes[rug]..' goodsWrites='..writes[goods]..' cardNameWrites='..initialCopies)
 end
 
 for _,mobile in ipairs({false,true}) do
- local ui,get,emit,tap,picker,run,writes=setup(mobile)
- assert(get('shopRoom').visible and not get('shopView').visible,'enter shop must show scene before goods')
- assert(not ui.actions['shopView/card1'] and not writes[get('shopView/card1')],'hidden goods were rendered on room entry')
- local gold=run.gold
- assert(not ui:press('shopView/card1') and run.gold==gold,'hidden goods accepted purchase')
- assert(get('merchant').visible and get('merchant/talk').visible)
- emit('merchant/talk','down',99);ui:setVisible(false);ui:setVisible(true)
- emit('merchant/talk','up',99)
- assert(not emit('merchant/talk','click',99),'stale merchant tap survived hide/show')
- emit('merchant/talk','down',11)
- for _,event in ipairs({'up','drag','endDrag','exit'})do emit('merchant/talk',event,12) end
- emit('merchant/talk','up',11)
- for _,event in ipairs({'drag','endDrag','exit'})do emit('merchant/talk',event,12) end
- assert(not emit('merchant/talk','click',12),'foreign click accepted')
- assert(emit('merchant/talk','click',11),'foreign event swallowed the valid merchant click')
- assert(not get('shopView').visible and ui.shopBusy,'cold click must leave the complete room up while the shelf is staged')
- assert(get('shopRoom').visible and not get('merchant/talk').visible)
- assert(not ui:press('shopView/card1'),'transition accepted purchase')
- assert(not emit('merchant/talk','click'),'repeat open accepted')
- for _=1,7 do
-    ui:update(1/30)
-    assert(not get('shopView').visible and get('shopRoom').visible,'partially filled shelf became visible')
- end
- ui:update(1/30)
- assert(get('shopView').visible and get('shopView').y>300)
- local cardWrites=writes[get('shopView/card1')]
- ui:update(.15)
- assert(get('shopView').y>0 and get('shopView').y<300)
- ui:update(.16)
- assert(get('shopView').y==0 and not get('shopRoom').visible)
- assert(writes[get('shopView/card1')]==cardWrites,'shelf animation re-rendered a card')
- local offer=run.nodeFlow.cards[1]
- assert(tap('shopView/card1') and tap('confirm'))
- assert(run.gold==gold-offer.price and run.nodeFlow.cards[1].sold)
- assert(get('merchant/line').text=='谢啦！' and get('merchant/bubble').visible)
- ui:update(3)
- assert(not get('merchant/bubble').visible)
- ui:update(20)
- assert(not get('merchant/bubble').visible,'unprompted idle dialogue returned')
- picker();assert(tap('confirm'));assert(ui.mode=='main')
- assert(tap('back'));assert(not run.nodeFlow.complete and get('shopRoom').visible)
- assert(not tap('back'),'repeat exit accepted')
- ui:update(.31);assert(run.nodeFlow.complete)
- assert(not get('shopView').visible)
+    local ui,get,emit,tap,picker,run,writes,cues=setup(mobile)
+    local room,shelf,shade=get('shopRoom'),get('shopView'),get('shopShade')
+    local face=get('shopView/card1/name')
+    assert(room.visible and not shelf.visible and writes[face]==1,'cold room must prepare before input')
+    local gold,view,cardAction=run.gold,ui.view,ui.actions['shopView/card1']
+    assert(not ui:press('shopView/card1') and run.gold==gold)
+    emit('merchant/talk','down',99);ui:setVisible(false);ui:setVisible(true)
+    emit('merchant/talk','up',99)
+    assert(not emit('merchant/talk','click',99),'stale merchant tap survived hide/show')
+    emit('merchant/talk','down',11)
+    for _,event in ipairs({'up','drag','endDrag','exit'})do emit('merchant/talk',event,12) end
+    emit('merchant/talk','up',11)
+    for _,event in ipairs({'drag','endDrag','exit'})do emit('merchant/talk',event,12) end
+    assert(not emit('merchant/talk','click',12),'foreign click accepted')
+    assert(emit('merchant/talk','click',11),'foreign click swallowed the valid merchant click')
+    assert(shelf.visible and shelf.y==720 and not ui.shopBusy and room.visible)
+    assert(not get('merchant/talk').visible and not get('shopView/card1').visible)
+    assert(not ui:press('shopView/card1') and not emit('merchant/talk','click'))
+    ui:update(1/60)
+    assert(not emit('shopView/card1','click',11),'merchant tap leaked through')
+    assert(get('shopView/card1').visible)
+    for _=2,18 do ui:update(1/60) end
+
+    -- Explicit settled renders still reconcile art ownership without rewriting
+    -- the quote's card copy or price.
+    local stable={}
+    for _,path in ipairs({'shopView/card1/name','shopView/card1/description','shopView/card1/cost','shopView/price1/value'})do
+        local box=get(path);stable[box]=writes[box] or 0
+    end
+    ui:render()
+    for box,count in pairs(stable)do assert((writes[box] or 0)==count,'settled quote rewrote copy or price')end
+
+    -- A warm close/open survives during both tails and preserves the live view.
+    view,cardAction=ui.view,ui.actions['shopView/card1']
+    local copies=writes[face]
+    local oldAlpha=shade.imageColor.a
+    assert(tap('back',13) and not shelf.visible and room.visible and not run.nodeFlow.complete)
+    assert(shade.imageColor.a<oldAlpha and shade.imageColor.a>0)
+    assert(tap('merchant/talk',14) and shelf.y==720 and shade.imageColor.a>0)
+    assert(ui.view==view and ui.actions['shopView/card1']==cardAction and writes[face]==copies)
+    assert(#cues==2 and cues[1]=='shop_open' and cues[2]=='shop_open')
+    assert(tap('back',21) and not shelf.visible)
+    run.nodeFlow.cards[1]=Combat.copy(run.nodeFlow.cards[1])
+    assert(tap('merchant/talk',22))
+    assert(ui.view~=view and ui.actions['shopView/card1']~=cardAction and writes[face]==copies)
+    for _=1,18 do ui:update(1/60) end
+
+    local offer=run.nodeFlow.cards[1]
+    assert(shelf.y>0 and tap('shopView/card1',15))
+    local selectedX=get('back').x
+    ui:update(1/60)
+    assert(get('back').x==selectedX,'ordinary cancel overwrote the secondary layout')
+    assert(tap('confirm',16) and run.gold==gold-offer.price and run.nodeFlow.cards[1].sold)
+    assert(get('merchant/line').text=='谢啦！' and get('merchant/bubble').visible)
+    ui:update(3)
+    assert(not get('merchant/bubble').visible)
+    ui:update(20)
+    assert(not get('merchant/bubble').visible,'unprompted idle dialogue returned')
+    picker();assert(tap('confirm',17));assert(ui.mode=='main')
+    assert(tap('back',18));assert(not run.nodeFlow.complete and room.visible)
+    assert(not tap('back',18),'closing click carried through to leave')
+    ui:update(.7)
+    assert(tap('back',19) and run.nodeFlow.complete)
+    assert(not shelf.visible and not ui:holding())
 end
-print('SHOP_ENTRY_PASS mouse/touch scene, parent motion, lock, buy, purge, exit')
+print('SHOP_ENTRY_PASS mouse/touch room, first render, reference phase, warm cache, tail buy, purge, leave')
