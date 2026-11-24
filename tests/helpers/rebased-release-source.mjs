@@ -47,12 +47,12 @@ const nativeButtonRepair=Object.freeze({
  },
 });
 const pickerHotfixOwners=['src/lua/abyss_node_ui_event_cards.lua','src/lua/abyss_node_ui_rewards.lua'];
+export const beforePickerHotfix=(path,source)=>pickerHotfixOwners.includes(path)?beforeCurrentReplayFixes(path,source):source;
 export function assertCurrentPickerHotfix(path,source){
- if(pickerHotfixOwners.includes(path))assert.notEqual(beforeCurrentReplayFixes(path,source),source,'fresh current production owner: '+path);
+ if(pickerHotfixOwners.includes(path))assert.notEqual(beforePickerHotfix(path,source),source,'fresh current production owner: '+path);
 }
 export function beforeNativeButtonRepair(path,source){
- if(pickerHotfixOwners.includes(path))source=beforeCurrentReplayFixes(path,source);
- source=beforeInputRetirement(path,source);
+ source=beforeInputRetirement(path,beforePickerHotfix(path,source));
  const row=Object.hasOwn(nativeButtonRepair,path)?nativeButtonRepair[path]:null;
  if(!row||typeof source!=='string'||source.includes('\r\r\n'))return source;
  const current=source.replaceAll('\r\n','\n');
