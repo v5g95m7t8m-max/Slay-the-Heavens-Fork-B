@@ -23,7 +23,7 @@ local function duration(e)
  return 0
 end
 function M.new()
- local run=Run.new(Data,'42');assert(Run.startCombat(run,'cultist_solo'))
+ local run=Run.new(Data,'42');assert(Run.startCombat(run,'raven_adept_solo'))
  run.combat=Combat.new(run.data,{deck={'strike','defend','strike','bash','defend'},enemies={'fungi_beast','fungi_beast'},seed=11,hp=68,maxHp=80,gold=99})
  -- This is an explicit five-card test fixture, not a real campaign opening draw.
  local pool=run.combat.hand;local hand={}
