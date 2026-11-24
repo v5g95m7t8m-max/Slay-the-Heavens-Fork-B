@@ -195,9 +195,10 @@ test(expandedOwnerCase,async()=>{
  if(process.argv[2]===expandedOwnerLane){
   const index=Number(process.argv[3]);assert(index===0||index===1);
   hosts=paths.filter((_,position)=>position%2===index);
- }else if(process.platform==='win32'&&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'
+ }else if((process.platform==='win32'||process.platform==='linux'&&availableParallelism()>=4)
+  &&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'
   &&availableParallelism()>=2&&!hasTestNameFilter()){
-  // This case alone used over 35 minutes in Windows job 137628123978.
+  // Share the four hosts between two isolated processes to avoid the Full job deadline.
   const outcomes=await Promise.allSettled([0,1].map(index=>runIsolatedTest(import.meta.url,
    [expandedOwnerLane,String(index)],[`--test-name-pattern=^${expandedOwnerCase}$`])));
   for(const outcome of outcomes)if(outcome.status==='rejected')throw outcome.reason;

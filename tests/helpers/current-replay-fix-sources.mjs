@@ -1574,7 +1574,7 @@ const bindings = new Map([
  {
   "path": "tests/reward-query-boundary-source.test.mjs",
   "beforeSha256": "378703a708fce2a44c6cb039d8825b0708a25e92191956afe9e347e39b4aedb8",
-  "afterSha256": "2eacd8d9d134eebb67a15b93e929f9831af0061fdbfe2153ae2ba09efe5663a7",
+  "afterSha256": "34c8159b2461d8afc4fc38657f250da2e9bc2784d77100eb509bba754fb0ef26",
   "hunks": [
    {
     "at": 1,
@@ -1599,10 +1599,10 @@ const bindings = new Map([
    {
     "at": 188,
     "before": "\ntest('current reward and M7 wrappers freshly reject every expanded owner and recover after each fault',()=>{\n const owners=[...sourceEpoch.proof.owners,pointerInputPath];",
-    "after": "\nconst expandedOwnerCase='current reward and M7 wrappers freshly reject every expanded owner and recover after each fault';\nconst expandedOwnerLane='--reward-expanded-owner-lane';\ntest(expandedOwnerCase,async()=>{\n assert.equal(paths.length,4,'the expanded reward checks bind four hosts');\n let hosts=paths;\n if(process.argv[2]===expandedOwnerLane){\n  const index=Number(process.argv[3]);assert(index===0||index===1);\n  hosts=paths.filter((_,position)=>position%2===index);\n }else if(process.platform==='win32'&&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'\n  &&availableParallelism()>=2&&!hasTestNameFilter()){\n  // This case alone used over 35 minutes in Windows job 137628123978.\n  const outcomes=await Promise.allSettled([0,1].map(index=>runIsolatedTest(import.meta.url,\n   [expandedOwnerLane,String(index)],[`--test-name-pattern=^${expandedOwnerCase}$`])));\n  for(const outcome of outcomes)if(outcome.status==='rejected')throw outcome.reason;\n  return;\n }\n const owners=[...sourceEpoch.proof.owners,pointerInputPath];"
+    "after": "\nconst expandedOwnerCase='current reward and M7 wrappers freshly reject every expanded owner and recover after each fault';\nconst expandedOwnerLane='--reward-expanded-owner-lane';\ntest(expandedOwnerCase,async()=>{\n assert.equal(paths.length,4,'the expanded reward checks bind four hosts');\n let hosts=paths;\n if(process.argv[2]===expandedOwnerLane){\n  const index=Number(process.argv[3]);assert(index===0||index===1);\n  hosts=paths.filter((_,position)=>position%2===index);\n }else if((process.platform==='win32'||process.platform==='linux'&&availableParallelism()>=4)\n  &&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'\n  &&availableParallelism()>=2&&!hasTestNameFilter()){\n  // Share the four hosts between two isolated processes to avoid the Full job deadline.\n  const outcomes=await Promise.allSettled([0,1].map(index=>runIsolatedTest(import.meta.url,\n   [expandedOwnerLane,String(index)],[`--test-name-pattern=^${expandedOwnerCase}$`])));\n  for(const outcome of outcomes)if(outcome.status==='rejected')throw outcome.reason;\n  return;\n }\n const owners=[...sourceEpoch.proof.owners,pointerInputPath];"
    },
    {
-    "at": 208,
+    "at": 209,
     "before": " const sources=Object.fromEntries(owners.filter(path=>path!==retiredControllerPath).map(path=>[path,read(path)]));\n for(const [consume,wrap]of [[project,reader],[preM7FinalSource,m7FinalReader]])for(const host of paths){\n  let bad=null,mode='good',seen=[];",
     "after": " const sources=Object.fromEntries(owners.filter(path=>path!==retiredControllerPath).map(path=>[path,read(path)]));\n for(const [consume,wrap]of [[project,reader],[preM7FinalSource,m7FinalReader]])for(const host of hosts){\n  let bad=null,mode='good',seen=[];"
    }
