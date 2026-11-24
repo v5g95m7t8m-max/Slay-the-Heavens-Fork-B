@@ -725,6 +725,27 @@
       },
       "supersedes": [],
       "note": "首战准备时的普通遮罩。复用璃月印记、七元素、就绪边界及输入隔离。 1280×720 离线投影，官方候选待验。"
+    },
+    {
+      "codePath": "scripts/ui-entrance-layout.mjs",
+      "codePaths": [
+        "scripts/node-ui-layout.mjs",
+        "src/lua/abyss_node_ui_shop.lua",
+        "src/lua/abyss_character_entrance.lua",
+        "src/lua/abyss_page_reveal.lua"
+      ],
+      "targetVersion": "v2.0.0",
+      "state": "entrance",
+      "revision": "sts1-timing-20261123",
+      "status": "CURRENT_IMPLEMENTATION",
+      "backlogTask": "TASK-111",
+      "reference": {
+        "path": "docs/plans/2026-11-23-ui-entrance.md",
+        "sha256": "a0fd8373bbda1be0a66e4f0fd3e5280bdbf945a26ac3f82d76c8d7376cd92183"
+      },
+      "supersedes": [],
+      "note": "商店与选角按固定源码实施分层入场。保留项目素材与最终排布，107271 纹理和设备效果待验。",
+      "source": "https://github.com/aeubanks/sts/tree/319009d5df0a82d9fb0f23cc22322286c6a87ec0"
     }
   ]
 }

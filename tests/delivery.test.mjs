@@ -1,3 +1,4 @@
+import {validPreflight} from '../scripts/fork-preflight.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, writeFileSync, rmSync, mkdirSync, renameSync } from 'node:fs';
@@ -162,14 +163,15 @@ test('checkout writer binds BASE to the event and ignores an empty preflight env
   git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','fixture');
   const head=git('rev-parse','HEAD'),before='a'.repeat(40),dispatch='b'.repeat(40),foreign='c'.repeat(40);
   writeFileSync(join(root,'writer.mjs'),readFileSync(new URL('../scripts/write-ci-receipt.mjs',import.meta.url)));
-  for(const [eventName,event,envBase,expected] of [
+  for(const [eventName,event,envBase,expected,preflight] of [
     ['push',{before},'',before],['push',{before},foreign,before],
+    ['push',{before:'0'.repeat(40)},dispatch,dispatch,true],
     ['workflow_dispatch',{before},dispatch,dispatch],
     ['pull_request',{before,pull_request:{number:12,head:{sha:head},base:{sha:before}}},foreign,before],
     ['merge_group',{before,merge_group:{head_sha:head,base_sha:before}},foreign,before],
   ]){
     const eventPath=join(root,'event.json');writeFileSync(eventPath,JSON.stringify(event));
-    const r=spawnSync(process.execPath,['writer.mjs'],{cwd:root,encoding:'utf8',env:{...process.env,
+    const r=spawnSync(process.execPath,['writer.mjs',...(preflight?['--preflight']:[])],{cwd:root,encoding:'utf8',env:{...process.env,
       GITHUB_EVENT_PATH:eventPath,GITHUB_EVENT_NAME:eventName,GITHUB_SHA:head,
       GITHUB_RUN_ID:'12',GITHUB_RUN_ATTEMPT:'1',PREFLIGHT_BASE_SHA:envBase}});
     assert.equal(r.status,0,r.stderr);
@@ -1532,4 +1534,104 @@ test('closeout will not archive a task that acquires a new active dependent',t=>
     writeFileSync(dependent,f.source.replace('TASK-1','TASK-3').replace('dependencies: []','dependencies: [TASK-1]'));
   }),/migrate active dependencies/);
   assert.deepEqual(calls,['edit']);
+});
+
+test('Fork push routing skips every Quality runner outside Fork B Full and preserves formal events',()=>{
+  const quality=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+  const quick=readFileSync(new URL('../.github/workflows/quick-feedback.yml',import.meta.url),'utf8');
+  const condition=(text,job)=>text.match(new RegExp('^  '+job+':[\\s\\S]*?^    if: \\$\\{\\{ (.*?) \\}\\}', 'm'))[1];
+  const evaluate=(expression,github)=>Function('github','cancelled','startsWith','return '+expression)(github,()=>false,(s,p)=>s.startsWith(p));
+  for(const repositoryId of [1429751262,1460097312,1460133275])for(const ref of ['refs/heads/ci/full/probe','refs/heads/fix/probe','refs/heads/develop','refs/heads/master']){
+    const github={event_name:'push',ref,event:{repository:{id:repositoryId}}};
+    const full=['refs/heads/develop','refs/heads/master'].includes(ref)||(repositoryId===1460133275&&ref==='refs/heads/ci/full/probe');
+    for(const job of ['impact','check','engineering-posix'])assert.equal(evaluate(condition(quality,job),github),full,job+' '+repositoryId+' '+ref);
+    assert.equal(evaluate(condition(quick,'related'),github),repositoryId===1460097312&&!ref.startsWith('refs/heads/ci/full/'));
+  }
+  for(const eventName of ['pull_request','merge_group','workflow_dispatch']){
+    const github={event_name:eventName,ref:'refs/pull/1/merge',event:{pull_request:{draft:false},repository:{id:1429751262}}};
+    for(const job of ['impact','check','engineering-posix'])assert.equal(evaluate(condition(quality,job),github),true,job+' '+eventName);
+  }
+});
+
+test('first Fork B Full push uses its pinned upstream base in real quality ratchet execution',t=>{
+ const workflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
+ const expressions=[...workflow.matchAll(/^          (CI_COMPARISON_BASE|BASE_SHA|QUALITY_RATCHET_BASE): \$\{\{ (.+github.event.before.*?) \}\}$/gm)];
+ assert.equal(expressions.length,3,'retain all three existing comparison consumers');
+ const root=mkdtempSync(join(tmpdir(),'fork-full-first-push-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+ const git=(...args)=>{const r=spawnSync('git',args,{cwd:root,encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout.trim();};
+ git('init','-q');writeFileSync(join(root,'fixture'),'base');git('add','.');
+ git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','base');
+ const base=git('rev-parse','HEAD'),zero='0'.repeat(40),formal='a'.repeat(40);
+ writeFileSync(join(root,'fixture'),'head');git('add','.');git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','head');
+ const context={event:{pull_request:{base:{sha:''}},merge_group:{base_sha:''},before:zero}};
+ const evaluate=(expression,github,inputs,needs)=>Function('github','inputs','needs','return '+expression)(github,inputs,needs);
+ const needs={impact:{outputs:{fork_base_sha:base}}};
+ const ratchet=expressions.find(row=>row[1]==='QUALITY_RATCHET_BASE')[2];
+ const resolved=evaluate(ratchet,context,{base_sha:''},needs);
+ const command=fileURLToPath(new URL('../scripts/check-quality-ratchet.mjs',import.meta.url));
+ const checkout=join(root,'checkout');
+ const clone=spawnSync('git',['clone','--quiet','--depth=1',pathToFileURL(root).href,checkout],{encoding:'utf8'});
+ assert.equal(clone.status,0,clone.stderr);
+ const run=qualityBase=>spawnSync(process.execPath,[command],{cwd:checkout,encoding:'utf8',env:{...process.env,CI:'false',QUALITY_RATCHET_BASE:qualityBase}});
+ assert.notEqual(run(resolved).status,0,'a base object in impact is absent from a separate shallow rules checkout');
+ const fetchStep=workflow.match(/      - name: Fetch exact upstream base for Fork B Full ratchet\n([\s\S]*?)(?=      - name:)/)[1];
+ const fetchScript=fetchStep.match(/        run: \|\n([\s\S]*)/)[1].replace(/^          /gm,'')
+  .replace('https://github.com/FurinyaWorks/Slay-the-Heavens.git',pathToFileURL(root).href);
+ const shell=process.platform==='win32'?`${process.env.ProgramFiles}/Git/bin/bash.exe`:'/bin/bash';
+ const fetch=spawnSync(shell,['-e','-c',fetchScript],{cwd:checkout,encoding:'utf8',env:{...process.env,FORK_BASE_SHA:base}});
+ assert.equal(fetch.status,0,fetch.stdout+fetch.stderr);
+ const result=run(resolved);assert.equal(result.status,0,result.stdout+result.stderr);
+ assert.equal(JSON.parse(readFileSync(join(checkout,'build/quality-ratchet.json'),'utf8')).base,base);
+ assert.notEqual(run(zero).status,0,'an all-zero base remains fail-closed, never a bypass');
+ assert.match(workflow,/^      fork_base_sha: \$\{\{ steps.forkbase.outputs.base_sha \}\}$/m);
+ assert.match(fetchStep,/if: matrix.shard == 1 && needs.impact.outputs.fork_base_sha != ''/);
+ assert.match(fetchStep,/\[\[ "\$FORK_BASE_SHA" =~ \^\[a-f0-9\]\{40\}\$ \]\]/);
+ assert.match(fetchStep,/fetch --depth=1 --filter=blob:none --no-auto-maintenance --no-tags https:\/\/github.com\/FurinyaWorks\/Slay-the-Heavens.git "\$FORK_BASE_SHA"/);
+ assert.match(fetchStep,/git cat-file -e "\$\{FORK_BASE_SHA\}\^\{commit\}"/);
+ for(const [,name,expression]of expressions){
+  assert.equal(evaluate(expression,context,{base_sha:''},needs),name==='QUALITY_RATCHET_BASE'?base:zero,name+' first push');
+  const noPin={impact:{outputs:{fork_base_sha:''}}};
+  assert.equal(evaluate(expression,{event:{...context.event,before:formal}},{base_sha:''},noPin),formal,name+' protected push');
+  assert.equal(evaluate(expression,{event:{...context.event,pull_request:{base:{sha:formal}}}},{base_sha:''},needs),formal,name+' PR');
+  assert.equal(evaluate(expression,{event:{...context.event,merge_group:{base_sha:formal}}},{base_sha:''},needs),formal,name+' queue');
+  assert.equal(evaluate(expression,context,{base_sha:formal},needs),formal,name+' dispatch');
+ }
+});
+
+test('automatic Fork A Quick is bounded advisory without a complete certificate while manual preflight stays complete',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/quick-feedback.yml',import.meta.url),'utf8');
+ const expression=value=>value.replace(/^\$\{\{ /,'').replace(/ \}\}$/,'');
+ const evaluate=(value,event)=>Function('github','return '+expression(value))({event_name:event});
+ const field=name=>workflow.match(new RegExp('^    '+name+': (.+)$','m'))[1];
+ assert.match(field('name'),/^\$\{\{ /,'automatic and manual checks must identify their different coverage');
+ const steps=workflow.split(/^      - /m).slice(1);
+ const enabled=(step,event)=>{const guard=step.match(/^(?:        )?if: (.+)$/m)?.[1];return !guard||evaluate(guard,event);};
+ for(const event of ['push','workflow_dispatch']){
+  const selected=steps.filter(step=>enabled(step,event)).join('\n');
+  assert.equal(evaluate(field('name'),event),event==='push'?'Advisory Quick feedback':'Complete affected preflight');
+  assert.equal(evaluate(field('timeout-minutes'),event),event==='push'?10:30);
+  if(event==='push'){
+   assert.match(selected,/node scripts\/test-affected\.mjs --ci-fast --base "\$BASE_SHA"/);
+   assert.doesNotMatch(selected,/--preflight|write-ci-receipt|actions\/upload-artifact|build\/ci-checkout\.json/);
+   assert.match(selected,/90s Lua scheduling estimate/);
+   assert.match(selected,/10-minute automatic job guard/);
+   assert.match(selected,/integration and deferred Lua require formal Quality/);
+   assert.match(selected,/not a complete preflight certificate/);
+  }else{
+   assert.match(selected,/run: node scripts\/test-affected\.mjs --preflight --base "\$BASE_SHA"/);
+   assert.match(selected,/run: node scripts\/write-ci-receipt\.mjs --preflight/);
+   assert.match(selected,/PREFLIGHT_BASE_SHA: \$\{\{ steps\.comparison\.outputs\.sha \}\}/);
+   assert.match(selected,/name: preflight-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/);
+   assert.match(selected,/path: build\/ci-checkout\.json/);
+   assert.doesNotMatch(selected,/--ci-fast/);
+  }
+ }
+ assert.match(workflow,/^run-name: \$\{\{ github\.event_name == 'push' && 'Advisory Quick' \|\| 'Preflight' \}\} \/ /m);
+ assert.match(workflow,/^permissions:\n  contents: read$/m);
+ assert.match(workflow,/https:\/\/github.com\/FurinyaWorks\/Slay-the-Heavens.git refs\/heads\/develop/);
+ const head='a'.repeat(40),base='b'.repeat(40);
+ const run={path:'.github/workflows/quick-feedback.yml',head_sha:head,status:'completed',conclusion:'success',event:'workflow_dispatch',display_title:`Preflight / ${head} / ${base}`};
+ assert.equal(validPreflight(run,{head,base}),true,'manual complete contract remains reusable as before');
+ for(const display_title of [`Advisory Quick / ${head} / ${base}`,run.display_title])
+  assert.equal(validPreflight({...run,event:'push',display_title},{head,base}),false,'an automatic advisory success cannot be reused as a complete preflight');
 });

@@ -72,16 +72,17 @@ for(const [name,anchor,replacement,failure]of mutations)test(`runtime UI negativ
   assert.ok((result.stdout+result.stderr).includes(failure),result.stdout+result.stderr);
  }finally{unlinkSync(entry);}
 });
+const activation='suspendBattle(run,deckOpen,potionOpen),deferDeckRender)';
 test('runtime UI negative control: deferred activation violates render ordering',()=>{
  const module='abyss_game_ui_view',source=readFileSync(`src/lua/${module}.lua`,'utf8');
- const anchor='suspendBattle(run,deckOpen,potionOpen))';assert.equal(source.split(anchor).length-1,1);
+ assert.equal(source.split(activation).length-1,1);
  const entry=join(tmpdir(),`gameui-render-mutant-${randomUUID()}.lua`);
- writeFileSync(entry,`package.preload[${luaString(module)}]=assert(load(${luaString(source.replace(anchor,'suspendBattle(run,deckOpen,potionOpen),true)'))},'@${module}-mutant'))\ndofile('tests/lua/runtime_ui_hotpaths.lua')\n`);
+ writeFileSync(entry,`package.preload[${luaString(module)}]=assert(load(${luaString(source.replace(activation,'suspendBattle(run,deckOpen,potionOpen),true)'))},'@${module}-mutant'))\ndofile('tests/lua/runtime_ui_hotpaths.lua')\n`);
  try{const result=runLua(entry);assert.notEqual(result.status,0);assert.match(result.stdout+result.stderr,/GameUI refresh must preserve both observable render boundaries/);}finally{unlinkSync(entry);}
 });
 test('runtime UI negative control: early paint misses a native reentrant command',()=>{
  const module='abyss_game_ui_view';let source=readFileSync(`src/lua/${module}.lua`,'utf8').replaceAll('\r\n','\n');
- const anchor='suspendBattle(run,deckOpen,potionOpen))';assert.equal(source.split(anchor).length-1,1);
+ assert.equal(source.split(activation).length-1,1);
  const final='        self.battleUI:render()\n';assert.equal(source.split(final).length-1,1);
  source=source.replace(final,'');
  const entry=join(tmpdir(),`gameui-early-paint-${randomUUID()}.lua`);

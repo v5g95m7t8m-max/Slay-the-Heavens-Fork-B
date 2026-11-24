@@ -17,7 +17,9 @@ test('Effects target group outer epoch preserves every prior binding and exact f
  assert.equal(proof.collectedBaseCommit,prior.collectedBaseCommit);
  assert.equal(proof.effectsTargetGroupLocalSourceSliceCommit,'eba244948d6116aeb478b409095680f5c3f8cdc9');
  assert.equal(proof.effectsTargetGroupSourceTree,'ef6ff1bd7ce4fe466ea52752bee6c9fd9eb5fc65');
- assert.equal(raw(path),readFileSync(path,'utf8').replaceAll('\r\n','\n'));
+ const live=file=>readFileSync(file,'utf8');
+ assertDevelopBackflowCurrent(path,live(path));
+ assert.equal(raw(path),authenticateDevelopBackflow(path,live(path),live).replaceAll('\r\n','\n'));
  assert.deepEqual(effectsTargetGroupEpoch.proof.targets.prior.files[path],prior.current[path]);
  assert.deepEqual(proof.targets.effectsTargetGroupPrior.files,prior.current);
  for(const [name,target]of Object.entries(prior.targets))assert.deepEqual(proof.targets[name],target,name);

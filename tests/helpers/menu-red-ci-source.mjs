@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import {menuCiBytes} from './menu-red-ci-binding.mjs';
+import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex'),norm=s=>s.replaceAll('\r\n','\n');
 const freeze=v=>{if(v&&typeof v==='object'&&!Object.isFrozen(v)){Object.values(v).forEach(freeze);Object.freeze(v);}return v;};
 export const menuRedCiProof=freeze(JSON.parse(gunzipSync(menuCiBytes)));
@@ -28,7 +29,10 @@ export function menuRedPriorRead(read=readFileSync){return(path,encoding)=>{
 export function menuRedPriorLua(paths,read=readFileSync){
  paths=integratedPriorInventory(paths,'menu','lua',read);
  assert.deepEqual([...paths].sort(),menuRedCiProof.afterLua,'complete current menu Lua discovery');
- for(const [path,row]of Object.entries(menuRedCiProof.addedLua))assert.equal(hash(norm(read(path,'utf8'))),row.sha256,'complete added menu Lua source: '+path);
+ for(const [path,row]of Object.entries(menuRedCiProof.addedLua)){
+  const source=beforeCurrentReplayFixes(path,read(path,'utf8'));
+  assert.equal(hash(norm(source)),row.sha256,'complete added menu Lua source: '+path);
+ }
  return [...menuRedCiProof.beforeLua];
 }
 export function extendMenuRedHelperClosure(original){

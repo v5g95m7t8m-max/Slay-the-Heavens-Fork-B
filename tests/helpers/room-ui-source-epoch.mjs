@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
+import {createComposedSourceEpochProjector,createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
 import {componentUiSourceEpoch} from './component-ui-source-epoch.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const archive=readFileSync(new URL('./room-ui-source-epoch.json.gz',import.meta.url));
@@ -23,7 +23,7 @@ export function extendRoomUiEpoch(original){
   sourceSliceCommit:outer.sourceSliceCommit,currentTreeCommitted:false,
   current:{...prior.current,...outer.current},
   targets:{...prior.targets,componentUiPrior:{commit:prior.currentCommit,files:prior.current}}};
- const current=createSourceEpochProjector(proof,{allowConfigLayout:true}),live=p=>{
+ const current=createComposedSourceEpochProjector(proof),live=p=>{
   try{return readFileSync(p,'utf8');}catch(error){if(error.code==='ENOENT')return null;throw error;}
  },readers=new WeakMap();
  function preCombinedSource(path,source,{target,readSource=live}={}){

@@ -39,8 +39,18 @@ assert(menu:GetChild("title").text == "杀戮原塔2")
 F.click(root, "menuPanel", "start")
 assert(ui.characterOpen and not ui.run)
 local panel = root:GetChild("characterPanel")
-assert(panel:GetChild("details").visible, "production opens on the traveler, not a blank card")
+assert(ui.characterSelection.character == nil and ui.characterSelection.info == nil
+    and not ui.characterSelection:canConfirm() and panel:GetChild("traveler").visible,
+    "production waits for the approved traveler choice")
+assert(F.click(root, "characterPanel", "traveler"))
 assert(ui.characterSelection.character == "traveler" and ui.characterSelection.element == "ironclad")
+local info = panel:GetChild("details"):GetChild("infoMotion"):GetChild("info1")
+for _ = 1, 120 do
+    if info.visible and info.x == 0 and not (ui.pageReveal and ui.pageReveal:covered()) then break end
+    ui:update(1 / 60)
+end
+assert(info.visible and info.x == 0, "selected traveler details must finish their real entrance")
+assert(panel:GetChild("details").visible, "the selected traveler opens the correct portrait details")
 local portraits = panel:GetChild("details"):GetChild("portraits")
 assert(portraits:GetChild("traveler_ironclad").visible)
 assert(portraits:GetChild("traveler_ironclad").imageId == slots.large.traveler.ironclad.id)
@@ -51,9 +61,9 @@ end
 local traveler = panel:GetChild("traveler")
 assert(traveler:GetChild("hit"):GetChild("normal"):GetChild("bust").imageId == slots.bust.traveler.ironclad.id)
 assert(traveler:GetChild("selected").visible)
-assert(panel:GetChild("details"):GetChild("name").text:find("旅行者", 1, true))
-assert(panel:GetChild("details"):GetChild("stats").text:find("生命", 1, true))
-assert(panel:GetChild("details"):GetChild("gold").text:find("金币", 1, true))
+assert(info:GetChild("name").text:find("旅行者", 1, true))
+assert(info:GetChild("stats").text:find("生命", 1, true))
+assert(info:GetChild("gold").text:find("金币", 1, true))
 F.click(root, "characterPanel", "confirm")
 assert(ui.mode == "node" and ui.run.nodeFlow.event.id == "neow")
 assert(ui.run.nodeFlow.event.stage == "neow_intro")

@@ -17,7 +17,7 @@ local function find(list,name)
         if child then return child end
     end
 end
-local function setup(touch)
+local function setup(touch, clickOnly)
     local run,map=Run.new(F.Data,42),Map.generate(F.Data,42)
     run.relicPool=require('abyss_relic_pool').new('2',run.data.relicSource)
     while not run.nodeFlow do
@@ -33,6 +33,10 @@ local function setup(touch)
         pointerBlocked=function()return blocked end,color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end,touchScreen=function()return touch end})
     ui:setVisible(true)
     local function get(path)
+        path = path:gsub('^shopView/(%a+)', function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
         local control=root
         for key in path:gmatch('[^/]+')do control=assert(control:GetChild(key),path)end
         return control
@@ -42,7 +46,8 @@ local function setup(touch)
         return assert(box.listeners[kind],path..' missing '..kind)({touchId=id})
     end
     local function tap(path,id)emit(path,'down',id);emit(path,'up',id);return emit(path,'click',id)end
-    assert(tap('merchant/talk',900))
+    if clickOnly then assert(get('merchant/talk/hit').click())
+    else assert(tap('merchant/talk',900)) end
     advanceShop(ui)
     return ui,get,emit,tap,spec,function(value)blocked=value end
 end
@@ -57,7 +62,8 @@ test('mobile blank tap closes only current detail, then supports another item, p
     assert(tap('shopView/potion1',3));assert(get('shopView/detail').visible)
     local price=ui.run.nodeFlow.potions[1].price;local gold=ui.run.gold
     assert(tap('confirm',4));assert(ui.run.gold==gold-price and Run.potionCount(ui.run)==1)
-    assert(tap('back',5));advanceShop(ui);assert(ui.run.nodeFlow.complete,'leaving shop stopped working')
+    assert(tap('back',5));assert(not ui.run.nodeFlow.complete)
+    ui:update(.7);assert(tap('back',6) and ui.run.nodeFlow.complete,'leaving shop stopped working')
 end)
 test('desktop hover and selected focus are both removed by outside dismissal',function()
     local ui,get,emit,tap=setup(false)
@@ -93,7 +99,7 @@ test('hidden page and pre-dismiss purchase callbacks cannot act on the next sele
     assert(tap('shopDismiss',4));assert(not oldBuy());same(before,ui.run)
 end)
 test('click-only outside input remains usable, footer cancellation stays available',function()
-    local ui,get=setup(true)
+    local ui,get=setup(true,true)
     assert(get('shopView/relic3/hit').click());assert(get('shopView/detail').visible)
     assert(get('shopDismiss').click());assert(not get('shopView/detail').visible)
     assert(ui:press('shopView/potion1'));assert(ui:press('back'))

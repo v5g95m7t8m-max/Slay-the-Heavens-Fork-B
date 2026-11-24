@@ -143,7 +143,18 @@ assert(created==10 and chunks==50 and destroyed==0 and #pool:GetChildren()==10)
 local replacement=Run.new(F.Data,2)
 host.run=replacement;host:refresh();settle()
 assert(destroyed==10 and #pool:GetChildren()==0)
+-- A real preparation budget may yield before reaching the failing native create.
+local previousClock=factory.clock
+local budgetClock=0
+factory.clock=function()budgetClock=budgetClock+.005;return budgetClock end
 fail=true;assert(host:openDeck());tick();tick()
+assert(host.pageReveal:covered() and deck.pendingGrid and not deck.prepareError,
+    'budgeted preparation must remain pending before native creation')
+for _=3,80 do
+    if host.pageReveal.state=='failed' then break end
+    tick()
+end
+factory.clock=previousClock
 assert(host.pageReveal.state=='failed' and deck.prepareError)
 assert(host:recoverPage() and not deck.visible)
 settle();assert(host:openDeck());settle()

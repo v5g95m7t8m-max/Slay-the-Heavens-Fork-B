@@ -137,7 +137,7 @@ function M.attach(ui,root,options)
   for i=glows+1,previousGlows do at('g'..i):SetVisible(false)end
   for i=1,Layout.maxEdges do at('edge'..i):SetVisible(false)end
   visibleIcons={};nodeMeta={};for i,n in ipairs(view.nodes)do local box=at('node'..i);local state=M.state(n,view.currentNodeId,avail,reach);local icon=box:GetChild('icon');nodeMeta[n.id]={node=n,state=state,slot=i};local fx=ui.roomFx[n.id];if fx and fx.visible then box:GetChild('hit'):SetVisible(ui.visible and not ui.choosing)end
-   box:GetChild('ring'):SetVisible(false);box:GetChild('positionToken'):SetVisible(false)
+   box:GetChild('ring'):SetVisible(false)
    local ink=state=='available'and inks[n.type]or state=='visited'and{138,115,82}or state=='sealed'and{91,76,62}or{189,183,170}
    local alpha=state=='current'and 0 or filter and filter~=n.type and 56 or state=='visited'and 158 or state=='future'and 178 or state=='sealed'and 128 or 255
    alpha=math.floor(alpha*M.fade(position(n).y,Layout.viewport.bottom,Layout.viewport.top));tint(icon,ink[1],ink[2],ink[3],alpha);if box.visible~=false and ui.roomFx[n.id]and ui.roomFx[n.id].visible then visibleIcons[#visibleIcons+1]={id=n.id,baseY=n.hasEmeraldKey and Theme.layout.map.emeraldIconY or 0,icon=icon,state=state,size=n.type=='boss'and 66 or 32,ink=ink,alpha=alpha}end

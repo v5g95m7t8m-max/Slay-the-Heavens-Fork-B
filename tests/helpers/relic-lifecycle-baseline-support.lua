@@ -36,10 +36,57 @@ function F.normalized(result)
  if not result[1]and type(result[2])=='string'then observed[2]=result[2]:gsub('^.-:%d+: ','')end
  return observed
 end
+local equipmentApis=setmetatable({},{__mode='k'})
+local sessionAdapters={select=3,claim=4,claimRelic=3,chooseMirror=3}
+local combatAdapter={owner='Combat'}
+local function refreshEquipmentApi(api)
+ local visible=equipmentApis[api]
+ if not visible then visible={};equipmentApis[api]=visible end
+ for key in next,visible do rawset(visible,key,nil)end
+ for key,value in next,api do if key~='runCommands'then rawset(visible,key,value)end end
+ debug.setmetatable(visible,debug.getmetatable(api))
+ return visible
+end
+local function traceArguments(scope,name,args)
+ if not RELIC_LIFECYCLE_TRACE then return args end
+ local position=(scope=='boss' or scope=='shop') and sessionAdapters[name]
+ if scope=='boss'and name=='onEquip'and args.n==3 and (args[3]==nil or rawequal(args[3],F.R))then
+  return table.pack(args[1],args[2])
+ end
+ if position and args.n==position and rawequal(args[position],F.R) then
+  return table.pack(table.unpack(args,1,position-1))
+ end
+ if scope=='uncommon'and name=='battleEnd'and args.n==2 and rawequal(args[2],F.R) then
+  return table.pack(args[1])
+ end
+ if scope=='hooks'and name=='onEquip' and type(args[3])=='table'then
+  local api=args[3]
+  -- The command table is explicit plumbing. Verify the actual owner and keep every other field and alias in the gameplay trace.
+  local commands=rawget(api,'runCommands')
+  assert(commands==nil or rawequal(commands,F.R),'relic equipment command owner')
+  local observed=table.pack(table.unpack(args,1,args.n));observed[3]=refreshEquipmentApi(api)
+  return observed
+ end
+ local observed=args
+ for index=1,args.n do
+  if args[index]~=nil and rawequal(args[index],F.C) then
+   if observed==args then observed=table.pack(table.unpack(args,1,args.n))end
+   observed[index]=combatAdapter
+  end
+ end
+ return observed
+end
 function F.call(root,label,fn,...)
- local args=table.pack(...);F.snapshot(label..':enter',{root=root,fn=fn,args=args})
+ local args=table.pack(...);local observed=args
+ if RELIC_LIFECYCLE_TRACE then
+  for name in pairs(sessionAdapters)do
+   if fn==F.boss[name]then observed=traceArguments('boss',name,args);break end
+   if fn==F.shop[name]then observed=traceArguments('shop',name,args);break end
+  end
+ end
+ F.snapshot(label..':enter',{root=root,fn=fn,args=observed})
  local result=table.pack(pcall(fn,table.unpack(args,1,args.n)))
- F.snapshot(label..':return',{root=root,fn=fn,args=args,result=F.normalized(result)})
+ F.snapshot(label..':return',{root=root,fn=fn,args=observed,result=F.normalized(result)})
  return table.unpack(result,1,result.n)
 end
 local methods={
@@ -69,9 +116,16 @@ for _,namespace in ipairs({'hooks','uncommon','rare','boss','shop'})do
   local original=assert(module[name],namespace..'.'..name)
   module[name]=function(...)
    local label=namespace..'.'..name;F.coverage[label]=(F.coverage[label]or 0)+1
-   local args=table.pack(...);F.snapshot(label..':enter',{args=args})
+   local args=table.pack(...);local observed=traceArguments(namespace,name,args)
+   local api=namespace=='hooks'and name=='onEquip' and RELIC_LIFECYCLE_TRACE and type(args[3])=='table'and args[3]
+   local commands=api and rawget(api,'runCommands')
+   F.snapshot(label..':enter',{args=observed})
    local result=table.pack(pcall(original,table.unpack(args,1,args.n)))
-   F.snapshot(label..(result[1]and ':return'or ':throw'),{args=args,result=F.normalized(result)})
+   if api then
+    assert(rawequal(rawget(api,'runCommands'),commands),'relic equipment command owner changed')
+    refreshEquipmentApi(api)
+   end
+   F.snapshot(label..(result[1]and ':return'or ':throw'),{args=observed,result=F.normalized(result)})
    if not result[1]then error(result[2],0)end
    return table.unpack(result,2,result.n)
   end

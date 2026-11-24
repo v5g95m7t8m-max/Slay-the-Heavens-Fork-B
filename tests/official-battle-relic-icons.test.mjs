@@ -27,7 +27,8 @@ test('official relic material is shared across run phases while the legacy profi
   const child=(node,name)=>(node.controls??node.children).find(part=>part.name===name);
   const layout=JSON.parse(readFileSync(join(dir,'game-ui.json'),'utf8'));
   const stage=child(layout,'stage')??layout;
-  const selectionArt=official?child(child(child(stage,'characterPanel'),'details'),'v25RelicIcon').children:[];
+  const selectionInfo=official?child(child(child(child(stage,'characterPanel'),'details'),'infoMotion'),'info1'):null;
+  const selectionArt=official?child(selectionInfo,'v25RelicIcon').children:[];
   const detail=theme.layout.relicView.detail;
   const single=child(child(stage,'relicPanel'),'single');
   assert.deepEqual(child(single,'icon').position,detail.icon.slice(0,2));

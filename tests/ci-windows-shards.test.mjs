@@ -100,13 +100,13 @@ test('current Windows matrix consumes the shared eighteen-shard shape without ch
   assert.ok(rules.includes('npm run setup:lua-static'));
   assert.match(rules,/^      fail-fast: false$/m);
   assert.doesNotMatch(rules,/max-parallel:/);
-  assert.ok(rules.includes("timeout-minutes: ${{ inputs.runner_pool == 'local-special' && 75 || 45 }}"));
+  assert.ok(rules.includes("timeout-minutes: ${{ inputs.runner_pool == 'local-special' && 75 || 180 }}"));
   for(const gate of ['check:network','verify:backlog','check:syntax','validate:data','build:theme','check:engineering'])
     assert.ok(rules.includes(`      - run: npm run ${gate}\n        if: matrix.shard == 1\n`),gate);
   for(const command of ['node scripts/ci-shards.mjs --prepare=','node scripts/ci-shards.mjs --shard='])
     assert.ok(rules.includes(command+'${{ matrix.shard }}/${{ strategy.job-total }}'));
   assert.ok(rules.includes("node scripts/test-lua.mjs --shard ${{ matrix.shard }}/${{ strategy.job-total }} --workers ${{ inputs.runner_pool == 'local-special' && 1 || 2 }}"));
-  assert.match(job('check'),/^    needs: \[impact, rules, fast, presentation, engineering-posix\]\n    if: \$\{\{ !cancelled\(\) && \(github\.event_name != 'pull_request' \|\| github\.event\.pull_request\.draft == false\) \}\}$/m);
+  assert.ok(job('check').includes("    needs: [impact, rules, fast, presentation, engineering-posix]\n    if: ${{ !cancelled() && (github.event_name != 'push' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' || (github.event.repository.id == 1460133275 && startsWith(github.ref, 'refs/heads/ci/full/'))) && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}\n"));
   assert.doesNotMatch(rules,/continue-on-error:|--test-name-pattern|--test-skip-pattern/);
 });
 
@@ -114,7 +114,7 @@ test('current check releases cancelled runs and fails closed on every non-succes
   // #560 deliberately replaced always() only at the job gate. The historical
   // always() contract above stays frozen; failure/skip still reaches this shell.
   const check=job('check');
-  assert.match(check,/^    if: \$\{\{ !cancelled\(\) && \(github\.event_name != 'pull_request' \|\| github\.event\.pull_request\.draft == false\) \}\}$/m);
+  assert.ok(check.includes("    if: ${{ !cancelled() && (github.event_name != 'push' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' || (github.event.repository.id == 1460133275 && startsWith(github.ref, 'refs/heads/ci/full/'))) && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}\n"));
   assert.match(check,/^          RULES_RESULT: \$\{\{ needs.rules.result \}\}$/m);
   assert.doesNotMatch(check,/continue-on-error:|\|\| true/);
   const command=check.match(/^      - name: Require every regression shard\n        env:\n          RULES_RESULT: [^\n]+\n        run: \|\n((?:          .*\n)+)/m)?.[1];

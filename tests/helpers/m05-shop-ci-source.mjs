@@ -59,12 +59,29 @@ const pointerShopDismiss={
  sha256:'0d992f850751d137a2d23817ccc1dd79852fea9469938c593fd583cefd5f6947',
  gitBlob:'68f0ef3985931dc4cfd1b2ff40cf5d1b60fb2e3a',
 };
+// #859 adjusted only the dismissal layer's current adjacency assertions.
+const shopDismissLayoutSuccessor={
+ sha256:'db23a1f592c395e4ffad5cffbfb0770ef1e84674545dbd9cbabbd85e9630a82c',
+ gitBlob:'e2039aefbdf11e0a444100a8df07a8a869cae38b',
+};
+function beforeShopDismissLayout(source){
+ if(!matches(source,shopDismissLayoutSuccessor))return source;
+ const after="  assert.ok(panel.children.findIndex(c=>c.name==='backdrop')<index);\n"+
+  "  assert.equal(panel.children[index-1].name,'shopRoom');";
+ const before="  assert.equal(panel.children[index-1].name,'backdrop');";
+ const text=source.replaceAll('\r\n','\n');
+ assert.equal(text.split(after).length,2,'single exact shop dismissal layout transition');
+ const prior=text.replace(after,before);
+ assert(matches(prior,files[additions.js].after),'exact archived M05 shop dismissal predecessor');
+ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
 export function beforeM05BackflowInventory(paths,kind,read=readFileSync){
  assert(Object.hasOwn(additions,kind),'known M05 inventory kind');
  const path=additions[kind],entries=paths.filter(candidate=>candidate===path);
  if(!entries.length)return paths;
  assert.equal(entries.length,1,'single M05 backflow '+kind+' test');
- const source=read(path,'utf8');
+ const raw=read(path,'utf8');
+ const source=kind==='js'?beforeShopDismissLayout(raw):raw;
  const prior=typeof source==='string'&&!source.includes('\r\r\n')&&hash(source.replaceAll('\r\n','\n'))===backflowTestHashes[kind];
  assert(prior||kind==='lua'&&matches(source,pointerShopDismiss),'fresh M05 backflow '+kind+' test: '+path);
  return paths.filter(candidate=>candidate!==path);

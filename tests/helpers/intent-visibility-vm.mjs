@@ -27,10 +27,14 @@ if(baseline){
 const fixture=readFileSync('tests/lua/support/game_ui_fixture.lua','utf8');
 const needle='return NativeContract.control(self,spec)';if(fixture.split(needle).length!==2)throw Error('fixture anchor changed');
 lua.lua_pushstring(L,to_luastring(fixture.replace(needle,'ABYSS_HOST_CONTROL(self); '+needle)));lua.lua_setglobal(L,to_luastring('BASELINE_FIXTURE'));
-const rows=[];let previous=[0,0,0,0,0];
+const rows=[];let previous=[0,0,0,0,0],previousProperties={};
 lua.lua_pushjsfunction(L,state=>{
  const current=previous.map((_,i)=>lua.lua_tonumber(state,i+2));
- rows.push({phase:to_jsstring(lua.lua_tostring(state,1)),counts:current.map((value,i)=>value-previous[i])});previous=current;return 0;
+ const properties={};lua.lua_pushnil(state);
+ while(lua.lua_next(state,8)!==0){properties[to_jsstring(lua.lua_tostring(state,-2))]=lua.lua_tonumber(state,-1);lua.lua_pop(state,1);}
+ rows.push({phase:to_jsstring(lua.lua_tostring(state,1)),counts:current.map((value,i)=>value-previous[i]),
+  properties:Object.fromEntries(Object.entries(properties).map(([key,value])=>[key,value-(previousProperties[key]??0)]))});
+ previous=current;previousProperties=properties;return 0;
 });lua.lua_setglobal(L,to_luastring('BASELINE_MARK'));
 let observer=readFileSync('scripts/runtime-baseline/observer.lua','utf8');
 observer=observer.replace('for k in pairs(fields)do',"VISIBILITY_STATE_CONTROL(control,fields)\n for k in pairs(fields)do");

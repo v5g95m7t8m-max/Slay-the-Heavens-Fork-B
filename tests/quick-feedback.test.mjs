@@ -1,3 +1,4 @@
+import {beforeForkPush} from './helpers/fork-preflight-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -280,7 +281,7 @@ test('local and CI advisory plans select the same real Lua feedback', () => {
 });
 
 test('quick preflight is manual, read-only, exact-revision and cancels superseded branch work', () => {
-  const workflow = readFileSync('.github/workflows/quick-feedback.yml', 'utf8').replaceAll('\r\n', '\n');
+  const workflow = beforeForkPush('.github/workflows/quick-feedback.yml',readFileSync('.github/workflows/quick-feedback.yml', 'utf8')).replaceAll('\r\n', '\n');
   assert.match(workflow, /workflow_dispatch:/);
   assert.doesNotMatch(workflow, /^  pull_request:/m);
   assert.match(workflow, /permissions:\n  contents: read/);
@@ -319,7 +320,7 @@ test('unknown preflight fails instead of silently passing or starting local Full
  assert.notEqual(r.status,0); assert.match(r.stderr,/Full required/);
 });
 test('formal Quality retains required jobs and runs independently of Fork dispatch',()=>{
- const q=readFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');
+ const q=beforeForkPush('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml','utf8')).replaceAll('\r\n','\n');
  const jobs=[...q.slice(q.indexOf('\njobs:\n')).matchAll(/^  ([\w-]+):$/gm)].map(m=>m[1]);
  assert.deepEqual(jobs,['impact','fast','rules','check','presentation','engineering-posix-shards','engineering-posix']);
  assert.doesNotMatch(q,/needs: admission/);
@@ -330,12 +331,12 @@ test('formal Quality retains required jobs and runs independently of Fork dispat
  assert.doesNotMatch(impact,/continue-on-error:/);
  assert.match(q,/  presentation:\n    needs: impact\n    if: \$\{\{ !cancelled\(\) && needs\.impact\.result == 'success' \}\}/);
  assert.match(q,/merge_group:/);assert.match(q,/branches: \[develop, master, 'release\/\*\*'\]/);
- const quick=readFileSync('.github/workflows/quick-feedback.yml','utf8').replaceAll('\r\n','\n');
+ const quick=beforeForkPush('.github/workflows/quick-feedback.yml',readFileSync('.github/workflows/quick-feedback.yml','utf8')).replaceAll('\r\n','\n');
  assert.match(quick,/--preflight --base/); assert.doesNotMatch(quick,/--ci-fast --base/);
 });
 
 test('combined Release routing retains frozen publication Full and manual-only Fork preflight',async()=>{
- const workflow=readFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');
+ const workflow=beforeForkPush('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml','utf8')).replaceAll('\r\n','\n');
  const licenses=readFileSync('.github/workflows/licenses.yml','utf8').replaceAll('\r\n','\n');
  for(const source of [workflow,licenses])assert.match(source,/  pull_request:\n    branches: \[develop, master, 'release\/\*\*'\]/);
  const publication=workflow.indexOf('run: node scripts/release-ci.mjs verify-pr');
@@ -343,7 +344,7 @@ test('combined Release routing retains frozen publication Full and manual-only F
  assert(publication<workflow.indexOf('Check feature branch history'));
  assert.equal(workflow.split('run: node scripts/release-ci.mjs verify-pr').length,2);
  assert.match(workflow,/github.event.pull_request.base.ref == 'master' && startsWith\(github.event.pull_request.head.ref, 'release\/'\)/);
- const quick=readFileSync('.github/workflows/quick-feedback.yml','utf8').replaceAll('\r\n','\n');
+ const quick=beforeForkPush('.github/workflows/quick-feedback.yml',readFileSync('.github/workflows/quick-feedback.yml','utf8')).replaceAll('\r\n','\n');
  assert.doesNotMatch(quick,/^  pull_request:|Verify affected Release CI contracts explicitly/m);
  assert.match(quick,/--preflight --base/);
  const {impact}=await import('../scripts/ci-impact.mjs');
@@ -405,7 +406,7 @@ test('native successful reruns are valid preflight without making a new commit',
 
 import {runInNewContext as evaluateJobIf} from 'node:vm';
 test('Fast, Windows and POSIX reject incomplete impact even if it emitted a plan',()=>{
- const workflow=readFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');
+ const workflow=beforeForkPush('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml','utf8')).replaceAll('\r\n','\n');
  for(const [job,mode]of [['fast','fast'],['rules','full'],['engineering-posix-shards','full']]){
   const section=workflow.slice(workflow.indexOf('  '+job+':\n')).split(/\n  [a-z][\w-]*:\n/)[0];
   const expression=section.match(/^    if: (.+)$/m)?.[1];
@@ -424,7 +425,7 @@ test('Fast, Windows and POSIX reject incomplete impact even if it emitted a plan
 });
 
 test('drafts and failed impact never start presentation',()=>{
- const quality=readFileSync('.github/workflows/quality.yml','utf8').replaceAll('\r\n','\n');
+ const quality=beforeForkPush('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml','utf8')).replaceAll('\r\n','\n');
  const impact=quality.slice(quality.indexOf('  impact:'),quality.indexOf('  fast:'));
  const impactIf=impact.match(/^    if: (.+)$/m)[1];
  assert.equal(evaluateJobIf(impactIf,{github:{event_name:'pull_request',event:{pull_request:{draft:true}}}}),false);

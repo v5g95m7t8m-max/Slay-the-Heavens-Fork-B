@@ -39,13 +39,19 @@ test('complete Host route retains final run/native graph while idle intent write
  });
  assert.equal(samples[1].graph,samples[0].graph,'complete final Host/run/native graph changed');
  const idle=samples.map(s=>s.counts.find(row=>row.phase==='idle-300'));
- assert.deepEqual(idle.map(row=>row.counts),[[900,0,3600,7200,0],[900,0,1800,5400,0]]);
+ // Entrance assertions now require the fixture to mirror each position write
+ // into anchoredPositionX/Y. Count those extra fixture fields separately;
+ // native calls and the original visibility-write saving retain their budgets.
+ const anchorMirrors=idle.map(row=>(row.properties.anchoredPositionX??0)+(row.properties.anchoredPositionY??0));
+ assert.deepEqual(anchorMirrors,[1800,1800]);
+ assert.deepEqual(idle.map((row,i)=>row.counts.map((count,index)=>index===3?count-anchorMirrors[i]:count)),
+  [[900,0,3600,7200,0],[900,0,1800,5400,0]]);
  for(let i=0;i<samples[0].counts.length;i++)for(const index of [0,1,4])assert.equal(samples[0].counts[i].counts[index],samples[1].counts[i].counts[index],'require/load/snapshot workload changed');
  mkdirSync('build/intent-visibility',{recursive:true});
  writeFileSync('build/intent-visibility/equivalence.json',JSON.stringify({
   beforeSource:createHash('sha256').update(readFileSync('tests/fixtures/intent-visibility/before.lua')).digest('hex'),
   afterSource:createHash('sha256').update(readFileSync('src/lua/abyss_battle_render_actors.lua')).digest('hex'),
   graphBytes:Buffer.byteLength(samples[0].graph),graphSha256:createHash('sha256').update(samples[0].graph).digest('hex'),
-  equal:true,samples:samples.map(({side,counts})=>({side,counts})),
+  equal:true,fixtureAnchorMirrorWrites:anchorMirrors,samples:samples.map(({side,counts})=>({side,counts})),
   scope:'Full final Host/run/native reachable fields and alias/metatable graph after the fixed route, not per-frame output or official device evidence.'},null,2)+'\n');
 });

@@ -10,7 +10,7 @@ local PotionDiscardUI = require("abyss_potion_discard_ui")
 require("abyss_narrative")
 local Bgm = require("abyss_bgm")
 local CharacterSelect = require("abyss_character_select")
-require("abyss_character_select_view")
+local CharacterView = require("abyss_character_select_view")
 local MenuView=require("abyss_game_ui_menu_view")
 local Theme = require("abyss_theme")
 local M = {}
@@ -33,10 +33,10 @@ local function browserFrame()
     return {viewport[1],viewport[2]+viewport[4]/2-241.5,918,452}
 end
 
-local function revealMotion(platform)
+local function revealMotion(platform,characterMotion)
     if platform.prologue==true and platform.color then
         return {color=platform.color,duration=Theme.motion.slow,entryDuration=Theme.motion.fast/2,
-            entryTrace=platform.entryTrace}
+            entryTrace=platform.entryTrace,characterLocal=characterMotion~=nil}
     end
 end
 local function legacyPrologue(panel,platform,gate)
@@ -49,6 +49,7 @@ function M.new(root, data, presentation, clickEvent, platform)
     local owner = {exitGeneration=0, menuGeneration=0, ready=false}
     -- Per-host callbacks must stay with their original control tree.
     platform=setmetatable({},{__index=platform})
+    self.selectionMotion=CharacterView.motion(assert(root:GetChild('characterPanel'),'missing game panel characterPanel'),platform)
     local neowHistory=NeowHistory.new(platform.readNeowHistory)
     local endingHistory=EndingHistory.new({read=platform.readEndingHistory,write=platform.writeEndingHistory})
     -- Read-only Production data service; no navigation or eager catalogue build.
@@ -61,7 +62,7 @@ function M.new(root, data, presentation, clickEvent, platform)
             deckPanel=Theme.layout.deckView.viewport,deckBrowser=Theme.layout.deckView.pileViewport,deckPaged=browserFrame(),
             nodePanel=Theme.layout.nativeNode.backdrop,battlePanel=Theme.layout.rewardPick.stage,
             potionPanel={0,0,Theme.layout.modal.size[1],Theme.layout.modal.size[2]},
-            choicePanel=Theme.layout.combatChoice.panel},revealMotion(platform))
+            choicePanel=Theme.layout.combatChoice.panel},revealMotion(platform,self.selectionMotion))
         function self.pointerBlocked()
             local gate=self.pageReveal
             return gate:covered() and (not self.exitOpen or self.routeOpen)

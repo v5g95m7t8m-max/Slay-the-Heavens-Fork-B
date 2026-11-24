@@ -100,6 +100,15 @@ test("native OnStart rereads wall and CPU time after script and module recreatio
     game={GetUICanvasSize=function()return 1280,720 end,
         GetCursorUIPos=function()return 0,0 end,GetDevice=function()return 'desktop'end,
         InstantiateClientUIControl=actors.instantiate,DestroyClientUIControl=actors.destroy}
+    local function readyChoice(ui)
+        for _=1,80 do
+            if not(ui.pageReveal and ui.pageReveal:covered())then break end
+            OnUpdate(0.05)
+        end
+        assert(not ui.disabled and ui.characterOpen and not(ui.pageReveal and ui.pageReveal:covered()),
+            'native character choice did not publish readiness')
+        assert(ui.run==nil and ui.runSeed==nil,'selection readiness must not allocate a run or sample its seed')
+    end
     for i=1,2 do
         os.clock=function()return 120.123456+i*0.03125 end
         package.loaded.abyss_new_run_seed=nil -- Rechallenge may recreate the Lua module world.
@@ -109,9 +118,16 @@ test("native OnStart rereads wall and CPU time after script and module recreatio
         assert(#seen==i and script.updating)
         assert(seen[i]:start())
         assert(seen[i].run==nil, "opening character selection must not allocate a run or seed")
-        assert(F.confirmStart(seen[i],"traveler"))
+        local host=seen[i]
+        local accepted,reason=seen[i]:confirmCharacter()
+        assert(not accepted and reason=='character_choice_unavailable' and seen[i].run==nil,
+            'the native entry barrier must reject confirmation before real update turns')
+        readyChoice(seen[i])
+        assert(F.click(seen[i].root,'characterPanel','traveler'))
+        assert(seen[i].characterSelection.character=='traveler')
+        readyChoice(seen[i])
+        assert(F.click(seen[i].root,'characterPanel','confirm'))
         for _=1,80 do
-            local host=seen[i]
             if not host.starting and not(host.prologue and host.prologue:covering())
                 and not(host.pageReveal and host.pageReveal:covered())then break end
             OnUpdate(0.05)

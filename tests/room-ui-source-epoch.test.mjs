@@ -1,5 +1,6 @@
 import {sourceEpoch as combinedCurrent,sourceSlice,ciRepairSourceEpoch} from './helpers/closeout-source-epoch.mjs';
 import test from 'node:test';
+import {entranceInventory} from './helpers/ui-entrance-source.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync as nativeReadFileSync} from 'node:fs';
 import {jointUiSourceAt} from './helpers/joint-ui-source-epoch.mjs';
@@ -65,7 +66,7 @@ function retainedPaths(historical){
  assertActorFocusInventory(liveLua,currentRaw);
  const activeAdditions=[...actorFocusAdded,...stasisUpgradeAddedPaths,...deckPagesAdded,pointerInputPath];
  const historicalPaths=Object.keys(combinedCurrent.proof.current);
- assert.deepEqual(['config/architecture.json',...liveLua].sort(),
+ assert.deepEqual(entranceInventory(['config/architecture.json',...liveLua],currentRaw).sort(),
   [...historicalPaths.filter(p=>p!==retiredControllerPath),...activeAdditions].sort(),'complete live production inventory');
  assert.throws(()=>currentRaw(retiredControllerPath),{code:'ENOENT'});
  assert.equal(admittedRaw(retiredControllerPath),combinedCurrent.proof.current[retiredControllerPath].source);

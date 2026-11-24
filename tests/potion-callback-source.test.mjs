@@ -13,6 +13,7 @@ import {copyCurrentSourceFixture} from './helpers/isolated-current-source.mjs';
 import {prePotionCallbackSource as frozenProject,potionCallbackReader as frozenReader} from './helpers/epochs/potion/tests/helpers/potion-callback-source-inverse.mjs';
 import {prepareRound3CatalogModuleRetirement as frozenCatalogRetirement,round3CatalogProof} from './helpers/epochs/develop/tests/helpers/round3-catalog-source-inverse.mjs';
 import {sourceEpoch} from './helpers/combined-epoch/source-epoch.mjs';
+import {readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 const read=p=>readFileSync(p,'utf8').replaceAll('\r\n','\n');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const owners=Object.keys(proof.files),originals=owners.filter(p=>Object.hasOwn(proof.files[p],'beforeSource'));
@@ -193,7 +194,10 @@ test('the frozen catalog retirement retains its original identity errors before 
 });
 
 test('the current potion facade freshly rejects every expanded raw owner after warm nested reads',()=>{
- const current=Object.fromEntries(sourceEpoch.proof.owners.map(p=>[p,read(p)]));
+ const current=Object.fromEntries(sourceEpoch.proof.owners.filter(p=>p!==retiredControllerPath).map(p=>[p,read(p)]));
+ assert.throws(()=>read(retiredControllerPath),{code:'ENOENT'});
+ const retired=readRetiredController(read);
+ assert(retired.restored,'the pointer input must authenticate the retired controller');
  for(const path of originals){
   let bad=null,mode='good',seen=[];
   const raw=p=>{seen.push(p);if(p===bad){
@@ -201,14 +205,22 @@ test('the current potion facade freshly rejects every expanded raw owner after w
    if(mode==='missing')return undefined;if(mode==='null')return null;
    if(mode==='old')return proof.files[p].beforeSource;
    if(mode==='buffer')return Buffer.from(current[p]);if(mode==='changed')return current[p]+'\n';
-  }return current[p]??read(p);};
+  }return p===retiredControllerPath?null:current[p]??read(p);};
   const wrapped=potionCallbackReader(potionCallbackReader(raw));assert.equal(potionCallbackReader(wrapped),wrapped);
   const check=()=>assert.equal(project(path,read(path),{readSource:wrapped}),proof.files[path].beforeSource);
   check();const first=[...seen];for(const owner of sourceEpoch.proof.owners)assert(first.includes(owner),'fresh current owner: '+owner);
   seen=[];check();assert.deepEqual(seen,first,'warm calls repeat the complete raw-read sequence');
-  for(bad of sourceEpoch.proof.owners)for(mode of ['changed','missing','null','buffer','throw',...(Object.hasOwn(proof.files,bad)?['old']:[])]){
-   seen=[];assert.throws(check,error=>{assert.match(error.message,/linked owner/);assert(error.message.includes(bad));if(mode==='throw')assert.match(error.message,/expanded reader sentinel/);return true;});
-   assert(seen.includes(bad));const previous=mode;mode='good';check();mode=previous;
+  for(bad of sourceEpoch.proof.owners){
+   if(bad===retiredControllerPath){
+    mode='good';seen=[];check();assert(seen.includes(bad));
+    mode='throw';assert.throws(check,/linked owner missing: src\/lua\/abyss_controller\.lua/);
+    mode='old';assert.throws(()=>project(path,read(path),{readSource:p=>p===bad?retired.source:raw(p)}),/linked owner identity: src\/lua\/abyss_controller\.lua/);
+    continue;
+   }
+   for(mode of ['changed','missing','null','buffer','throw',...(Object.hasOwn(proof.files,bad)?['old']:[])]){
+    seen=[];assert.throws(check,error=>{assert.match(error.message,/linked owner/);assert(error.message.includes(bad));if(mode==='throw')assert.match(error.message,/expanded reader sentinel/);return true;});
+    assert(seen.includes(bad));const previous=mode;mode='good';check();mode=previous;
+   }
   }
  }
  for(const readSource of [null,{},'invalid'])for(const path of originals)assert.throws(()=>project(path,read(path),{readSource}),/linked (?:owner )?reader/);

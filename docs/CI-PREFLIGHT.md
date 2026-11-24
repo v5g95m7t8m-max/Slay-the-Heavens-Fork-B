@@ -1,23 +1,22 @@
-# Fork 预检
+# Fork 预检（Push 自动触发）
 
-开发候选先在 Fork 验证。按影响选择本地定向、A 的 hosted Fast 或 B 的 hosted Full。A/B 使用各自已有 runner，同一 HEAD/BASE 和模式的有效结果可复用。
+保留 Fork A / Fork B 作为隔离开发和预检算力池；主仓 `develop` 继续负责 Required Checks、独立审查、Merge Queue 和发布。Fork 结果只作诊断，不替代正式 CI。
 
-1. 读取目标分支准确 BASE，先用已有 `node scripts/test-affected.mjs --plan --base <BASE>` 查看影响。A 优先完整受影响 Quick；共享 CI、未知或零覆盖交给一个 Fork Full，B 优先、A 可互援。
-2. dispatch 前查看 A/B 的运行。相同 HEAD/BASE、模式和覆盖已成功就复用，在途运行交接给现有负责人。核对固定 Fork ID、准确 HEAD/BASE 和对应 attempt，原生成功 rerun 也可复用。
-3. 涉及共享 CI、核心路径或影响未知时，使用适用的 Full 验证。覆盖明确的低风险切片可用定向验证，记录实际命令及结果。适用验证完成后按[任务执行](TASK_EXECUTION.md#fork-first-开发)同步精确候选。主仓 Quality/Licenses 独立执行正式检查。
-4. Fork HEAD 与 PR merge SHA、Merge Queue SHA 分别验收；Fork 成功不替代正式检查。发布冻结 Full 与日常 Release 验证分别见 [CI-FAST](CI-FAST.md)。
+1. 从最新主仓 `develop` 建任务短分支，先用 `node scripts/test-affected.mjs --plan --base <BASE>` 估算影响。推送 Fork A 后，`quick-feedback.yml` 自动执行 advisory Quick（全部映射 Fast JS 与按 90 秒 Lua 调度估算筛选的子集；自动作业硬上限 10 分钟，不是整体 90 秒期限）；仅修改 Markdown 的推送不启动 Quick。
+2. Quick 在运行时固定主仓 `develop` 的比较 BASE，记录 HEAD/BASE；新 Push 取消同分支旧运行。比较 BASE 可能随主仓推进，不冒充开发初始基线。
+3. 只有核心路径、共享 CI 或覆盖未知等风险要求 Full 时，把同一候选推到 Fork B 的 `ci/full/<task>` 短分支；`quality.yml` 自动运行 hosted Full。不要对普通任务重复启动 Full。
+   Fork B 的比较 BASE 记在 impact 作业摘要，并经输出传给首个 rules 分片的质量棘轮；该分片从固定主仓获取此精确 SHA，首次 Push 的全零 before 不作棘轮基线；其 Full checkout 收据仍按正式 Push 合同记录 `event.before`，不把两者混为同一基线。Fork A 自动 Quick 只写 advisory 摘要，不生成或上传完整 preflight 收据；integration 和延后的 Lua 仍需正式 Full。手动 `workflow_dispatch` 保留原完整 `--preflight`、30 分钟作业上限及记录实际选测 BASE 的收据和 artifact。
+4. 验证后同步精确候选到主仓短分支，创建同仓 PR，继续正式 Quality/Licenses、独立 Review 与 Merge Queue Full。
 
 ```sh
-gh workflow run quick-feedback.yml --repo FurinyaDev/Slay-the-Heavens-Fork-A --ref <branch> -f base_sha=<BASE>
-# 仅风险或未知影响要求 Full 时使用；没有第二次默认 Full
-gh workflow run quality.yml --repo v5g95m7t8m-max/Slay-the-Heavens-Fork-B --ref <branch> -f runner_pool=hosted -f base_sha=<BASE>
+git push fork-a HEAD:refs/heads/<task-branch>       # 自动 Quick
+# 仅确有必要时：
+git push fork-b HEAD:refs/heads/ci/full/<task-name>  # 自动 Full
 ```
 
-dispatch 前读取候选 ref 的工作流和测试入口。旧 Fork 默认分支可能仍使用 5 分钟 Quick，或仅声明 `runner_pool` 的 Quality。把当前候选的精确提交推到诊断短分支，以带 `base_sha` 的对应工作流运行。旧输入合同生成的运行无法认证 BASE。以 `preflight-<run>-<attempt>` 的 checkout 收据核对实际执行身份，再计为有效预检。
+**新任务分支必须从包含本配置的最新主仓 `develop` 创建**，因为 GitHub 使用被 Push 提交内的工作流定义。旧分支不强行改写历史，可按正常主仓 PR 的自动检查交付。手动 `workflow_dispatch` 只保留为诊断回退，不作为常规合并前置条件；不需要 Agent 拥有 `Actions: Write`。
 
-固定仓库 ID：主1429751262、A1460097312、B1460133275；名称变化按 ID 解析。HEAD 已绑定工作流、测试、依赖和配置。成功 rerun 可以复用；读取权限不足时保留精确 HEAD/BASE 与运行链接，由已有授权维护者核对。
-
-Concurrency 只能取消同仓库/ref 的旧运行。A/B 沿用 Backlog 认领和 dispatch 前查重，同一候选只保留一个预检负责人。
+固定仓库 ID：主1429751262、A1460097312、B1460133275。复用现有 hosted Runner 与同 ref concurrency。查重使用固定 HEAD/BASE/run/attempt；Fork 的 Quick/Full 不取代主仓 PR merge SHA、队列组合 SHA 和发布证据。官方导入及实体设备仍按对应验收合同独立验证。
 
 失败先读准确 run/attempt 的失败步骤：代码冲突、断言失败、无 runner 的排队、权限拒绝和队列退出分别接续。记录作业创建到分配 runner 的等待与实际执行时长；未分配 runner 不计执行。原 HEAD/BASE 已成功或仍在途不重复派发，修复后沿原 PR 推进；入队/本地通过不记交付，实际合并后再用已有交付验证器核验并确认无独有工作才清理。正式候选先定稿版本和 CHANGELOG，再冻结做必要 Full/构建；官方和设备缺项保持未验，不前移为普通 PR 门槛。
 

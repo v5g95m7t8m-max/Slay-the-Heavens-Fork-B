@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,mkdirSync,writeFileSync,existsSync,rmSync,symlinkSync} from 'node:fs';
-import {join} from 'node:path';import {tmpdir} from 'node:os';
+import {join} from 'node:path';import {availableParallelism,tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {colorlessCatalogBefore,preColorlessCatalogSource as project,colorlessCatalogReader, colorlessCatalogSourceProof as proof,prepareColorlessCatalogRetirement as retire} from './helpers/colorless-catalog-source-inverse.mjs';
 import {preM7FinalSource,m7FinalReader} from './helpers/m7-core-final-source-inverse.mjs';
@@ -9,6 +9,7 @@ import {preRelicQuerySource,relicQueryReader} from './helpers/relic-query-source
 import {preColorlessCatalogSource as frozenProject,colorlessCatalogReader as frozenReader} from './helpers/epochs/colorless/tests/helpers/colorless-catalog-source-inverse.mjs';
 import {sourceEpoch} from './helpers/combined-epoch/source-epoch.mjs';
 import {beforeInputRetirementReader,pointerInputPath,retiredControllerPath} from './helpers/input-retirement-source.mjs';
+import {hasTestNameFilter,runIsolatedTest} from './helpers/isolated-historical-cases.mjs';
 const read=p=>readFileSync(p,'utf8').replaceAll('\r\n','\n');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const owners=Object.keys(proof.files),originals=owners.filter(p=>Object.hasOwn(proof.files[p],'beforeSource'));
@@ -84,12 +85,34 @@ test('new catalog retirement checks bytes twice and cannot delete a live-file al
 });
 
 
-test('every current Colorless entry freshly authenticates the full dynamic owner set through all reader forms',()=>{
+const expandedColorlessCase='every current Colorless entry freshly authenticates the full dynamic owner set through all reader forms';
+const expandedColorlessLane='--colorless-expanded-owner-lane';
+test(expandedColorlessCase,async()=>{
+ const wrappers=[r=>r,colorlessCatalogReader,r=>colorlessCatalogReader(colorlessCatalogReader(r))];
+ const entries=originals.flatMap((path,pathIndex)=>wrappers.map((wrap,wrapperIndex)=>({
+  path,wrap,lane:(pathIndex+wrapperIndex)%2,
+ })));
+ assert.equal(entries.length,9,'every Colorless entry uses all three reader forms');
+ let selected=entries;
+ if(process.argv[2]===expandedColorlessLane){
+  const lane=Number(process.argv[3]);assert(lane===0||lane===1,'registered Colorless owner lane');
+  selected=entries.filter(entry=>entry.lane===lane);
+  assert.equal(selected.length,lane===0?5:4,'all entry and reader pairs for this lane');
+ }else if(process.platform==='win32'&&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'
+  &&availableParallelism()>=4&&!hasTestNameFilter()){
+  const outcomes=await Promise.allSettled([0,1].map(lane=>runIsolatedTest(import.meta.url,
+   [expandedColorlessLane,String(lane)],[`--test-name-pattern=^${expandedColorlessCase}$`])));
+  for(const result of outcomes){
+   if(result.status==='rejected')throw result.reason;
+   process.stdout.write(result.value);
+  }
+  return;
+ }
  const currentOwners=[...sourceEpoch.proof.owners,pointerInputPath];
  assert.throws(()=>read(retiredControllerPath),{code:'ENOENT'});
  const retiredSource=beforeInputRetirementReader(read)(retiredControllerPath);
  const current=Object.fromEntries(currentOwners.filter(path=>path!==retiredControllerPath).map(path=>[path,read(path)]));
- for(const path of originals)for(const wrap of [r=>r,colorlessCatalogReader,r=>colorlessCatalogReader(colorlessCatalogReader(r))]){
+ for(const {path,wrap} of selected){
   let bad=null,mode='good',seen=[];
   const raw=p=>{seen.push(p);if(p===bad){
    if(mode==='throw')throw Error('expanded reader sentinel: '+p);

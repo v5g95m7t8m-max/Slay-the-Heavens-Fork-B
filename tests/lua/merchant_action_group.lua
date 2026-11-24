@@ -27,12 +27,12 @@ for _,mobile in ipairs({false,true})do
  local buyLeft=confirm.x-Theme.layout.nativeNode.confirm[3]/2
  assert(buyLeft-(back.x+Theme.layout.nativeNode.back[3]/2)<=32,'dialogue separates purchase actions')
  same(before,ui.run)
- assert(not node:GetChild('shopRoom').visible and not merchant:GetChild('talk').visible)
+ assert(node:GetChild('shopRoom').visible and not merchant:GetChild('talk').visible)
  same(before,ui.run)
  before=F.Combat.copy(ui.run)
  assert(click('back'));same(before,ui.run)
  assert(back.x==math.min(Theme.layout.nativeNode.back[1],-510),'unselected footer clears the lowest price')
- assert(back.visible and not confirm.visible and back:GetChild('label').text=='离开')
+ assert(back.visible and not confirm.visible and back:GetChild('label').text=='关闭')
  local offer=ui.run.nodeFlow.cards[1];local gold,deck=ui.run.gold,#ui.run.deck
  assert(click('shopView/card1') and click('confirm'))
  assert(ui.run.gold==gold-offer.price and #ui.run.deck==deck+1 and ui.run.nodeFlow.cards[1].sold)
@@ -47,9 +47,8 @@ for _,mobile in ipairs({false,true})do
  assert(root:GetChild('mapPanel'):GetChild('previewBack'):GetChild('hit').click() and not ui.routeOpen and ui.nodeUI.visible)
  assert(ui.nodeUI.merchant.current==reaction and merchant:GetChild('bubble').visible,'return from map must resume the current reaction')
  assert(not click('shopView/card1'),'sold offer cannot purchase twice')
- assert(click('back'));ui:update(.31);assert(ui.nodeUI:holding())
- assert(ui.nodeUI.merchant.current.kind=='leave' and not node:GetChild('shopView').visible)
- assert(not back.visible and confirm:GetChild('label').text=='继续')
- assert(click('confirm') and not ui.nodeUI:holding())
+ assert(click('back'));assert(not ui.run.nodeFlow.complete and not node:GetChild('shopView').visible)
+ ui:update(.7);assert(click('back') and ui.run.nodeFlow.complete and not ui.nodeUI:holding())
+ assert(ui.nodeUI.merchant.current.kind=='leave' and ui.mode=='map')
 end
 print('MERCHANT_ACTION_GROUP_PASS mouse/touch cancel, buy, dialogue, farewell')

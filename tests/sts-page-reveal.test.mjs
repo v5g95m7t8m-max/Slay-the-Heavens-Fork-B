@@ -85,8 +85,9 @@ test('ready combat choice cannot publish through a synchronous paint or on its f
  lua(`package.path='src/lua/?.lua;'..package.path
 local Gate=require('abyss_page_reveal');local shown=false
 local veil={SetAnchoredPosition=function()end,SetSizeDelta=function()end}
+local blocker={SetAnchoredPosition=function()end,SetSizeDelta=function()end}
 local cover={SetVisible=function(_,v)shown=v end,SetAsLastSibling=function()end,
- GetChild=function(_,name)if name=='veil'then return veil end end}
+ GetChild=function(_,name)if name=='veil'then return veil elseif name=='blocker'then return blocker end end}
 local gate=Gate.new(cover,function()return true end,nil,{full={0,0,1280,720},choicePanel={5,10,1100,600},battlePanel={0,0,1100,600}})
 local run,battle={},{}
 local fight={page='battlePanel',mode='battle',phase='combat',run=run,battle=battle}
@@ -335,7 +336,7 @@ test('Forethought authenticates its complete Lua and layout owners',async()=>{
  const {gunzipSync}=await import('node:zlib');
  const lua='src/lua/abyss_deck_ui.lua',layout='scripts/deck-ui-layout.mjs';
  const read=path=>readFileSync(path,'utf8');
- const crlf=source=>source.replaceAll('\n','\r\n');
+ const crlf=source=>source.replace(/\r?\n/g,'\r\n');
  const priorLua=beforeDevelopBackflow(lua,read(lua));
  const priorLayout=beforeDevelopBackflow(layout,read(layout));
  assert.notEqual(priorLua,read(lua));

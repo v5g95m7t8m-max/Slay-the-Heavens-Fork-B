@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
+import {createComposedSourceEpochProjector,createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const archive=readFileSync(new URL('./relic-equip-source-epoch.json.gz',import.meta.url));
 assert.equal(hash(archive),'c7f30e9773f4f08d3cf33e1ece1a1be425fa04389d0144bb285ff70643d06863','relic-equip compressed identity');
@@ -17,7 +17,7 @@ export function extendRelicEquipEpoch(original){
  const proof={...prior,currentTreeCommitted:false,relicEquipCurrentCommitRole:outer.currentCommitRole,relicEquipCollectedBaseCommit:outer.targets.prior.commit,current:{...prior.current,...outer.current},
   owners:[...new Set([...prior.owners,...outer.owners])],
   targets:{...prior.targets,relicEquipPrior:{commit:outer.targets.prior.commit,files:prior.current}}};
- const current=createSourceEpochProjector(proof,{allowConfigLayout:true}),live=p=>readFileSync(p,'utf8'),readers=new WeakMap();
+ const current=createComposedSourceEpochProjector(proof),live=p=>readFileSync(p,'utf8'),readers=new WeakMap();
  function preCombinedSource(path,source,{target,readSource=live}={}){
   readSource=readers.get(readSource)?.raw??readSource;
   const projected=current.preCombinedSource(path,source,{target,readSource});

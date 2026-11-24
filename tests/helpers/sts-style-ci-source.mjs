@@ -6,6 +6,7 @@ import {gunzipSync} from 'node:zlib';
 import {stsStyleCiBytes} from './sts-style-ci-binding.mjs';
 import {feedbackCiPatch} from './sts-feedback-ci.mjs';
 import {extendFeedbackCiProof} from './sts-feedback-source-runtime.mjs';
+import {beforeStsRuntimeFixtureSuccessor} from './input-retirement-sts-binding.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex'),norm=s=>s.replaceAll('\r\n','\n');
 export const stsStyleBeforeFeedbackCiProof=JSON.parse(gunzipSync(stsStyleCiBytes));
 assert.equal(stsStyleBeforeFeedbackCiProof.schemaVersion,1);assert.equal(stsStyleBeforeFeedbackCiProof.normalization,'LF');
@@ -23,7 +24,7 @@ const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value))
 freeze(stsStyleBeforeFeedbackCiProof);
 export const stsStyleCiProof=extendFeedbackCiProof(stsStyleBeforeFeedbackCiProof,feedbackCiPatch);
 export function preStsStyleCiSource(path,source){
- source=integratedSource(path,source,'sts');
+ source=integratedSource(path,beforeStsRuntimeFixtureSuccessor(path,source),'sts');
  const row=Object.hasOwn(stsStyleCiProof.files,path)?stsStyleCiProof.files[path]:null;
  return row?.before&&typeof source==='string'&&hash(norm(source))===row.after.sha256?row.before.source:source;
 }
@@ -33,15 +34,18 @@ export function stsStylePriorRead(read=readFileSync){return(path,encoding)=>{
 };}
 export function stsStylePriorInventory(paths,read=readFileSync){
  paths=integratedPriorInventory(paths,'sts','js',read);
- read=integratedRead('sts',{read});
+ const readCurrent=integratedRead('sts',{read:withStsRuntimePredecessors(read)});
  const proof=stsStyleCiProof;if(!proof.addedTests.some(path=>paths.includes(path)))return [...paths];
  assert.deepEqual([...paths].sort(),proof.afterInventory,'complete StS Full inventory');
- for(const p of proof.addedTests)assert.equal(hash(norm(read(p,'utf8'))),proof.files[p].after.sha256,'StS added inventory source: '+p);
+ for(const p of proof.addedTests)assert.equal(hash(norm(readCurrent(p,'utf8'))),proof.files[p].after.sha256,'StS added inventory source: '+p);
  return [...proof.beforeInventory];
+}
+function withStsRuntimePredecessors(read){
+ return (path,encoding)=>beforeStsRuntimeFixtureSuccessor(path,read(path,encoding));
 }
 export function assertStsStyleCiCurrent(paths,read=readFileSync){
  paths=integratedPriorInventory(paths,'sts','js',read);
- read=integratedRead('sts',{read});
+ read=integratedRead('sts',{read:withStsRuntimePredecessors(read)});
  assert.deepEqual([...paths].sort(),stsStyleCiProof.afterInventory,'complete StS current Full inventory');
  for(const [p,row]of Object.entries(stsStyleCiProof.files))assert.equal(hash(norm(read(p,'utf8'))),row.after.sha256,'fresh complete StS CI source: '+p);
  for(const [p,row]of Object.entries(stsStyleCiProof.helperSources))assert.equal(hash(norm(read(p,'utf8'))),row.sha256,'fresh StS helper source: '+p);

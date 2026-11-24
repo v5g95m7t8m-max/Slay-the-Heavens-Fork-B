@@ -2,6 +2,7 @@
 local Theme=require('abyss_theme')
 local Select=require('abyss_character_select')
 local number=require('abyss_numbers').integer
+local Motion=require('abyss_character_entrance')
 local M={}
 -- 选角只做一眼扫读（对标 STS 选角页）：牌组按 攻击→技能→能力→其它 排好直接列出，不提供筛选。
 local typeOrder={attack=1,skill=2,power=3,status=4,curse=5}
@@ -62,12 +63,12 @@ local function paintPortraitNote(details,info,platform,large,key,portraits)
     if large and large.playable==false then note=note..' · 非本次正式角色' end
     details:GetChild('portraitNote').text=note
 end
-local function paintCharacterButtons(panel,state,platform,originalSts,open)
+local function paintCharacterButtons(panel,state,platform,originalSts,open,hideSelection)
     for i,id in ipairs(Select.characters)do
         local box=panel:GetChild(i==5 and 'traveler' or 'character'..i)
         local allowed=(originalSts or open>1 or id=='traveler') and state:allowsCharacter(id)
         if box.visible~=allowed then box:SetVisible(allowed)end
-        selected(box,state.character==id)
+        selected(box,not hideSelection and state.character==id)
         local _,bust=largeSlot(id,id=='traveler' and (state.element or 'ironclad') or nil)
         if not originalSts or id~='traveler' then paintBust(box,bust,platform)end
     end
@@ -90,7 +91,7 @@ local function paintThemesAndElements(panel,state,platform,elementsOpen)
         paintBust(box,Theme.icon.heroSlots.bust.traveler[id],platform)
     end
 end
-local function paintDetails(details,state,platform,originalSts,nativeV25,info)
+local function paintInfo(details,info,nativeV25)
     details:GetChild('name').text=info.name
     details:GetChild('stats').text=(nativeV25 and '生命：' or '生命  ')..number(info.maxHp)..(nativeV25 and '/' or ' / ')..number(info.maxHp)
     details:GetChild('gold').text=(nativeV25 and '金币：' or '金币  ')..number(info.gold)
@@ -99,20 +100,52 @@ local function paintDetails(details,state,platform,originalSts,nativeV25,info)
     details:GetChild('relic').text=#relics>0 and table.concat(relics,'、') or '无'
     details:GetChild('relicText').text=table.concat(texts,' ')
     if details:GetChild('deckSummary') then renderStarterDeck(details,info) end
+end
+local function paintFigure(details,state,platform,originalSts,info)
     local large,key,portraits=paintPortraits(details,state,platform)
     if originalSts then portraits:SetVisible(false)end
     paintPortraitNote(details,info,platform,large,key,portraits)
+    return not originalSts and portraits:GetChild(key) or nil
 end
 local function countAllowed(ids,allows)
     local count=0
     for _,id in ipairs(ids)do if allows(id)then count=count+1 end end
     return count
 end
-function M.render(panel,state,platform,published)
+local function officialPanel(panel)
+    return Theme.presentationProfile=='official-assets-first'
+        and (panel:GetChild('stsCharacter')~=nil or panel:GetChild('v25Roster')~=nil)
+end
+function M.prepare(panel,state,platform)
+    local roster=panel:GetChild('v25Roster')
+    local open=countAllowed(Select.characters,function(id)return state:allowsCharacter(id)end)
+    if roster then roster:SetVisible(open==1) end
+    paintCharacterButtons(panel,state,platform,panel:GetChild('stsCharacter')~=nil,open,true)
+end
+function M.motion(panel,platform)
+    local nativeV25=officialPanel(panel)
+    return Motion.new(panel,platform,function(control,info)paintInfo(control,info,nativeV25)end)
+end
+local function paintPublished(panel,details,state,platform,motion,info,originalSts,nativeV25)
+    local portrait
+    if info then
+        if not motion then paintInfo(details,info,nativeV25) end
+        portrait=paintFigure(details,state,platform,originalSts,info)
+    end
+    if motion then
+        local portraits=platform.portraits
+        local native=portraits and portraits.status and portraits:status().selection
+        motion:show(info,info and info.id=='ironclad' and native and native.phase=='ready',portrait)
+    else panel:GetChild('confirm'):SetVisible(info~=nil) end
+    local confirm=panel:GetChild('confirm'):GetChild('hit')
+    local enabled=state:canConfirm()
+    confirm.interactable,confirm.raycastTarget=enabled,enabled
+end
+function M.render(panel,state,platform,published,motion)
     local info=state.info
     if published==false then info=nil end
     local originalSts=Theme.presentationProfile=='official-assets-first' and panel:GetChild('stsCharacter')~=nil
-    local nativeV25=Theme.presentationProfile=='official-assets-first' and (originalSts or panel:GetChild('v25Roster')~=nil)
+    local nativeV25=officialPanel(panel)
     panel:GetChild('hint').text=state.notice or (nativeV25 and '' or (info and '查看初始信息，确认后开始冒险。' or '点击下方角色查看详情，再确认出发。'))
     -- 只剩一个可选角色/元素时不摆假选择钮（Pan 2026-10-31：单角色发版）。
     local open=countAllowed(Select.characters,function(id)return state:allowsCharacter(id)end)
@@ -128,10 +161,6 @@ function M.render(panel,state,platform,published)
         roster:GetChild('selected'):GetChild('selection'):SetVisible(info~=nil)
         panel:GetChild('traveler'):GetChild('selected'):SetVisible(false)
     end
-    panel:GetChild('confirm'):SetVisible(info~=nil)
-    local confirm=panel:GetChild('confirm'):GetChild('hit')
-    confirm.interactable,confirm.raycastTarget=state:canConfirm(),state:canConfirm()
-    if not info then return end
-    paintDetails(details,state,platform,originalSts,nativeV25,info)
+    paintPublished(panel,details,state,platform,motion,info,originalSts,nativeV25)
 end
 return M

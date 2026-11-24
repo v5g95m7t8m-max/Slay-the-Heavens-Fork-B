@@ -13,6 +13,8 @@ import {copyCurrentSourceFixture} from './helpers/isolated-current-source.mjs';
 import {preActorPresenceSource as frozenProject,actorPresenceReader as frozenReader} from './helpers/epochs/actor/tests/helpers/actor-presence-source-inverse.mjs';
 import {prepareRound3CatalogModuleRetirement as frozenCatalogRetirement,round3CatalogProof} from './helpers/epochs/develop/tests/helpers/round3-catalog-source-inverse.mjs';
 import {sourceEpoch} from './helpers/combined-epoch/source-epoch.mjs';
+import {pointerInputPath,retiredControllerPath,readRetiredController} from './helpers/input-retirement-source.mjs';
+import {addedEntranceModules} from './helpers/ui-entrance-source.mjs';
 const read=p=>readFileSync(p,'utf8').replaceAll('\r\n','\n');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const owners=Object.keys(proof.files),originals=owners.filter(p=>Object.hasOwn(proof.files[p],'beforeSource'));
@@ -175,22 +177,30 @@ test('the frozen catalog retirement retains its original identity errors before 
 });
 
 test('the current actor facade freshly rejects every expanded raw owner after warm nested reads',()=>{
- const current=Object.fromEntries(sourceEpoch.proof.owners.map(p=>[p,read(p)]));
+ const rawOwners=[...new Set([...sourceEpoch.proof.owners.filter(p=>p!==retiredControllerPath),pointerInputPath,...addedEntranceModules])];
+ const current=Object.fromEntries(rawOwners.map(p=>[p,read(p)]));
+ assert.throws(()=>read(retiredControllerPath),{code:'ENOENT'});
+ const {source:retired,restored}=readRetiredController(read);assert(restored,'exact live pointer witnesses the absent Controller');
  for(const path of originals){
+  const source=read(path);
   let bad=null,mode='good',seen=[];
   const raw=p=>{seen.push(p);if(p===bad){
    if(mode==='throw')throw Error('expanded reader sentinel');
    if(mode==='missing')return undefined;if(mode==='null')return null;
-   if(mode==='buffer')return Buffer.from(current[p]);if(mode==='changed')return current[p]+'\n';
+   const source=p===retiredControllerPath?retired:current[p];
+   if(mode==='old')return retired;
+   if(mode==='buffer')return Buffer.from(source);if(mode==='changed')return source+'\n';
   }return current[p]??read(p);};
   const wrapped=actorPresenceReader(actorPresenceReader(raw));assert.equal(actorPresenceReader(wrapped),wrapped);
-  const check=()=>assert.equal(project(path,read(path),{readSource:wrapped}),proof.files[path].beforeSource);
+  const check=()=>assert.equal(project(path,source,{readSource:wrapped}),proof.files[path].beforeSource);
   check();const first=[...seen];for(const owner of sourceEpoch.proof.owners)assert(first.includes(owner),'fresh current owner: '+owner);
   seen=[];check();assert.deepEqual(seen,first,'warm calls repeat the complete raw-read sequence');
-  for(bad of sourceEpoch.proof.owners)for(mode of ['changed','missing','null','buffer','throw']){
-   seen=[];assert.throws(check,error=>{assert.match(error.message,/linked owner/);assert(error.message.includes(bad));if(mode==='throw')assert.match(error.message,/expanded reader sentinel/);return true;});
+  for(bad of [...rawOwners,retiredControllerPath])for(mode of bad===retiredControllerPath?['old','changed','buffer','throw']:['changed','missing','null','buffer','throw']){
+   seen=[];assert.throws(check,error=>{assert.match(error.message,/linked owner/);assert(error.message.includes(bad===pointerInputPath?retiredControllerPath:bad));if(mode==='throw')assert.match(error.message,/expanded reader sentinel/);return true;});
    assert(seen.includes(bad));const previous=mode;mode='good';check();mode=previous;
   }
+  bad=retiredControllerPath;
+  for(mode of ['missing','null']){seen=[];check();assert.deepEqual(seen,first,'retired controller still requires every current owner');assert(seen.includes(retiredControllerPath)&&seen.includes(pointerInputPath),'absent Controller freshly requires its exact pointer');}
  }
  for(const readSource of [null,{},'invalid'])for(const path of originals)assert.throws(()=>project(path,read(path),{readSource}),/linked (?:owner )?reader/);
 });

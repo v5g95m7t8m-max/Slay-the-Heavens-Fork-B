@@ -290,9 +290,9 @@ test('current UI facade authenticates all 118 disk owners and their continuation
  const expected=current.targets[target].files[file].source,admittedReads=[];
  const record=owner=>{admittedReads.push(owner);return diskReadFileSync(owner,'utf8');};
  assert.equal(currentSourceEpoch.preCombinedSource(file,input,{target,readSource:record}),expected);
- assert.equal(admittedReads.length,460,'complete live owner read trace');
+ assert.equal(admittedReads.length,480,'complete live owner read trace');
  assert.equal(createHash('sha256').update(JSON.stringify(admittedReads)).digest('hex'),
-  '6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51','ordered Develop owner read trace');
+  'ad1c81a8f757224fa6520ca74d2a9b682f24925d2689141bc4b2eb1066d6a7fd','ordered Develop owner read trace');
  let position=-1;
  for(const owner of [...current.owners,...currentProductionRereads]){
   position=admittedReads.indexOf(owner,position+1);

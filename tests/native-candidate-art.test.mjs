@@ -172,7 +172,7 @@ test('MCP mock: audio wrapper preserves full art receipt and rejects input chang
   const full=one.receipt();
   const {buildNativeAudioGame}=await import('../scripts/build-native-audio-game.mjs');
   let runs=0;
-  const packageAudio=mutate=>buildNativeAudioGame({root:f.root,baseMap:f.baseMap,output:'audio',nativeCardArt:{registry:f.literal,hosts:['battlePanel/card1']},buildFull:async()=>full,
+  const packageAudio=(output,mutate)=>buildNativeAudioGame({root:f.root,baseMap:f.baseMap,output,nativeCardArt:{registry:f.literal,hosts:['battlePanel/card1']},buildFull:async()=>full,
     run:(script,[base,directory])=>{
       runs++;mkdirSync(directory,{recursive:true});const mapPath=join(directory,'audio.gil');writeFileSync(mapPath,'MCP mock audio');
       writeFileSync(join(directory,'candidate.json'),JSON.stringify({mapPath,sha256:fileRecord(mapPath).sha256,candidate:fileRecord(mapPath),
@@ -180,19 +180,19 @@ test('MCP mock: audio wrapper preserves full art receipt and rejects input chang
     uiProfile:full.uiProfile,...(full.officialAssetsProfile?{officialAssetsProfile:full.officialAssetsProfile}:{})}));
       mutate?.();
     }});
-  const audio=await packageAudio();assert.deepEqual(audio.nativeCardArt,full.nativeCardArt);
+  const audio=await packageAudio('audio');assert.deepEqual(audio.nativeCardArt,full.nativeCardArt);
   assert.deepEqual(audio.toolchainIdentity,full.toolchainIdentity);
   const {verifyUiCandidateInputs}=await import('../scripts/verify-ui-acceptance.mjs');
   assert.doesNotThrow(()=>verifyUiCandidateInputs(audio,audio.mapPath,{root:f.root}));
   const original=readFileSync(f.literal);writeFileSync(f.literal,Buffer.concat([original,Buffer.from('\n')]));
-  await assert.rejects(packageAudio(),/Native art.*changed/);assert.equal(runs,1,'stale art must not start audio packaging');
+  await assert.rejects(packageAudio('stale-registry-audio'),/Native art.*changed/);assert.equal(runs,1,'stale art must not start audio packaging');
   writeFileSync(f.literal,original);
   const drawing=f.registry.sourceInputs[0].path,drawingBytes=readFileSync(drawing);
-  await assert.rejects(packageAudio(()=>writeFileSync(drawing,'changed during audio')),/Native art.*changed/);
+  await assert.rejects(packageAudio('changed-drawing-audio',()=>writeFileSync(drawing,'changed during audio')),/Native art.*changed/);
   writeFileSync(drawing,drawingBytes);
   const encoder=full.toolchainIdentity.sourcePath,encoderBytes=readFileSync(encoder);
   try {
-    await assert.rejects(packageAudio(()=>writeFileSync(encoder,Buffer.concat([encoderBytes,Buffer.from('\n')]))),/Native UI encoder input changed/);
+    await assert.rejects(packageAudio('changed-encoder-audio',()=>writeFileSync(encoder,Buffer.concat([encoderBytes,Buffer.from('\n')]))),/Native UI encoder input changed/);
   } finally {writeFileSync(encoder,encoderBytes);}
 });
 
@@ -373,14 +373,14 @@ for(const [label,edit,pattern]of [
 test('MCP mock: monster-only audio preserves source receipt and rejects changed drawing inputs',async t=>{
  const f=fixture(t,{monsterOnly:true}),one=f.cli(['--art-monsters=true']);success(one);const full=one.receipt();
  const {buildNativeAudioGame}=await import('../scripts/build-native-audio-game.mjs');
- const run=()=>buildNativeAudioGame({root:f.root,baseMap:f.baseMap,output:'audio',artFeatures:{monsters:true},buildFull:async()=>full,
+ const run=output=>buildNativeAudioGame({root:f.root,baseMap:f.baseMap,output,artFeatures:{monsters:true},buildFull:async()=>full,
   run:(script,[base,directory])=>{
    mkdirSync(directory,{recursive:true});const mapPath=join(directory,'audio.gil');writeFileSync(mapPath,'MCP mock audio');
    writeFileSync(join(directory,'candidate.json'),JSON.stringify({mapPath,sha256:fileRecord(mapPath).sha256,candidate:fileRecord(mapPath),
     baseSha256:full.candidate.sha256,baseAfter:full.candidate.sha256,buildId:full.buildId,artFeatures:full.artFeatures,
     uiProfile:full.uiProfile,...(full.officialAssetsProfile?{officialAssetsProfile:full.officialAssetsProfile}:{})}));
   }});
- const audio=await run();assert.deepEqual(audio.nativeMonsterArt,full.nativeMonsterArt);
+ const audio=await run('audio');assert.deepEqual(audio.nativeMonsterArt,full.nativeMonsterArt);
  const path=join(f.root,full.nativeMonsterArt.inputs[0].path);writeFileSync(path,readFileSync(path,'utf8')+'\n-- changed');
- await assert.rejects(run(),/Source changed during audio/);
+ await assert.rejects(run('changed-source-audio'),/Source changed during audio/);
 });

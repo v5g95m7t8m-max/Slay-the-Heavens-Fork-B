@@ -1,4 +1,6 @@
+import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {exactSourceMatches} from './source-fingerprint.mjs';
 import {releaseUiRestoreArchive} from './release-ui-restore-source.mjs';
 
 const mergedPaths=new Set([
@@ -49,11 +51,42 @@ const mapRoomCohortPaths=new Set([
  'tests/lua/support/session_menu_v25.lua',
  'tests/sts-page-reveal.test.mjs',
 ]);
+// The complete Run test now pins all 43 backflow freshness rereads. Only that
+// exact test revision can bridge into the unchanged map-room replay archive.
+const runOwnerTracePath='tests/run-max-hp-config-inverse.test.mjs';
+const runOwnerTraceSuccessor=Object.freeze({
+ sha256:'80fa5d4abba3365678708d91c65975874d6cf57bb7a071a2f587ca0e6bd5cbc3',
+ gitBlob:'d3b014defa783e2efb0c60dbc807277c3b658182',
+});
+const runOwnerTraceEdits=Object.freeze([
+ [` // The exact trace also includes 14 action-button, 20 combat/event, and 9
+ // deck/potion freshness reads, in addition to the prior ordered closure.
+ const admittedReads=[...reads];
+ assert.equal(admittedReads.length,460,'complete fresh raw closure size');
+ assert.equal(hash(JSON.stringify(admittedReads)),'6b72ef490e6f79b870b0a21d5b63ddb122f065aff81f837e8f6fa3bafbd40d51',`,
+ ` // The exact current trace includes the nested Actor/Stasis and MapRoom
+ // checks, plus the original direct and continuation reads in their order.
+ const admittedReads=[...reads];
+ assert.equal(admittedReads.length,417,'complete fresh raw closure size');
+ assert.equal(hash(JSON.stringify(admittedReads)),'05131aa3de86e8f88d0e82bca23e667bba10e3921cf029de891ec4e8b06c3a67',`],
+]);
+function beforeRunOwnerTracePin(path,source,archive){
+ if(path!==runOwnerTracePath||!exactSourceMatches(source,runOwnerTraceSuccessor))return source;
+ let prior=source.replaceAll('\r\n','\n');
+ for(const [after,before] of runOwnerTraceEdits){
+  assert.equal(prior.split(after).length,2,'exact Run raw-owner trace pin');
+  prior=prior.replace(after,()=>before);
+ }
+ const row=archive.files[path];
+ assert(row&&exactSourceMatches(prior,row.after),'exact Run raw-owner trace predecessor');
+ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
+
 export function beforeMapRoomReplayCohort(path,source){
  if(!mapRoomCohortPaths.has(path))return source;
  mapRoomReplayCohort??=releaseUiRestoreArchive(readFileSync(new URL('./map-room-replay-cohort-source.json.gz',import.meta.url)),
   '6af29058c13b798d571e11355bca6af33a9912c4363a627a7618f6979ec8a61f','67fc8750dd6ef9a13067c6a43137f910b6a44228');
- return mapRoomReplayCohort.project(path,source);
+ return mapRoomReplayCohort.project(path,beforeRunOwnerTracePin(path,source,mapRoomReplayCohort));
 }
 
 export function beforeCurrentDevelopReplayMerge(path,source){

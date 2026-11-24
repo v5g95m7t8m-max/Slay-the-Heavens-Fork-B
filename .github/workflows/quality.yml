@@ -8,7 +8,7 @@ on:
     types: [checks_requested]
     branches: [develop]
   push:
-    branches: [develop, master]
+    branches: [develop, master, 'ci/full/**']
   workflow_dispatch:
     inputs:
       base_sha:
@@ -27,7 +27,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   impact:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # Fork B alone uses explicitly requested full-preflight pushes. Others skip.
+    if: ${{ (github.event_name != 'push' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' || (github.event.repository.id == 1460133275 && startsWith(github.ref, 'refs/heads/ci/full/'))) && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -36,6 +37,7 @@ jobs:
       statuses: write
     timeout-minutes: 6
     outputs:
+      fork_base_sha: ${{ steps.forkbase.outputs.base_sha }}
       mode: ${{ steps.plan.outputs.mode }}
       windows_shards: ${{ steps.plan.outputs.windows_shards }}
       posix_shards: ${{ steps.plan.outputs.posix_shards }}
@@ -73,10 +75,19 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/check-pr-history.mjs
       - run: npm ci --ignore-scripts --prefer-offline --no-audit --no-fund --fetch-retries=0 --fetch-timeout=30000
+      - name: Pin upstream comparison for explicit Fork B Full
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/ci/full/')
+        id: forkbase
+        run: |
+          set -euo pipefail
+          git -c credential.helper= -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 fetch --depth=1 --filter=blob:none --no-tags https://github.com/FurinyaWorks/Slay-the-Heavens.git refs/heads/develop
+          BASE_SHA="$(git rev-parse FETCH_HEAD)"
+          printf 'base_sha=%s\n' "$BASE_SHA" >> "$GITHUB_OUTPUT"
+          printf 'Fork Full diagnostic HEAD: %s, comparison BASE: %s\n' "$GITHUB_SHA" "$BASE_SHA" >> "$GITHUB_STEP_SUMMARY"
       - name: Resolve exact comparison base
-        if: github.event_name == 'pull_request' || github.event_name == 'merge_group' || inputs.base_sha != ''
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group' || inputs.base_sha != '' || steps.forkbase.outputs.base_sha != ''
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || inputs.base_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || inputs.base_sha || steps.forkbase.outputs.base_sha }}
         run: |
           [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]]
           if ! git cat-file -e "${BASE_SHA}^{commit}"; then
@@ -199,7 +210,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(inputs.runner_pool == 'local-special' && '[1]' || needs.impact.outputs.windows_shards) }}
     # Thirty minutes is a performance target; allow host variance before killing work.
-    timeout-minutes: ${{ inputs.runner_pool == 'local-special' && 75 || 45 }}
+    timeout-minutes: ${{ inputs.runner_pool == 'local-special' && 75 || 180 }}
     defaults:
       run:
         shell: ${{ github.event_name == 'workflow_dispatch' && inputs.runner_pool == 'local-special' && 'powershell -NoProfile -ExecutionPolicy Bypass -File {0}' || 'pwsh -NoProfile -ExecutionPolicy Bypass -File {0}' }}
@@ -400,10 +411,20 @@ jobs:
         if: matrix.shard == 1
       - run: npm run check:engineering
         if: matrix.shard == 1
+      - name: Fetch exact upstream base for Fork B Full ratchet
+        if: matrix.shard == 1 && needs.impact.outputs.fork_base_sha != ''
+        shell: bash
+        env:
+          FORK_BASE_SHA: ${{ needs.impact.outputs.fork_base_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$FORK_BASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          git -c credential.helper= -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=30 fetch --depth=1 --filter=blob:none --no-auto-maintenance --no-tags https://github.com/FurinyaWorks/Slay-the-Heavens.git "$FORK_BASE_SHA"
+          git cat-file -e "${FORK_BASE_SHA}^{commit}"
       - name: Enforce incremental Lua CC and SCC ratchet
         if: matrix.shard == 1 && (github.event_name == 'pull_request' || github.event_name == 'merge_group' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.base_sha != ''))
         env:
-          QUALITY_RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || inputs.base_sha || github.event.before }}
+          QUALITY_RATCHET_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || inputs.base_sha || needs.impact.outputs.fork_base_sha || github.event.before }}
         run: node scripts/check-quality-ratchet.mjs
       - name: Check production platform load
         if: matrix.shard == 1
@@ -439,7 +460,7 @@ jobs:
     # Preserve the required check name. A skipped/cancelled/missing shard must
     # never turn the aggregate green; fail-fast=false collects all shard results.
     needs: [impact, rules, fast, presentation, engineering-posix]
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    if: ${{ !cancelled() && (github.event_name != 'push' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' || (github.event.repository.id == 1460133275 && startsWith(github.ref, 'refs/heads/ci/full/'))) && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions:
@@ -530,7 +551,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.impact.outputs.posix_shards) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -597,7 +618,7 @@ jobs:
   engineering-posix:
     # Preserve the required check name and reject every non-success outcome.
     needs: [impact, engineering-posix-shards, fast]
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    if: ${{ !cancelled() && (github.event_name != 'push' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' || (github.event.repository.id == 1460133275 && startsWith(github.ref, 'refs/heads/ci/full/'))) && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

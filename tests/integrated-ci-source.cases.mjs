@@ -74,7 +74,9 @@ test('Release bootstrap exact sources retain every old byte and reject missing d
  const bytes=rawReadFileSync('tests/helpers/release-bootstrap-ci-source.json.gz');
  const marker="const bytes=readFileSync(new URL('./release-bootstrap-ci-source.json.gz',import.meta.url));";
  assert.equal(leaf.split(marker).length,2);
- const broken=leaf.replace("from './fork-preflight-source.mjs'",'from '+JSON.stringify(new URL('./helpers/fork-preflight-source.mjs',import.meta.url).href))
+ const helperDirectory=new URL('./helpers/',import.meta.url);
+ const broken=leaf.replace(/^(import [^\r\n]+ from )'(\.\/[^']+)'/gm,(_match,statement,specifier)=>
+  statement+JSON.stringify(new URL(specifier,helperDirectory).href))
   .replace(marker,`const bytes=Buffer.from(${JSON.stringify(bytes.subarray(0,bytes.length-1).toString('base64'))},'base64');`);
  await assert.rejects(import('data:text/javascript;base64,'+Buffer.from(broken).toString('base64')),/complete Release bootstrap CI continuation/);
 });

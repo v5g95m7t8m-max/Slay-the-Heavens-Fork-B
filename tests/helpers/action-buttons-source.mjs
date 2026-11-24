@@ -13,10 +13,14 @@ assert.equal(base, '438f48d60a2e5aa81cf82d6f30b909327999226e');
 for (const row of Object.values(files)) assert.equal(hash(row.before), row.beforeSha);
 
 export const actionButtonsOwns = path => Object.hasOwn(files, path);
+const lastVerifiedBytes = new Map();
 
 function matches(path, source) {
-  return actionButtonsOwns(path) && typeof source === 'string' && !source.includes('\r\r\n')
-    && hash(normalize(source)) === files[path].afterSha;
+  if (!actionButtonsOwns(path) || typeof source !== 'string') return false;
+  if (lastVerifiedBytes.get(path) === source) return true;
+  if (source.includes('\r\r\n') || hash(normalize(source)) !== files[path].afterSha) return false;
+  lastVerifiedBytes.set(path, source);
+  return true;
 }
 
 export function beforeActionButtons(path, source) {

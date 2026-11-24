@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {availableParallelism} from 'node:os';
 import {runLua} from '../scripts/test-lua.mjs';
 import {integration as proof,acceptedPresentationSource,digest} from './helpers/presentation-m3-integration.mjs';
 
@@ -11,6 +12,11 @@ import {retirementSources,preRetirementSource,archivedRetirementChangelog} from 
 import {formalEntryInverses,preFormalEntrySource} from './support/formal-entry-source-inverse.mjs';
 import {materializeHistoricalPresentation} from './helpers/p0-presentation-inverse.mjs';
 import {preMaxHpSource} from './helpers/max-hp-accepted-source-inverse.mjs';
+import {hasTestNameFilter,runIsolatedTest} from './helpers/isolated-historical-cases.mjs';
+
+const cases=[];
+const replay=(...args)=>cases.push([historicalTest,args]);
+const check=(...args)=>cases.push([test,args]);
 
 const oldTheme=JSON.parse(proof.beforeSources['data/presentation/ui_theme.json']);
 // The delta oracle describes its immutable reviewed sources, not today's layout.
@@ -109,7 +115,7 @@ function verify(before,after,delta){
   return counts;
 }
 
-historicalTest('M3 frame and first UI batch retain every old native write except the explicitly reviewed visual delta',()=>{
+replay('M3 frame and first UI batch retain every old native write except the explicitly reviewed visual delta',()=>{
   assert.equal(proof.base,'4f5bf5bb30821f88f33467585abec3caba7e6005');
   assert.deepEqual(proof.heads,{nest:'15b879f4b8d2f9771ac2b124adc8e8b7abd8ee9e',drag:'fcb18ea8345585e02cf869143ef9f85430bc8676',frame:'41dda081f46f0cbad68e88e9b8f6924a0d5b93ca',ui:'8849c853f8a2e7a43dd52fd9fee821872b077f38'});
   verify(proof.before,proof.after,proof.delta);
@@ -119,7 +125,7 @@ historicalTest('M3 frame and first UI batch retain every old native write except
   }
 });
 
-test('visual proof rejects changed gameplay text, missing writes, reordered writes and broadened visual approval',()=>{
+check('visual proof rejects changed gameplay text, missing writes, reordered writes and broadened visual approval',()=>{
   const wrong=[...proof.after];const position=wrong.findIndex(value=>value.includes('/hp,2=string:text,'));
   assert(position>=0);wrong[position]+='0';assert.throws(()=>verify(proof.before,wrong,proof.delta));
   assert.throws(()=>verify(proof.before,proof.after.slice(1),proof.delta));
@@ -134,7 +140,7 @@ test('visual proof rejects changed gameplay text, missing writes, reordered writ
 for(const [count,hash,sources]of [
  [79543,1215629804,{...retirementSources.beforeSources,...proof.beforeSources}],
  [79757,1467902785,retirementSources.beforeSources],
-])historicalTest(`the accepted presentation sources still execute the original strict ${count}-write fixture`,()=>{
+])replay(`the accepted presentation sources still execute the original strict ${count}-write fixture`,()=>{
   mkdirSync('build',{recursive:true});const directory=mkdtempSync(resolve('build/accepted-presentation-'));
   try{
     // Repository-local temporary tree inherits installed node_modules resolution.
@@ -161,7 +167,7 @@ for(const [count,hash,sources]of [
   }finally{rmSync(directory,{recursive:true,force:true});}
 });
 
-historicalTest('historical replay inputs bind every changed build, host and version source, including the deleted module',()=>{
+replay('historical replay inputs bind every changed build, host and version source, including the deleted module',()=>{
  assert.deepEqual(retirementSources.trace,{before:[79757,1467902785],removed:68,after:[79689,2034622601]});
  for(const [path,before]of Object.entries(retirementSources.beforeSources)){
   assert.equal(path==='CHANGELOG.md'?archivedRetirementChangelog():preRetirementSource(path),before);
@@ -172,7 +178,7 @@ historicalTest('historical replay inputs bind every changed build, host and vers
  assert.match(retirementSources.beforeSources['tests/lua/presentation_responsibilities_trace.lua'],/assert\(trace.count==79757 and trace.hash==1467902785/);
 });
 
-historicalTest('historical relic input is the complete frozen pre-Molten/Mushrooms source, not a reduced live dataset',()=>{
+replay('historical relic input is the complete frozen pre-Molten/Mushrooms source, not a reduced live dataset',()=>{
  const path='data/relics.json',live=readFileSync(path,'utf8').replaceAll('\r\n','\n');
  const before=readFileSync('tests/fixtures/presentation-relics-before-m3.json','utf8').replaceAll('\r\n','\n');
  assert.equal(digest(before),'76f9c76d89f57c7c0bd5c556e1813d09eecd673ec8a0a1992446059b4ec87758');
@@ -189,7 +195,7 @@ historicalTest('historical relic input is the complete frozen pre-Molten/Mushroo
  ])assert.throws(()=>preRetirementSource(path,JSON.stringify(change,null,2)+'\n'),/unreviewed integrated retirement source drift/);
 });
 
-historicalTest('NodeUI refactor inverse preserves historical Mushrooms copy and rejects drift in every responsibility',()=>{
+replay('NodeUI refactor inverse preserves historical Mushrooms copy and rejects drift in every responsibility',()=>{
  const path='src/lua/abyss_node_ui.lua',source=readFileSync(path,'utf8').replaceAll('\r\n','\n');
  assert.equal(acceptedPresentationSource(path),proof.beforeSources[path]);
  assert.equal(acceptedPresentationSource(path,source.replaceAll('\n','\r\n')),proof.beforeSources[path]);
@@ -210,7 +216,7 @@ historicalTest('NodeUI refactor inverse preserves historical Mushrooms copy and 
  }
 });
 
-test('historical announcement copy is independent of current player text but rejects archive tampering',()=>{
+check('historical announcement copy is independent of current player text but rejects archive tampering',()=>{
  const historical=retirementSources.beforeSources['CHANGELOG.md'];
  const current=readFileSync('CHANGELOG.md','utf8').replaceAll('\r\n','\n');
  assert.notEqual(digest(current),retirementSources.afterSha256['CHANGELOG.md'],
@@ -224,3 +230,30 @@ test('historical announcement copy is independent of current player text but rej
  assert.throws(()=>preRetirementSource('CHANGELOG.md',current),
   /unreviewed integrated retirement source drift/,'explicit current-source drift remains rejected');
 });
+
+// Each Windows worker owns its historical checkout and keeps the original
+// fixture deadlines. Pair the 79757-write replay with the frame provenance
+// case and keep the other 79543-write replay with the remaining checks.
+const firstLane=new Set([
+ 'M3 frame and first UI batch retain every old native write except the explicitly reviewed visual delta',
+ 'the accepted presentation sources still execute the original strict 79757-write fixture',
+]);
+const lanes=[cases.filter(([, [name]])=>firstLane.has(name)),cases.filter(([, [name]])=>!firstLane.has(name))];
+assert.equal(lanes[0].length,firstLane.size,'all first-lane cases are registered');
+assert.equal(new Set(cases.map(([, [name]])=>name)).size,cases.length,'every registered case is unique');
+const laneFlag='--isolated-presentation-m3-lane';
+if(process.argv[2]===laneFlag){
+ const lane=lanes[Number(process.argv[3])];assert(lane,'registered M3 presentation lane');
+ for(const [register,args] of lane)register(...args);
+}else if(process.platform==='win32'&&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'
+ &&availableParallelism()>=4&&!hasTestNameFilter()){
+ test('Windows M3 presentation replays',async()=>{
+  const outcomes=await Promise.allSettled(lanes.map((lane,index)=>runIsolatedTest(import.meta.url,[laneFlag,String(index)],[],lane.length)));
+  for(const result of outcomes){
+   if(result.status==='rejected')throw result.reason;
+   process.stdout.write(result.value);
+  }
+ });
+}else{
+ for(const [register,args] of cases)register(...args);
+}

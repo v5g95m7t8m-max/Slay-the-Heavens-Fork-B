@@ -64,7 +64,8 @@ function frozenPrelude(proof,label){
 }
 export function relicLifecycleFrozenPrelude(){return frozenPrelude(frozenRelicLifecycleSources(),'frozen391');}
 export function purgeA27FrozenPrelude(){return frozenPrelude(frozenPurgeA27Sources(),'frozena27');}
-// Independent processes retain the original raw runner's 30s / 1MiB limits.
+// Independent graph-comparison VMs allow hosted startup and execution variance;
+// the original 1MiB output limit and infrastructure-error rejection remain strict.
 // Native observation is the existing shared observer, with complete readable
 // graph records written to a dedicated file rather than stdout transport.
 export function runRelicLifecycle(group,{frozen=false,trace=true,isolation=false,a27=false}={}){
@@ -73,7 +74,7 @@ export function runRelicLifecycle(group,{frozen=false,trace=true,isolation=false
  mkdirSync(directory,{recursive:true});
  const started=Date.now();
  const result=spawnSync(process.execPath,[resolve('tests/helpers/relic-lifecycle-baseline-vm.mjs'),group,variant,directory,isolation?'isolation':trace?'trace':'raw'],{
-  cwd:process.cwd(),encoding:'utf8',timeout:30000,maxBuffer:1024*1024,
+  cwd:process.cwd(),encoding:'utf8',timeout:60000,maxBuffer:1024*1024,
  });
  writeFileSync(`${directory}/stdout.log`,result.stdout??'');writeFileSync(`${directory}/stderr.log`,result.stderr??'');
  const receipt={group,variant,status:result.status,signal:result.signal,error:result.error?.message??null,

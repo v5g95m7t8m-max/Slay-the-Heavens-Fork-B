@@ -9,6 +9,7 @@ import {pathToFileURL} from 'node:url';
 import {copyIntegrationSourceClosure} from './helpers/copy-integration-source-closure.mjs';
 import {copyCurrentSourceFixture} from './helpers/isolated-current-source.mjs';
 import {sourceEpoch} from './helpers/combined-epoch/source-epoch.mjs';
+import {pointerInputPath,readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 import {preCoreLifecycleSource as frozenCore,coreLifecycleSourceProof} from './helpers/epochs/develop/tests/helpers/core-lifecycle-source-inverse.mjs';
 import {preGameUiExtractionSource as frozenGameUi} from './helpers/epochs/develop/tests/helpers/game-ui-extraction-source-inverse.mjs';
 import * as epoch from './helpers/epochs/develop/tests/helpers/relic-query-source-inverse.mjs';
@@ -170,19 +171,30 @@ test('the isolated current relic facade reads all owners per entry and rejects r
   const {sourceEpoch:detachedEpoch}=await import(pathToFileURL(join(directory,'tests/helpers/combined-epoch/source-epoch.mjs')).href);
   assert.deepEqual(detachedEpoch.proof,sourceEpoch.proof);
   const currentOwners=detachedEpoch.proof.owners;
-  const source=Object.fromEntries([...new Set([...paths,...currentOwners])].map(path=>[path,raw(path)]));
+  const source=Object.fromEntries([...new Set([...paths,...currentOwners,pointerInputPath])].filter(path=>path!==retiredControllerPath).map(path=>[path,raw(path)]));
+  assert.throws(()=>raw(retiredControllerPath),{code:'ENOENT'});
+  const retired=readRetiredController(raw);
+  assert(retired.restored,'the pointer input must authenticate the retired controller');
   const expected={...old,[config]:inverse()(config,read(config))};
   for(const host of paths){
    const reads=new Set();
    assert.equal(prior(host,source[host],{readSource:path=>{reads.add(path);return raw(path);}}),expected[host]);
    assert.deepEqual(currentOwners.filter(path=>!reads.has(path)),[],'fresh current owner inventory: '+host);
   }
-  for(const linked of currentOwners){
+  for(const linked of new Set([...currentOwners,pointerInputPath])){
    const target=join(directory,linked);
+   if(linked===retiredControllerPath){
+    writeFileSync(target,retired.source);
+    assert.throws(()=>prior(actor,source[actor]),/linked owner identity: src\/lua\/abyss_controller\.lua/);
+    rmSync(target);
+    assert.equal(prior(actor,source[actor]),expected[actor]);
+    continue;
+   }
+   const required=linked===pointerInputPath?retiredControllerPath:linked;
    writeFileSync(target,source[linked]+'\n');
-   assert.throws(()=>prior(actor,source[actor]),error=>{assert.match(error.message,/linked owner identity/);assert(error.message.includes(linked));return true;});
+   assert.throws(()=>prior(actor,source[actor]),error=>{assert.match(error.message,linked===pointerInputPath?/linked owner missing/:/linked owner identity/);assert(error.message.includes(required));return true;});
    rmSync(target);
-   assert.throws(()=>prior(actor,source[actor]),error=>{assert.match(error.message,/linked owner missing/);assert(error.message.includes(linked));return true;});
+   assert.throws(()=>prior(actor,source[actor]),error=>{assert.match(error.message,/linked owner missing/);assert(error.message.includes(required));return true;});
    writeFileSync(target,source[linked]);assert.equal(prior(actor,source[actor]),expected[actor]);
   }
   writeFileSync(join(directory,config),JSON.stringify(JSON.parse(source[config])));

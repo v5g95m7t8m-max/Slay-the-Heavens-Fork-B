@@ -2,6 +2,10 @@ import {authorizeRebasedRelease,beforeRebasedRelease} from './rebased-release-so
 import {beforeLateReleaseUiSource,beforeReleaseDetailSource} from './release-integration-source.mjs';
 import {beforeCombatVisualSource,combatVisualPriorRead} from './combat-visual-source.mjs';
 import {authorizeRefinedReleaseProduction,beforeRefinedReleaseProduction} from './refined-release-source.mjs';
+import {inputRetirementStsFixtureSource} from './input-retirement-sts-binding.mjs';
+import {beforeStsFadeCi} from './sts-fade-ci-source.mjs';
+import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
+import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
@@ -56,14 +60,47 @@ export function shopEntryPriorRead(read){
  return (path,...args)=>beforeReleaseShopEntry(path,read(path,...args));
 }
 export const beforeRecordingUi=(path,source)=>beforeReleaseDetailSource(path,recording.project(path,beforeCombatVisualSource(path,source)));
+const officialRuntimePath='tests/official-assets-runtime.test.mjs';
+const currentOfficialRuntime={
+ sha256:'a3341b88551a035189ccc811fa7aa2b7f2eb9c1b6377baa22df6ff3b1fc8c828',
+ gitBlob:'82bdb7dda43d8772e1d1d5ffac3a9690509d9dd4',
+};
+const deckLayoutPath='scripts/deck-ui-layout.mjs';
+const pileReturnLayout={
+ sha256:'0f57f26a4fb520c8feb1df92d48417a6b445900a9ae453c160f500e5a9ee2272',
+ gitBlob:'6c9ce59b446f0dd9b8d5f9ffb3c2303e0320195d',
+};
+function recordingRuntimeInput(path,source){
+ // Production owners must remain raw for the entrance cohort's fresh identity check.
+ if(path.startsWith('src/')||path==='config/architecture.json')return source;
+ source=beforeCurrentReplayFixes(path,beforeUiEntranceWitness(path,source));
+ if(path!==officialRuntimePath||!matches(source,currentOfficialRuntime))return source;
+ return beforeStsFadeCi(path,inputRetirementStsFixtureSource(path,source));
+}
+function recordingLayoutInput(path,source){
+ if(path!==deckLayoutPath||!matches(source,pileReturnLayout))return source;
+ const successor="battlePileReturn(button('pileReturn',[-550,-237,180,54],'返回'),theme.officialAssets.buttonInk)";
+ const predecessor="battlePileReturn(button('pileReturn',[-550,-237,180,54],'返回'),true,undefined,theme.officialAssets.buttonInk)";
+ assert.equal(source.split(successor).length,2,'exact pile return layout change');
+ const prior=source.replace(successor,predecessor);
+ assert(matches(prior,recording.files[path].after),'exact recording layout predecessor');
+ return prior;
+}
 export function beforeAuthenticatedRecordingStage(path,source,read){
- const released=beforeRebasedRelease(path,source);
- if(released!==source)authorizeRebasedRelease([[path,source]],owner=>read(owner,'utf8'));
- const readReleased=owner=>beforeRebasedRelease(owner,read(owner,'utf8'));
- const current=beforeCombatVisualSource(path,released,readReleased);
+ const input=recordingRuntimeInput(path,source);
+ if(input!==source){
+  const live=read(path,'utf8');
+  assert(typeof live==='string'&&live.replaceAll('\r\n','\n')===source.replaceAll('\r\n','\n'),
+   'recording UI linked owner changed: '+path);
+ }
+ const readInput=owner=>recordingRuntimeInput(owner,read(owner,'utf8'));
+ const released=beforeRebasedRelease(path,input);
+ if(released!==input)authorizeRebasedRelease([[path,input]],readInput);
+ const readReleased=owner=>beforeRebasedRelease(owner,readInput(owner));
+ const current=recordingLayoutInput(path,beforeCombatVisualSource(path,released,readReleased));
  const prior=recording.project(path,current);
  if(prior!==current){
-  const live=combatVisualPriorRead(readReleased)(path,'utf8');
+  const live=recordingLayoutInput(path,combatVisualPriorRead(readReleased)(path,'utf8'));
   assert(matches(live,recording.files[path].after),'recording UI linked owner changed: '+path);
  }
  return prior===current?source:prior;

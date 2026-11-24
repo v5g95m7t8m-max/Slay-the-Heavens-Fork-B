@@ -1,7 +1,7 @@
 import {readBeforeMobileQaSource} from './helpers/mobile-qa-source-inverse.mjs';
 import {nodeUiRefactor} from './helpers/node-ui-refactor-inverse.mjs';
 import {preIntegratedNodeUiSource} from './helpers/approved-node-ui-refactor.mjs';
-import {historicalTest as test} from './helpers/historical-baseline-inputs.mjs';
+import {runHistoricalCases} from './helpers/isolated-historical-cases.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,existsSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
@@ -11,6 +11,8 @@ import {approvedUi,preApprovedUiSource,preApprovedUiOuterSource} from './helpers
 import {p0Presentation,preAcceptedPresentation,materializeHistoricalPresentation} from './helpers/p0-presentation-inverse.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const read=p=>readBeforeMobileQaSource(p).replaceAll('\r\n','\n');
+const cases=[];
+const register=(name,body)=>cases.push([name,body]);
 const potionPath='tests/lua/battle_ui_potion_target_failures.lua';
 const potionPart=JSON.parse(read('tests/fixtures/ui-regression-partitions.json')).partitions.find(part=>part.entry===potionPath);
 function originalPotionFailures(source){
@@ -29,7 +31,7 @@ function originalApprovedNodeWitness(binding){
  const source=lines.join('\n');assert.equal(hash(source),binding.afterSha256);
  return source;
 }
-test('approved UI layer binds complete current sources and restores exactly the unchanged PR302 base',()=>{
+register('approved UI layer binds complete current sources and restores exactly the unchanged PR302 base',()=>{
  assert.equal(approvedUi.baseHead,'53fa164a9914dd8a7a5849ff741925dd3131f5e4');
  assert.equal(Object.keys(p0Presentation.files).length,26,'all original PR302 historical bindings remain');
  assert.equal(hash(readFileSync('tests/fixtures/p0-accepted-presentation-inverses.json.gz')),'6f74bc575b24e5c830119e0309b0311017cbeba5ad5cc6d1fdcc44f69a27e164');
@@ -53,7 +55,7 @@ test('approved UI layer binds complete current sources and restores exactly the 
   if(moved.join('\n')!==source)assert.throws(()=>preApprovedUiSource(path,moved.join('\n')),/unreviewed integrated/);
  }
 });
-test('bounded potion registrar composes only its complete exact source before the unchanged frozen UI guard',()=>{
+register('bounded potion registrar composes only its complete exact source before the unchanged frozen UI guard',()=>{
  const live=read(potionPath),original=originalPotionFailures(live),binding=approvedUi.files[potionPath];
  assert.equal(hash(live),'49dcd4b8dfeb5c8fcac998e57c1a8fdc01f8f087959fa723470fcc36136cbf75');
  assert.equal(hash(original),'47565faaad06cbf34edf208a30d922ab4975b19a5025dc751c379ff6ed2d83a9');
@@ -83,7 +85,7 @@ test('bounded potion registrar composes only its complete exact source before th
  assert.equal(preApprovedUiSource('unrelated.lua',live),live,'unrelated paths remain untouched');
  assert.throws(()=>preApprovedUiSource(potionPath,null),/unreviewed integrated/,'a missing bound source remains rejected');
 });
-test('historical materialization consumes both all 26 original sources and every new UI consumer',()=>{
+register('historical materialization consumes both all 26 original sources and every new UI consumer',()=>{
  for(const path of ['src/lua/abyss_card_display.lua','src/lua/abyss_card_skin.lua','src/lua/abyss_shop_ui.lua'])assert(approvedUi.files[path],path);
  const directory=mkdtempSync(join(tmpdir(),'approved-ui-inverse-'));
  try{
@@ -102,3 +104,5 @@ test('historical materialization consumes both all 26 original sources and every
   }
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
+
+runHistoricalCases(import.meta.url,'approved UI historical replay',cases);

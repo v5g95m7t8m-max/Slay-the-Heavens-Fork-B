@@ -1,5 +1,6 @@
 local F=dofile('tests/lua/support/toxic_egg_fixture.lua')
 local U=dofile('tests/lua/support/game_ui_fixture.lua');local UI=require('abyss_node_ui')
+local advanceShop=dofile('tests/lua/support/shop_timeline.lua')
 local function spec(list,name)for _,v in ipairs(list)do if v.name==name then return v end;local found=v.children and spec(v.children,name);if found then return found end end end
 local function bind(r,m)
  local root=U.control(spec(U.Layout,'nodePanel'));local p=require('abyss_character_presentation').prepare(U.Presentation,r.data)
@@ -9,6 +10,7 @@ local function bind(r,m)
 end
 do
  local r=F.Run.new(F.D,42);assert(F.Run.obtainRelic(r,'Toxic Egg 2'));F.Run.gainGold(r,1000);local m=F.enter(r,'shop');local ui,get,p=bind(r,m)
+ assert(ui:press('merchant/talk'));advanceShop(ui)
  local c=r.nodeFlow.cards[3];assert(c.upgraded);assert(get('shopView/card3/name').text:find('＋',1,true))
  local def=F.definition(r,c.id);F.eq(get('shopView/card3/cost').text,tostring(def.upgrade.cost or def.cost))
  local body=require('abyss_card_display').permanentText(p[c.id],def,c);F.eq(get('shopView/card3/description').text,body)

@@ -6,7 +6,8 @@ local V25=require('abyss_v25_menu_view')
 local function control(name)
  local n={name=name,visible=true,children={},scaleWrites=0}
  function n:GetChild(key)
-  if key=='stsCharacter' then return self.children[key]end
+  -- This unit exercises the plain official fallback, not composed rounded result faces.
+  if key=='stsCharacter' or key=='v25Face' then return self.children[key]end
   if not self.children[key]then self.children[key]=control(key)end
   return self.children[key]
  end
@@ -27,6 +28,8 @@ local ctx=Menu.new(owner,menu,{}, {color=function(r,g,b,a)return{r=r,g=g,b=b,a=a
 Menu.present(ctx)
 assert(menu:GetChild('menuRuinsScene').visible,'menu scenery is visible on entry')
 local start=menu:GetChild('start')
+assert(start:GetChild('v25Face')==nil and menu:GetChild('settle'):GetChild('v25Face')==nil,
+ 'plain fallback must not invent rounded result surfaces')
 assert(menu:GetChild('settle'):GetChild('border').visible,'menu must not mutate hidden official settlement surfaces')
 assert(start:GetChild('label').text=='开始游戏')
 assert(start.x==-430 and start.y==-71)

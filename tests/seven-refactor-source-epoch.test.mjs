@@ -426,15 +426,21 @@ test('pure source calculations reuse exact strings but every projection freshly 
   const run=input=>project.preCombinedSource(path,input,{target:'prior',readSource:()=>{reads++;return actual;}});
   assert.equal(run(source),'{}\n');assert.equal(reads,1);
   assert.equal(run(source),'{}\n');assert.equal(reads,2);
+  // Entrance admission parses every input afresh; only the pure layout matcher memoizes.
+  assert.equal(parses,2,'two exact input calls each retain the fresh entrance syntax gate');
   const layout='{ "cacheFreshness" : 1 }\n';
-  assert.equal(run(layout),'{}\n');assert.equal(parses,1);assert.equal(reads,3);
-  assert.equal(run(layout),'{}\n');assert.equal(parses,1);assert.equal(reads,4);
+  const beforeLayout=parses;
+  assert.equal(run(layout),'{}\n');assert.equal(parses-beforeLayout,2,'fresh entrance plus first pure layout calculation');assert.equal(reads,3);
+  const beforeWarmLayout=parses;
+  assert.equal(run(layout),'{}\n');assert.equal(parses-beforeWarmLayout,1,'warm calculation still runs fresh entrance admission');assert.equal(reads,4);
   actual=source.replace('1','2');assert.throws(()=>run(layout),/linked owner identity/);assert.equal(reads,5);
   actual=null;assert.throws(()=>run(layout),/linked owner identity/);assert.equal(reads,6);
   actual=source.replaceAll('\n','\r\n');assert.equal(run(layout),'{}\n');assert.equal(reads,7);
   assert.throws(()=>project.preCombinedSource(path,layout,{target:'prior',readSource:null}),/linked owner reader/);
-  const foreign=layout.replace('1','2');assert.equal(run(foreign),foreign);assert.equal(reads,7);
-  assert.equal(run(foreign),foreign);assert.equal(reads,7);assert.equal(parses,2);
+  const foreign=layout.replace('1','2'),beforeForeign=parses;assert.equal(run(foreign),foreign);assert.equal(reads,7);
+  assert.equal(parses-beforeForeign,2,'foreign input runs entrance syntax and its first pure calculation');
+  const beforeWarmForeign=parses;
+  assert.equal(run(foreign),foreign);assert.equal(reads,7);assert.equal(parses-beforeWarmForeign,1,'foreign warm calculation is cached without caching admission');
  }finally{crypto.createHash=originalHash;JSON.parse=originalParse;syncBuiltinESMExports();}
 });
 

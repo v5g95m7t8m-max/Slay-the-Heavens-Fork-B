@@ -22,9 +22,8 @@ end
 for _,action in ipairs({'hide','resize','restart'})do
  local ui,root=setup()
  local tap=root:GetChild('merchant'):GetChild('talk'):GetChild('hit').click
- advanceShop(ui) -- Stage the concealed shelf before testing interruption of its visible slide.
  assert(ui.merchant.current==nil and tap())
- ui:update(.1);assert(ui.shopBusy)
+ ui:update(.1);assert(not ui.shopBusy and root:GetChild('shopView').y>0)
  if action=='hide' then ui:setVisible(false);assert(not tap());ui:update(5);ui:setVisible(true)
  elseif action=='resize' then ui:resize(1920,1080)
  else
@@ -40,7 +39,7 @@ for _,action in ipairs({'hide','resize','restart'})do
  ui:setVisible(true);ui:update(2)
  assert(not root:GetChild('merchant'):GetChild('bubble').visible)
  ui:render();ui:update(30);assert(ui.merchant.current==current)
- assert(not root:GetChild('shopRoom').visible)
+ assert(root:GetChild('shopRoom').visible)
  assert(ui:press('back'));ui:update(.1);ui:setVisible(false);ui:setVisible(true)
  assert(not ui.shopBusy and not ui.run.nodeFlow.complete,'cancelled exit committed in background')
  assert(ui:press('back'));ui:update(.31);assert(ui.run.nodeFlow.complete)

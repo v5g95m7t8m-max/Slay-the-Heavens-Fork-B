@@ -52,3 +52,22 @@ test('native startup failure lifecycle covers competition Geo and retained full-
   assert.equal(result.status,0,result.stdout+result.stderr);
   assert.match(result.stdout,/GAME_UI_CLASSES_FAILURE_PASS 7/);
 });
+
+
+test('relative roster StS replay composes exact integration successors before its frozen witness',async()=>{
+ const {beforeCurrentHistoricalStsSource}=await import('./helpers/calibration-replay-sources.mjs');
+ const {inputRetirementStsFixtureSource}=await import('./helpers/input-retirement-sts-binding.mjs');
+ const path='tests/integration-source-epoch.test.mjs',raw=readFileSync(path,'utf8').replaceAll('\r\n','\n');
+ const digest=s=>createHash('sha256').update(s).digest('hex');
+ for(const input of [raw,raw.replaceAll('\n','\r\n'),Buffer.from(raw)]){
+  const witness=beforeCurrentHistoricalStsSource(path,input),text=Buffer.isBuffer(witness)?witness.toString('utf8'):witness;
+  assert.equal(digest(text.replaceAll('\r\n','\n')),'58159c0c30a0bbd658c1d47543c2350d8534198c43c4ba59b03318f14195178d','exact pre-entrance merged integration witness');
+  const prior=inputRetirementStsFixtureSource(path,witness),result=Buffer.isBuffer(prior)?prior.toString('utf8'):prior;
+  assert.equal(digest(result.replaceAll('\r\n','\n')),'91dcae5efd5e6625764f85069f1552aaf7bfe5644d1b4c86e350faf90a9d576f','complete immutable archived StS integration source');
+  assert.equal(Buffer.isBuffer(prior),Buffer.isBuffer(input),'historical reader preserves Buffer type');
+ }
+ for(const drift of [raw+'\n',raw.replaceAll('\n','\r\r\n')]){
+  assert.equal(beforeCurrentHistoricalStsSource(path,drift),drift,'unknown complete bytes stay opaque');
+  assert.throws(()=>inputRetirementStsFixtureSource(path,drift),/fresh composed StS integration source/);
+ }
+});

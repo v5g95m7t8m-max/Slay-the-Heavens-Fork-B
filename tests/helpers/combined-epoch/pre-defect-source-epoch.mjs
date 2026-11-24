@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createSourceEpochProjector} from './source-epoch-runtime.mjs';
+import {createComposedSourceEpochProjector} from './source-epoch-runtime.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const compressed=readFileSync(new URL('./source-epoch.json.gz',import.meta.url));
 assert.equal(hash(compressed),'2085260a5aabde4476411172eb0b2e6fd3afcaa991a3cafc52f3ab0e98755c73','combined compressed manifest identity');
@@ -22,7 +22,7 @@ const proof={schemaVersion:1,normalization:packed.normalization,currentCommit:pa
 // the complete production tree is independently authenticated by the live test.
 proof.owners=packed.owners.filter(path=>Object.values(proof.targets).some(target=>target.files[path]?.sha256!==proof.current[path]?.sha256));
 // Standalone siblings retain their original exact 45/46-owner contracts.
-export const preWatcherFlowEpoch=extendSevenRefactorEpoch(createSourceEpochProjector(proof,{allowConfigLayout:true}));
+export const preWatcherFlowEpoch=extendSevenRefactorEpoch(createComposedSourceEpochProjector(proof));
 export const preSilentTacticsEpoch=preWatcherFlowEpoch;
 export const preEffectsTargetGroupEpoch=preWatcherFlowEpoch;
 export const standaloneWatcherFlowEpoch=extendWatcherFlowEpoch(preWatcherFlowEpoch);

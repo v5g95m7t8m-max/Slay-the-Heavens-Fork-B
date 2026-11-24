@@ -124,13 +124,29 @@ print('ROUTE_CURVE_PASS')
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {beforeAuthenticatedRecordingStage} from './helpers/release-ui-restore-source.mjs';
+import {beforeCurrentReplayFixes} from './helpers/current-replay-fix-sources.mjs';
 test('recording historical continuation accepts exact owners and rejects stale, drifted or mixed reads',()=>{
  const {files}=JSON.parse(gunzipSync(readFileSync('tests/helpers/recording-0401-source.json.gz')));
  for(const [path,row] of Object.entries(files)){
   const live=readFileSync(path,'utf8');
-  assert.equal(beforeAuthenticatedRecordingStage(path,live,readFileSync),row.before.source,path);
+  assert.equal(beforeAuthenticatedRecordingStage(path,live,readFileSync).replaceAll('\r\n','\n'),row.before.source,path);
   const drift=live+'\n-- unreviewed drift\n';
   assert.equal(beforeAuthenticatedRecordingStage(path,drift,readFileSync),drift,'unknown bytes must remain unprojected');
   assert.throws(()=>beforeAuthenticatedRecordingStage(path,live,owner=>owner===path?drift:readFileSync(owner,'utf8')),/linked owner (?:changed|identity)/);
  }
+});
+
+test('recording continuation authenticates raw current production owners before projection',()=>{
+ const path='src/lua/abyss_deck_ui.lua',live=readFileSync(path,'utf8');
+ const expected=beforeAuthenticatedRecordingStage(path,live,readFileSync);
+ const expectedLf=expected.replaceAll('\r\n','\n');
+ for(const owner of ['src/lua/abyss_game_ui.lua','src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui_run.lua']){
+  const raw=readFileSync(owner,'utf8'),stale=beforeCurrentReplayFixes(owner,raw);
+  assert.notEqual(stale,raw,'negative control must change production bytes');
+  for(const bad of [stale,raw+'\n-- unreviewed drift\n']){
+   assert.throws(()=>beforeAuthenticatedRecordingStage(path,live,p=>p===owner?bad:readFileSync(p,'utf8')),/linked owner (?:missing|identity|changed)/,owner);
+   assert.equal(beforeAuthenticatedRecordingStage(path,live,readFileSync),expected,'a rejected read must not authorize or poison the next cohort');
+  }
+ }
+ assert.equal(beforeAuthenticatedRecordingStage(path,live.replace(/\r?\n/g,'\r\n'),p=>readFileSync(p,'utf8').replace(/\r?\n/g,'\r\n')).replaceAll('\r\n','\n'),expectedLf);
 });

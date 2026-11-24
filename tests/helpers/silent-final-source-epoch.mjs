@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
+import {createComposedSourceEpochProjector,createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const archive=readFileSync(new URL('./silent-final-source-epoch.json.gz',import.meta.url));
 assert.equal(hash(archive),'8d70652c025b8075e2a03936f12c2509dbca427abd555e472f197b1ac4850b49','silent-final compressed identity');
@@ -17,7 +17,7 @@ export function extendSilentFinalEpoch(original){
  const proof={...prior,currentTreeCommitted:false,silentFinalCurrentCommitRole:outer.currentCommitRole,silentFinalCollectedBaseCommit:outer.targets.prior.commit,current:{...prior.current,...outer.current},
   owners:[...new Set([...prior.owners,...outer.owners])],
   targets:{...prior.targets,silentFinalPrior:{commit:outer.targets.prior.commit,files:prior.current}}};
- const current=createSourceEpochProjector(proof,{allowConfigLayout:true}),live=p=>readFileSync(p,'utf8'),readers=new WeakMap();
+ const current=createComposedSourceEpochProjector(proof),live=p=>readFileSync(p,'utf8'),readers=new WeakMap();
  function preCombinedSource(path,source,{target,readSource=live}={}){
   readSource=readers.get(readSource)?.raw??readSource;
   const projected=current.preCombinedSource(path,source,{target,readSource});

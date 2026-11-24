@@ -94,6 +94,10 @@ local function setup(kind, source, prepare, events, sound,relicSeed)
     ui:setVisible(true) -- the host shows the panel in node mode
     if kind=="shop" then assert(root:GetChild("merchant"):GetChild("talk"):GetChild("hit").click());advanceShop(ui) end
     local function get(key)
+        key = key:gsub('^shopView/(%a+)', function(name)
+            return (name:match('^relic') or name:match('^potion') or name:match('^removal'))
+                and 'shopView/goods/'..name or 'shopView/'..name
+        end)
         local node = root
         for part in key:gmatch("[^/]+") do node = assert(node:GetChild(part), "missing " .. key) end
         return node
@@ -193,7 +197,7 @@ test("shop shelf shows five colored and two implemented colorless cards without 
         assert(get('shopView/card'..i..'/description').text~='',offer.id..' must describe the card')
         assert(not get('shopView/card'..i..'/veil').visible,offer.id..' must not be sold')
     end
-    assert(get("back").children.label.text == "离开" and not shown("confirm"))
+    assert(get("back").children.label.text == "关闭" and not shown("confirm"))
 end)
 
 test("unaffordable goods turn the price red, grey the card and explain without charging", function()
@@ -307,16 +311,15 @@ end)
 
 test("merchant only gives short transaction feedback and never idle dialogue", function()
     local ui,get,click,shown=setup('shop',nil,function(run)run.gold=10000 end)
-    assert(not shown('shopRoom') and ui.merchant.current==nil)
+    assert(shown('shopRoom') and ui.merchant.current==nil)
     assert(click('shopView/card1') and click('confirm'))
     assert(get('merchant/line').text=='谢啦！' and shown('merchant/bubble'))
     ui:update(2);assert(not shown('merchant/bubble'))
     ui:update(20);assert(not shown('merchant/bubble'))
     assert(click('shopView/card2') and click('confirm'))
-    assert(shown('merchant/bubble') and not shown('shopRoom'))
-    assert(click('back'));ui:update(.31)
-    assert(ui:holding() and not shown('shopView'))
-    assert(click('confirm') and not ui:holding())
+    assert(shown('merchant/bubble') and shown('shopRoom'))
+    assert(click('back'));assert(not ui.run.nodeFlow.complete and not shown('shopView'))
+    ui:update(.7);assert(click('back') and ui.run.nodeFlow.complete and not ui:holding())
 end)
 
 test("merchant reaction sounds are requested only for sales and refusals", function()
@@ -328,13 +331,13 @@ test("merchant reaction sounds are requested only for sales and refusals", funct
         sound = function(cue) cues[#cues + 1] = cue end })
     ui:setVisible(true)
     assert(root:GetChild("merchant"):GetChild("talk"):GetChild("hit").click());advanceShop(ui)
-    assert(#cues == 0, "entering and greeting are silent")
+    assert(#cues == 1 and cues[1]=='shop_open', "only shelf activation plays the entry cue")
     assert(ui:press("shopView/card1"))
-    assert(#cues==0, "preview is not a sale")
+    assert(#cues==1, "preview is not a sale")
     assert(ui:press("confirm"))
     run.gold = 0 ui:render()
     assert(not ui:press("shopView/card2"))
-    assert(cues[1] == "merchant_buy" and cues[2] == "merchant_deny" and #cues == 2)
+    assert(cues[2] == "merchant_buy" and cues[3] == "merchant_deny" and #cues == 3)
     assert(Theme.sound.merchant_buy and Theme.sound.merchant_deny)
 end)
 

@@ -1,5 +1,7 @@
-import {actorFocusAdded,assertActorFocusInventory,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
+import {actorFocusAdded,assertActorFocusInventory,deckPagesAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
+import {pointerInputPath,readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 import {beforeCharacterPreparationSource} from './helpers/character-preparation-source.mjs';
+import {entranceInventory} from './helpers/ui-entrance-source.mjs';
 import {assertCurrentJsInventory,beforeInputRetirementTestInventory,beforeShopEntryInventory} from './helpers/fork-preflight-source.mjs';
 import test from 'node:test';
 import {integratedRead,integratedCiProof,integratedPriorInventory,assertIntegratedCurrent} from './helpers/integrated-ci-source.mjs';
@@ -15,6 +17,8 @@ import {readFileSync,readdirSync} from 'node:fs';
 import {discoverJs,jsPlanningWeights,timings} from '../scripts/ci-shards.mjs';
 const hash=source=>createHash('sha256').update(source).digest('hex');
 const bind=source=>({source,sha256:hash(source)}),commit='c'.repeat(40);
+const readProduction=path=>readFileSync(path,'utf8');
+const readProductionHistory=path=>path===retiredControllerPath?readRetiredController(readProduction).source:readProduction(path);
 function fixture(){
  const config='config/architecture.json',one='src/lua/one.lua',two='src/lua/two.lua',added='src/lua/abyss_page_reveal.lua';
  const current={[config]:bind('{}\n'),[one]:bind('return 1\n'),[two]:bind('return 2\n')};
@@ -107,21 +111,29 @@ test('incomplete inventories, invented predecessors and unowned additions cannot
 
 test('real style source retains the complete CI-repair and every older target while authenticating all current raw owners',async()=>{
  const {sourceEpoch,ciRepairSourceEpoch,releaseSourceEpoch,prePowerMembershipEpoch}=await import('./helpers/closeout-source-epoch.mjs');
- const p=sourceEpoch.proof,before=ciRepairSourceEpoch.proof,read=path=>readFileSync(path,'utf8');
+ const p=sourceEpoch.proof,before=ciRepairSourceEpoch.proof,read=readProduction;
  assert.equal(Object.keys(before.current).length,347); // config plus all 346 prior Lua modules.
  assert.equal(Object.keys(releaseSourceEpoch.proof.current).length,350); // Frozen release: page reveal, low-cost art, merchant pages.
  assert.equal(Object.keys(prePowerMembershipEpoch.proof.current).length,352); // Final menu adds navigation and navigation view.
  assert.deepEqual(Object.keys(p.current).sort(),[...Object.keys(prePowerMembershipEpoch.proof.current),'src/lua/abyss_power_membership.lua'].sort());
  const actual=['config/architecture.json',...readdirSync('src/lua').filter(n=>n.endsWith('.lua')).map(n=>'src/lua/'+n)].sort();
- assert.deepEqual([...Object.keys(p.current),...stasisUpgradeAddedPaths,...actorFocusAdded].sort(),actual);
+ assert(Object.hasOwn(p.current,retiredControllerPath),'the archived controller must remain available to historical targets');
+ const previous=Object.keys(p.current).filter(path=>path!==retiredControllerPath);
+ assert.deepEqual([...previous,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort(),entranceInventory(actual,read));
  assertActorFocusInventory(actual.filter(path=>path!=='config/architecture.json'),read);
  for(const [path,row]of Object.entries(before.current))assert.deepEqual(p.targets.stsStylePrior.files[path],row,path+' complete prior');
  for(const [name,target]of Object.entries(before.targets))for(const [path,row]of Object.entries(target.files))assert.deepEqual(p.targets[name].files[path],row,name+'/'+path);
- for(const path of Object.keys(p.current))assert.equal(beforeCharacterPreparationSource(path,read(path)).replaceAll('\r\n','\n'),p.current[path].source,path+' raw complete current');
+ for(const path of Object.keys(p.current))assert.equal(beforeCharacterPreparationSource(path,readProductionHistory(path)).replaceAll('\r\n','\n'),p.current[path].source,path+' exact historical input');
  const config='config/architecture.json',raw=read(config),prior=p.targets.stsStylePrior.files[config].source;
  assert.equal(sourceEpoch.preCombinedSource(config,raw,{target:'stsStylePrior',readSource:read}),prior);
- for(const owner of p.owners.filter(path=>!before.owners.includes(path)))for(const missing of [null,read(owner)+'\n'])
-  assert.throws(()=>sourceEpoch.preCombinedSource(config,raw,{target:'stsStylePrior',readSource:path=>path===owner?missing:read(path)}),/linked owner identity/,owner);
+ for(const owner of p.owners.filter(path=>!before.owners.includes(path))){
+  const foreign=readProductionHistory(owner)+'\n';
+  // The retired controller has an absence witness. Removing its live replacement must still fail.
+  const missing=owner===retiredControllerPath?pointerInputPath:owner;
+  for(const [changed,value] of [[missing,null],[owner,foreign]]){
+   assert.throws(()=>sourceEpoch.preCombinedSource(config,raw,{target:'stsStylePrior',readSource:path=>path===changed?value:read(path)}),/linked owner|pointer input/,changed);
+  }
+ }
 });
 
 test('real style CI admits only full inventory, complete source and freshly verified executable helpers',async()=>{
@@ -234,8 +246,8 @@ test('feedback real current source and CI preserve all four immutable archives a
   assert.equal(p.targets.stsFeedbackPrior.files[path],null,'new module has no invented predecessor');
   for(const name of Object.keys(stsStyleEpoch.proof.targets))assert.equal(p.targets[name].files[path],null,name+'/'+path);
  }
- for(const [path,row]of Object.entries(p.current))assert.equal(beforeCharacterPreparationSource(path,readFileSync(path,'utf8')).replaceAll('\r\n','\n'),row.source,path);
- const anchor=feedbackProductionPaths[0],raw=path=>readFileSync(path,'utf8');
+ for(const [path,row]of Object.entries(p.current))assert.equal(beforeCharacterPreparationSource(path,readProductionHistory(path)).replaceAll('\r\n','\n'),row.source,path);
+ const anchor=feedbackProductionPaths[0],raw=readProduction;
  assert.equal(sourceEpoch.preCombinedSource(anchor,raw(anchor),{target:'stsFeedbackPrior',readSource:raw}),stsStyleEpoch.proof.current[anchor].source);
  for(const path of feedbackProductionPaths){
   assert(p.owners.includes(path),'current owner must guard every changed feedback source: '+path);

@@ -5,6 +5,7 @@ import {gunzipSync} from 'node:zlib';
 import {beforeStsUiCloseoutSource} from './sts-ui-closeout-source.mjs';
 import {exactSourceContinuation} from './exact-source-continuation.mjs';
 import {beforeAuthenticatedReleaseUiRestore,beforeReleaseUiRestore} from './release-ui-restore-source.mjs';
+import {beforeInputRetirement} from './input-retirement-source.mjs';
 
 const bytes=readFileSync(new URL('../fixtures/potion-pointer-source.json.gz',import.meta.url));
 const sha256=value=>createHash('sha256').update(value).digest('hex');
@@ -26,8 +27,14 @@ export function authorizePotionPointerSource(path,source,binding,samples,read){
 export function beforePotionPointerSource(path,source,read){
  const continuation=continuations.get(path);
  if(!continuation)return source;
- source=beforeStsUiCloseoutSource(path,source);
- const readSts=owner=>beforeStsUiCloseoutSource(owner,read(owner));
+ const current=beforeInputRetirement(path,source);
+ if(current!==source){
+  const live=read(path);
+  assert(typeof live==='string'&&live.replaceAll('\r\n','\n')===source.replaceAll('\r\n','\n'),
+   'combined linked owner identity: '+path+' during potion backflow validation');
+ }
+ source=beforeStsUiCloseoutSource(path,current);
+ const readSts=owner=>beforeStsUiCloseoutSource(owner,beforeInputRetirement(owner,read(owner)));
  source=beforeAuthenticatedReleaseUiRestore(path,source,readSts);
  return continuation.predecessor(path,source,owner=>beforeReleaseUiRestore(owner,readSts(owner)));
 }

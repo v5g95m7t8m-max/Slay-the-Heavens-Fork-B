@@ -4,7 +4,7 @@ import {officialAssetsProfile,refinedReleaseOfficialAssetsProfile,refinedRelease
 import {uiProfileReceipt} from '../scripts/ui-profile.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -16,7 +16,7 @@ import { gitSourceIdentity } from '../scripts/release-notes.mjs';
 import {prepareRefinedReleaseMonsterArt,refinedReleaseMonsterRegistry} from '../scripts/refined-release-monsters.mjs';
 
 function fixture(t, mutate = () => {}, {refined=false}={}) {
-  const root = mkdtempSync(join(tmpdir(), 'abyss-audio-release-'));
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'abyss-audio-release-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, 'data')); writeFileSync(join(root, 'data/input.json'), '{}');
   const registryPath=join(root,refinedReleaseMonsterRegistry);

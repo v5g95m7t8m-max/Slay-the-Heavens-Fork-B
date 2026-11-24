@@ -100,15 +100,27 @@ test('EndTurn current source composes into frozen N35 and freshly authenticates 
  };
  const wrapped=relicQueryReader(raw);assert.equal(relicQueryReader(wrapped),wrapped);
  assert.equal(preRelicQuerySource(file,current),old);assert.equal(wrapped(file),old);
- const outerReadCount=403;
+ const outerReadCount=466;
  let validReads;
  for(const readSource of [raw,wrapped]){
   changed=undefined;reads=[];assert.equal(preRelicQuerySource(file,current,{readSource}),old);
   if(!validReads){
-   // Nested source cohorts have their own fresh reads before and after the
-   // original owners. Bind the full live trace to its exact frozen order.
-   assert.equal(reads.length,8150);
-   assert.equal(hash(JSON.stringify(reads)),'78bb454171aed5367d039514c30a57c9971c0be116f11e048df8f3a08bc7cbb2');
+   // Current replay cohorts add fresh linked reads around the original owner sequence.
+   // Bind the complete live trace after normalizing Windows checkout endings.
+   assert.equal(reads.length,9898);
+   assert.equal(hash(JSON.stringify(reads)),'79bf86a4544d87721356dea6a0e668a4cb1ffbd076b8c97ba227107540d6b8e0');
+   const entranceBytes=readFileSync('tests/fixtures/ui-entrance-source.json.gz');
+   assert.equal(hash(entranceBytes),'7ac3f53b242819cdb569c0a1ebf60de0605b72297a1072ea612bfeb11b0597c9');
+   const entranceOwners=Object.keys(JSON.parse(gunzipSync(entranceBytes)).files),priorReads=[];
+   let entranceGroups=0;
+   for(let i=0;i<reads.length;){
+    if(JSON.stringify(reads.slice(i,i+entranceOwners.length))===JSON.stringify(entranceOwners)){
+     entranceGroups++;i+=entranceOwners.length;
+    }else priorReads.push(reads[i++]);
+   }
+   assert.equal(entranceGroups,22,'all complete fresh entrance cohorts remain observed');
+   assert.equal(priorReads.length,9458);
+   assert.equal(hash(JSON.stringify(priorReads)),'fcf5e049f6c8f284fa248ebe012c2f7a5620546e453ebc8766fea8c1d14bd749','unchanged complete prior admission sequence');
    let position=-1;
    for(const owner of owners){
     position=reads.indexOf(owner,position+1);
@@ -141,10 +153,10 @@ test('EndTurn current source composes into frozen N35 and freshly authenticates 
  const configDrift='combined linked owner missing: '+config+': combined linked owner identity: '+config+
   ' changed during Develop backflow validation (deck-pages validation)';
  assert.throws(()=>preRelicQuerySource(file,current,{readSource:p=>p===config?JSON.stringify(JSON.parse(read(p))):read(p)}),{message:configDrift});
- // The first 403 observations belong to the outer authenticated projection.
+ // The first 466 observations include the new complete entrance cohort.
  // Mutate the first config observation from the wrapped N35 projector.
  const firstInnerConfig=validReads.indexOf(config,outerReadCount);
- assert.equal(firstInnerConfig,405);
+ assert.equal(firstInnerConfig,468);
  const innerOccurrence=validReads.slice(0,firstInnerConfig+1).filter(path=>path===config).length;
  let configReads=0;reads=[];
  assert.throws(()=>preRelicQuerySource(file,current,{readSource:p=>{

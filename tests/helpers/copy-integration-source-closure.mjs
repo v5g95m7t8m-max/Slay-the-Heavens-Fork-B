@@ -314,11 +314,57 @@ const actionButtonFiles=Object.freeze({
  'tests/helpers/action-buttons-source.mjs':'fdb6c73f52cf92fededa3d48fded11f05e21356ec66864a43c54bdf51781d4cd',
  'tests/fixtures/action-buttons-source.json.gz':'86634a756c4085906261d4d318118bb1f7692a642479651526c1ace0fefe4487',
 });
+const currentReplayFiles=Object.freeze({
+ ...actionButtonFiles,
+ 'tests/helpers/combined-epoch/pre-defect-source-epoch.mjs':'6199f290e0faf4770452de5e6481aa4d27e4d039bcd2d4b6673b96694726d6d0',
+ 'tests/helpers/defect-final-source-epoch.mjs':'d6dabee023a3a9f8a2620c3edd1dee0b8b359aa62aff8a17b63175e170ab8b04',
+ 'tests/helpers/effects-target-group-source-epoch.mjs':'c73c6b050ece8efd96775188c146e1d736561d068f61cd3e7081c74d937fc0af',
+ 'tests/helpers/encounter-formation-source-epoch.mjs':'a044c0830309415ea3858a6368f6d794440db1f2d68b6cf3742111b03cd047c5',
+ 'tests/helpers/noncombat-source-epoch.mjs':'4b8705f85cf1609b8e1c28253610b3ddc4ea8a1fa8dae4b054601c56fdd3c9b2',
+ 'tests/helpers/relic-equip-source-epoch.mjs':'b768a3e8023f0286f4aa577d1300f932567b9d731b836038dac5959e9d67ce02',
+ 'tests/helpers/room-ui-source-epoch.mjs':'ce50bd58037ea74976dae9e94515dfd16f91432c715ee880c00ae8080a73202e',
+ 'tests/helpers/seven-refactor-source-epoch.mjs':'5944f7c74d61e93fa5870281b5cc45993535c2e96c4d0014a1d5fe24baa46341',
+ 'tests/helpers/silent-final-source-epoch.mjs':'d31330033fd9e188d93001a55213e1c471546f6e57b3b6ec68f726c23468e35e',
+ 'tests/helpers/silent-tactics-source-epoch.mjs':'decd2795a2b2a02ae717787dd5ae822f69191b1660464da905a641f8116930d1',
+ 'tests/helpers/watcher-flow-source-epoch.mjs':'def224824eedc945a1cb402dd0429861593f0ff08a822f1961a954bf467f3378',
+ 'tests/helpers/combined-epoch/source-epoch-runtime.mjs':'a8afebef6e0f30862db595c59dfc5e2056e3ea52207b70644a0fa3a5ae1568db',
+ 'tests/helpers/source-fingerprint.mjs':'61602dc332625a797e6d316c4871de39b4d241aa722a3f0dab3db2435576cbfd',
+ 'tests/helpers/game-ui-extraction-source-inverse.mjs':'2289fc74eb6d0948182080709e12d0e1f497a9c7b845dcbdeb704b6bd191be1a',
+ 'tests/helpers/action-buttons-source.mjs':'2ed23e99f0b72927215c24189b1a93752d9869b968cca0fc327a4b780900d4af',
+ 'tests/helpers/develop-release-backflow-source.mjs':'9e3606266f404f4992c32eb168b8924314deaf129ecbe2ac09c8fd2641efc954',
+ 'tests/helpers/m7-core-final-source-inverse.mjs':'acd5d226aa7f1e4e843a2b6db3f6e4d97b36476df2319ad6b6176cfac1c0cf86',
+ 'tests/helpers/potion-pointer-source.mjs':'0eee6e133a69f776e08576c0f5c981c1601ec45a371c1d641ec647f998734c76',
+ 'tests/helpers/input-retirement-source.mjs':'50ed8e5e59062cc3c0f59dff740b550a17fddfaf817d2dd53b0d09c125ab5222',
+ 'tests/helpers/release-ui-restore-source.mjs':'de6835c2a44271c50a20ea39cb18c68f3d5c84b04ce8959171c013b34efc4664',
+ 'tests/helpers/current-replay-fix-sources.mjs':'033b3684438a3c3a5c51a5acaebe6a86881db44c39d82068776dd38386c84a0d',
+ 'tests/helpers/exact-fixture-hunks.mjs':'83f9cb15d9d745c86c555a77875b6b2bfc283a12ec380bcd2af518aa6526a935',
+ 'tests/helpers/input-retirement-sts-binding.mjs':'f6395a7c5e299738db3caf30f29d7d29724e7ac091af012a585c76b785697219',
+ 'tests/helpers/input-retirement-merged-sts-source.json.gz':'0c8455ee5877bbb5c4c2fa9e8c2dfb5bfba9cb7e6c388bf1c67f149ac53ca960',
+ 'tests/helpers/sts-fade-ci-source.mjs':'08e3a0e48adc084331516d89af8a91ef013c55553b227e6ade54eb647b6512ab',
+ 'tests/fixtures/sts-fade-ci-source.json':'be33c862d5b8d8d3f3d40a70228c9eba52c8391e0425b77df07a04297e8bfdb6',
+ 'tests/fixtures/sts-ui-closeout-ci.json':'d9855569eb08eeb059fa50ec036d65fe7d28050b10bde7b6a5626c081fe02ac0',
+});
+const entranceFiles=Object.freeze({
+ ...currentReplayFiles,
+ 'tests/helpers/m7-core-final-source-inverse.mjs':'8e0d432cd1ecf668bad14a614a61772e495e13cce67ab0168babcaac5bfda1e6',
+ 'tests/helpers/release-ui-restore-source.mjs':'d2f34bef11ae4cb35c5df68556afc37d3de8d4ce7268a988bcef8fc39495b47a',
+ 'tests/helpers/current-replay-fix-sources.mjs':'bfef80da2fc30501c3b2e82cd14bdb8130e4a089f2db231ff2587804fa83a08b',
+ 'tests/helpers/character-preparation-source.mjs':'ae3b89b99224cf8bb86b8e569e6488db68ac2d30bf1233ed6652c90808df1984',
+ 'tests/helpers/develop-release-backflow-source.mjs':'4ac2a7c073d78f0029d85e9834f6063a4a797f215a529e349bdfc4f19ab5484c',
+ 'tests/helpers/native-fixture-replay-source.mjs':'5a9de41dfd4ee6d5438c24c9c7c9f068eeaeba66bc6fc8abec16d9c08d32864b',
+ 'tests/helpers/native-flow-fixture-source.mjs':'303770de22647a8eea4090cefa8e75cafa9c8643a2048441698ed8c02633a732',
+ 'tests/helpers/ui-entrance-source.mjs':'55bbaca21af744a48dff1c5b445160b993bcf0862f813ce328a630408247e315',
+ 'tests/helpers/exact-fixture-hunks.mjs':'83f9cb15d9d745c86c555a77875b6b2bfc283a12ec380bcd2af518aa6526a935',
+ 'tests/fixtures/ui-entrance-source.json.gz':'7ac3f53b242819cdb569c0a1ebf60de0605b72297a1072ea612bfeb11b0597c9',
+ 'tests/helpers/combined-epoch/source-epoch-runtime.mjs':'e4d3f37edd23a2040290b1091540d17776fe6f7f7a129f4c31e48e71a8f9a0c0',
+ [runtime]: 'e4d3f37edd23a2040290b1091540d17776fe6f7f7a129f4c31e48e71a8f9a0c0',
+ [closeout]: '4f559399c631fbd0fd25ea7f1ceb8f3b8c6643e167f0116d9f151e12ee0a0ecb',
+});
 const inside=(root,path)=>{const r=relative(root,path);return r!==''&&!isAbsolute(r)&&r!=='..'&&!r.startsWith('../')&&!r.startsWith('..\\');};
 export function copyIntegrationSourceClosure(directory,{sourceRoot=process.cwd()}={}){
  const destination=realpathSync.native(directory);
  assert.notEqual(destination,realpathSync.native(sourceRoot),'isolated helper copy destination');
- for(const [path,sha]of Object.entries(actionButtonFiles)){
+ for(const [path,sha]of Object.entries(entranceFiles)){
   assert((path.startsWith('tests/helpers/')||path.startsWith('tests/fixtures/'))&&!path.split('/').includes('..'),'fixed helper path');
   const source=join(sourceRoot,path),content=integrationClosureBytes(path,readFileSync(source));assert.equal(hash(content),sha,'fresh helper copy identity: '+path);
   const target=join(directory,path);mkdirSync(dirname(target),{recursive:true});

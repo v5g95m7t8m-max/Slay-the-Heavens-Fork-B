@@ -31,8 +31,8 @@ function M.install(ctx)
         ctx.resetButtons()
         ctx.shopSelection:clear()
         ctx.roomMotion:cancel()
-        ctx.cancelShop(false)
         self.canvasWidth, self.canvasHeight = width, height
+        ctx.cancelShop(false)
         if self.pendingOwner then self:render();return end
         if self.view and self.view.node and (self.view.node.type=='shop' or ctx.options.enhancedRooms) then self:render() end
         if self.view and self.view.node and self.view.node.type=='event' and stagedEvent(self.view.node.event.id) then self:render() end
@@ -96,11 +96,7 @@ function M.install(ctx)
         if require('abyss_relic_pending').owner(self.run) then self:render();return end
         local node = self.view and self.view.node
         if not node then return end
-        if ctx.options.enhancedRooms or stagedVisibleEvent(node) or node.type == 'shop' and self.shopOpen then
-            self:render()
-        elseif node.type == 'shop' then
-            ctx.paintShop()
-        end
+        if ctx.options.enhancedRooms or stagedVisibleEvent(node) or node.type == 'shop' then self:render() end
     end
 
     function ctx.self:setVisible(value,retainPage,renderByHost)
@@ -109,6 +105,7 @@ function M.install(ctx)
         if not value then
             ctx.resetButtons();ctx.shopSelection:clear();ctx.roomMotion:cancel();ctx.cancelShop(false)
             if not retainPage then
+                ctx.invalidateShopVisuals()
                 ctx.campUI:hide()
                 for box in pairs(ctx.artFaces)do CardDisplay.clearNativeArt(box)end;ctx.artFaces={}
             end
@@ -242,7 +239,7 @@ function M.install(ctx)
     end
 
     function ctx.self:press(key)
-        if key:match("^shopView/") and not self.shopOpen then return false,"unavailable_action" end
+        if key:match("^shopView/") and not ctx.shopGoodsVisible() then return false,"unavailable_action" end
         local ok, view = ctx.current()
         if not ok then
             local entry = self.actions[key]

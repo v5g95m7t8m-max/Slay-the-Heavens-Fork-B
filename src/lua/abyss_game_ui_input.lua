@@ -133,7 +133,14 @@ function M.bindCommand(platform,self,canManagePotions,clickEvent,owner)
                 if mapReturn then return M.mapReturnAvailable(self) end
                 return runMenuAvailable()
             end
+            local function covered()
+                if not Pointer.blocked(platform) then return false end
+                local gate=self.pageReveal
+                return not (characterAction and kind~='character_confirm' and kind~='character_deck'
+                    and gate and gate:allowsCharacterEdit())
+            end
             local function available()
+                if covered() then return false end
                 if self.prologue and self.prologue:covering() then return false end
                 if self.disabled or self.settlementRequested or self.settlementBusy then return false end
                 if routeMode then return battleRouteAvailable(self,enabled,routeMode)end
@@ -190,7 +197,7 @@ function M.bindCommand(platform,self,canManagePotions,clickEvent,owner)
                 end
             end
             hit:AddCursorEventListener(clickEvent, function(event)
-                if Pointer.blocked(platform)then return false end
+                if covered() then return false end
                 if observed or cursor.CursorDown and cursor.CursorUp and touch(event) ~= nil then
                     local token = released
                     if not current(token) then

@@ -1,15 +1,19 @@
+import {beforePosixDeadlineWorkflow,beforeWindowsDeadlineWorkflow} from './auto-merge-workflow.mjs';
 import {beforeInputRetirementTestInventory,readRetiredInputLuaReceipt} from './input-retirement-inventory.mjs';
 import {beforeDeckPagesSuiteSource} from './input-retirement-source.mjs';
 export {beforeInputRetirementTestInventory} from './input-retirement-inventory.mjs';
 import {assertDevelopBackflowCurrent,authenticateDevelopBackflow,beforeDevelopBackflow,developBackflowOwns} from './develop-release-backflow-source.mjs';
-import {beforeCalibrationReplay} from './calibration-replay-sources.mjs';
+import {beforeCalibrationReplay,beforeCurrentReplayCopier} from './calibration-replay-sources.mjs';
 import {beforeNativeHostReplay} from './native-host-replay-source.mjs';
 import {assertNativeFixturesCurrent,beforeNativeFixtureReplay} from './native-fixture-replay-source.mjs';
 import {assertNativeFlowFixturesCurrent,beforeNativeFlowFixture} from './native-flow-fixture-source.mjs';
+import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 import {beforeOfficialBackgroundFixture} from './official-background-fixture-source.mjs';
 import {beforeMapRoomReplayCohort,beforeDevelopReplayMerge} from './develop-replay-merge-source.mjs';
 import {beforeStsUiCloseoutSource} from './sts-ui-closeout-source.mjs';
 import {beforeStsFadeCi} from './sts-fade-ci-source.mjs';
+import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
+import {restoreExactFixtureHunks} from './exact-fixture-hunks.mjs';
 import {beforeIntegratedStsInventory} from './sts-selection-fade-source.mjs';
 import {beforeNativeButtonRepair,beforeRebasedCi,beforeRebasedRelease,historicalReleaseCopier} from './rebased-release-source.mjs';
 import {beforeTinyHouseIntegratedSource} from './tiny-house-integrated-source.mjs';
@@ -91,6 +95,32 @@ for(const [path,row] of Object.entries(transport.files)){
  assert.equal(createHash('sha1').update(`blob ${Buffer.byteLength(row.before)}\0`).update(row.before).digest('hex'),row.gitBlob,path);
 }
 const normalize=s=>s.replaceAll('\r\n','\n');
+// Exact complete successor bytes preserve the existing immutable historical CI views.
+const forkPushBytes=readFileSync(new URL('../fixtures/fork-push-ci-source.json.gz',import.meta.url));
+assert.equal(hash(forkPushBytes),'12578e98ed7242d10f407897972706bbec7559ae91171bb813320c9376020bbd','complete Fork push CI continuation');
+const forkPushPacket=JSON.parse(gunzipSync(forkPushBytes));
+assert.equal(forkPushPacket.baseCommit,'73c21489efaab409d4c0c46bee517d410d3427fc');
+for(const row of Object.values(forkPushPacket.files))assert.equal(hash(row.before),row.beforeSha256);
+const backlogSuccessors=forkPushPacket.backlogSuccessors;
+for(const row of Object.values(backlogSuccessors))assert.equal(row.beforeCommit,'02dcb2466b2c90308f9a9e42896c2c5af3ed288c');
+function beforeBacklogReconcile(path,source){
+ if(!Object.hasOwn(backlogSuccessors,path))return source;
+ const prior=restoreExactFixtureHunks(backlogSuccessors[path],path,source);
+ return prior!==source&&source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
+export function beforeForkPush(path,source){
+ source=beforeBacklogReconcile(path,source);
+ const row=forkPushPacket.files[path];
+ return row&&typeof source==='string'&&!source.includes('\r\r\n')&&hash(normalize(source))===row.afterSha256?(source.includes('\r\n')?row.before.replaceAll('\n','\r\n'):row.before):source;
+}
+// Receipt readers retain the actual Q1 current-source predecessor before their existing replay layers.
+for(const row of Object.values(forkPushPacket.receiptSuccessors??{}))assert.equal(hash(row.before),row.beforeSha256);
+export function beforeForkReceiptSource(path,source){
+ const row=forkPushPacket.receiptSuccessors?.[path];
+ if(row&&typeof source==='string'&&!source.includes('\r\r\n')&&hash(normalize(source))===row.afterSha256)
+  return source.includes('\r\n')?row.before.replaceAll('\n','\r\n'):row.before;
+ return beforeForkPush(path,source);
+}
 const rewardScreenBytes=readFileSync(new URL('./reward-screen-ci-source.json.gz',import.meta.url));
 assert.equal(hash(rewardScreenBytes),'04094f1942139397d7e267131fe819c49a5045b7027a4663157ccac985c5cd82');
 const rewardScreenCi=JSON.parse(gunzipSync(rewardScreenBytes));
@@ -117,7 +147,6 @@ for(const {before,after} of Object.values(releaseUiBuild.files)){
  assert.match(after.sha256,/^[a-f0-9]{64}$/);
  assert.match(after.gitBlob,/^[a-f0-9]{40}$/);
 }
-// Authenticate the current copier before giving old CI receipts its exact predecessor.
 function beforeRefinedReleaseCopier(path,source){
  if(path!=="tests/helpers/copy-integration-source-closure.mjs"||typeof source!=='string'||source.includes('\r\r\n'))return source;
  const lf=normalize(source);
@@ -240,6 +269,7 @@ function beforeDevelopSessionRelicCopier(path,source){
  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
 function beforeDevelopBackflowCopier(path,source){
+ source=beforeCurrentReplayCopier(path,source);
  source=beforeDevelopReplayMerge(path,source);
  source=beforeReplayFingerprintSource(path,source);
  if(path==='tests/helpers/copy-integration-source-closure.mjs'&&typeof source==='string'&&!source.includes('\r\r\n')){
@@ -322,6 +352,7 @@ function beforeReleaseUiBuildSource(path,source,read=readFileSync){
  return source.includes('\r\n')?before.source.replaceAll('\n','\r\n'):before.source;
 }
 function releaseHistoricalInput(path,source){
+ source=beforeCurrentReplayCopier(path,source);
  return beforeRebasedCopier(path,source)!==source?historicalReleaseCopier(source):beforeRebasedRelease(path,source);
 }
 export function beforeReleaseTinyHouseSource(path,source,read=readFileSync){
@@ -534,7 +565,7 @@ const newerTests={
  },
 };
 export function beforeReleaseAdditionalInventory(paths,kind,read=readFileSync){
- paths=beforeM05BackflowInventory(paths,kind,read);
+ paths=beforeM05BackflowInventory(paths,kind,(path,encoding)=>beforeCurrentReplayFixes(path,beforeUiEntranceWitness(path,read(path,encoding))));
  for(const [path,sha] of Object.entries(newerTests[kind])){
   const count=paths.filter(candidate=>candidate===path).length;
   if(!count)continue;
@@ -552,7 +583,7 @@ export function beforeShopEntryInventory(paths,kind,read=readFileSync){
  const position=paths.indexOf(path);
  if(position===-1)return paths;
  assert.equal(paths.lastIndexOf(path),position,'duplicate inventory source: '+path);
- const source=read(path,'utf8');
+ const source=beforeUiEntranceWitness(path,read(path,'utf8'));
  assert(typeof source==='string'&&!source.includes('\r\r\n')&&authenticated.includes(hash(normalize(source))),'fresh added inventory source: '+path);
  return paths.filter(test=>test!==path);
 }
@@ -566,7 +597,7 @@ export function assertCurrentLuaInventory(paths,preceding,read=readFileSync){
  const additions=[...Object.keys(newerTests.lua),shopEntryTests.lua[0],'tests/lua/shop_dismiss.lua'];
  assert.deepEqual([...paths].sort(),[...preceding,...additions].sort(),'complete current raw discovery inventory (Lua)');
  const prior=beforeShopEntryInventory(paths,'lua',(path,encoding)=>{
-  const source=beforeForkFirstCi(path,read(path,encoding));
+  const source=beforeForkFirstCi(path,beforeUiEntranceWitness(path,read(path,encoding)));
   if(developBackflowOwns(path))assertDevelopBackflowCurrent(path,source);
   return source;
  });
@@ -748,10 +779,13 @@ function beforeReplayArchiveStorage(path,source){
  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
 export function beforeReviewedBuildInput(path,source,read){
- const live=owner=>read(owner,'utf8');
- const production=authenticateDevelopBackflow(path,source,live);
+ source=beforeForkPush(path,source);
+ const reviewed=(owner,raw)=>owner.startsWith('src/')||owner==='config/architecture.json'?raw:
+  beforeCurrentReplayFixes(owner,beforeUiEntranceWitness(owner,beforeCurrentReplayCopier(owner,beforeForkPush(owner,raw))));
+ const live=owner=>reviewed(owner,read(owner,'utf8'));
+ const production=authenticateDevelopBackflow(path,reviewed(path,source),live);
  const deck=beforeDeckPagesSuiteSource(path,production);
- const merged=beforeDevelopReplayMerge(path,deck);
+ const merged=beforeDevelopReplayMerge(path,beforeCurrentReplayFixes(path,deck));
  return beforeForkFirstCi(path,beforeReplayArchiveStorage(path,merged));
 }
 function beforeIntegrationSuccessor(path,source){
@@ -763,10 +797,21 @@ function beforeIntegrationSuccessor(path,source){
  return source.includes('\r\n')?prior.source.replaceAll('\n','\r\n'):prior.source;
 }
 export function assertIntegrationSuccessorsCurrent(read=readFileSync){
- const liveRead=read;
+ const rawRead=read;
+ for(const path of Object.keys(backlogSuccessors)){
+  const source=rawRead(path,'utf8');
+  assert.notEqual(beforeBacklogReconcile(path,source),source,'fresh Backlog reconciliation source: '+path);
+ }
+ const liveRead=(path,encoding)=>beforeForkPush(path,rawRead(path,encoding));
  assertNativeFixturesCurrent(liveRead);
  assertNativeFlowFixturesCurrent(liveRead);
- read=(path,encoding)=>beforeCalibrationReplay(path,liveRead(path,encoding));
+ read=(path,encoding)=>{
+  const raw=liveRead(path,encoding);
+  // Raw production owners reach their own fresh admission guard unchanged.
+  // Only CI and helper receipts need the pure historical source projections.
+  return path.startsWith('src/')||path==='config/architecture.json'?raw:
+   beforeCalibrationReplay(path,beforeCurrentReplayFixes(path,beforeUiEntranceWitness(path,beforeCurrentReplayCopier(path,raw))));
+ };
  const readCurrent=(path,encoding)=>{
   const live=read(path,encoding);
   let raw=beforeNativeFlowFixture(path,live);
@@ -813,6 +858,10 @@ export function assertIntegrationSuccessorsCurrent(read=readFileSync){
  }
 }
 export function beforePreflightSource(path,source,view='prior'){
+ source=beforeForkPush(path,source);
+ if(path==='.github/workflows/quality.yml')source=beforePosixDeadlineWorkflow(beforeWindowsDeadlineWorkflow(source));
+ source=beforeUiEntranceWitness(path,beforeCurrentReplayCopier(path,source));
+ source=beforeCurrentReplayFixes(path,source);
  source=beforeNativeFlowFixture(path,source);
  source=beforeOfficialBackgroundFixture(path,source);
  if(path===replayAssetLedger)source=beforeDeckBrowserAssetLedger(source);

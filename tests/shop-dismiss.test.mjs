@@ -13,7 +13,13 @@ test('only the precise shop dismissal background is a nonfocusable bottom input 
   assert.deepEqual(dismiss.position,[0,0]);
   assert.deepEqual(dismiss.size,nativeTheme.canvas.base);
   assert.ok(panel.children.findIndex(c=>c.name==='backdrop')<index);
-  assert.equal(panel.children[index-1].name,'shopRoom');
+  assert.equal(panel.children[index-2].name,'shopRoom');
+  const shade=panel.children[index-1];
+  assert.equal(shade.name,'shopShade');
+  assert.equal(shade.kind,'image','transition shade adds paint only, never an input area');
+  assert.notEqual(shade.focusable,true);
+  assert.notEqual(shade.raycastTarget,true);
+  assert.equal(shade.visible,false,'transition shade starts hidden');
   for(const name of ['shopView','merchant','back','confirm']) {
     assert.ok(panel.children.findIndex(c=>c.name===name)>index,name);
   }

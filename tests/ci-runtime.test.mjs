@@ -25,14 +25,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync as actualReadFileSync, mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
 import {officialAssetsFlowPlanningFloors as officialAssetsPlanningFloors} from './helpers/official-assets-flow-ci-source-inverse.mjs';
-import { tmpdir } from 'node:os';
+import { availableParallelism, tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import { originalLuaRunner } from './helpers/ci-lua-runner-inverse.mjs';
 import {readBeforeMobileQaSource} from './helpers/mobile-qa-source-inverse.mjs';
-import { partition, jsShard, jsPlanningWeights, discoverJs, timings } from '../scripts/ci-shards.mjs';
+import { partition, jsShard, jsPlanningWeights, discoverJs, timings, replayPlanningMinimumMs } from '../scripts/ci-shards.mjs';
 import { shardLuaScripts } from '../scripts/test-lua.mjs';
 import {historicalTest,readHistoricalBaselineSource} from './helpers/historical-baseline-inputs.mjs';
 import {qualityShardMatrices} from '../scripts/ci-quality-shape.mjs';
@@ -116,16 +116,39 @@ test('all current JS and Lua files are scheduled exactly once; new unmeasured fi
   }
 });
 
+test('Windows runs strict Host result replay separately from the concurrent source replays', () => {
+  const files = discoverJs(), count = qualityShardMatrices.windows.length;
+  const host = 'tests/game-ui-host-result.test.mjs';
+  const sourceReplays = ['tests/colorless-catalog-source.test.mjs', 'tests/presentation-m3-integration.test.mjs'];
+  const bins = Array.from({length:count}, (_, index) => jsShard(files, `${index + 1}/${count}`, 'win32'));
+  const weights = jsPlanningWeights(files, 'win32');
+  assert.equal(bins.filter(bin => bin.files.includes(host)).length, 1);
+  assert.ok(sourceReplays.every(file => bins.some(bin => bin.files.includes(file) && !bin.files.includes(host))));
+  for (const [index, bin] of bins.entries()) {
+    const expectedLoad = bin.files.reduce((total, path) => total + weights[path], index === 0 ? timings.initialMs.win32[0] : 0);
+    assert.equal(bin.loads[index], expectedLoad, 'Lua receives the actual cost of each JS shard');
+  }
+});
+
+function expectedPlanningWeight(file,platform,floor=timings.jsPlanning?.localLowerBounds?.[file]?.durationMs??0){
+ const native=Object.hasOwn(timings.js,platform)?[platform]:Object.keys(timings.js);
+ return Math.max(floor,...native.flatMap(os=>[
+  timings.js[os][file]??timings.unknownJsMs,
+  replayPlanningMinimumMs[os]?.[file.slice('tests/'.length)]??0,
+ ]));
+}
+
 test('platform-native placement covers every current file once and unknown platforms retain the conservative fallback',()=>{
  const files=discoverJs();
- const asymmetric=files.find(file=>{
-  const floor=timings.jsPlanning?.localLowerBounds?.[file]?.durationMs??0;
-  return Math.max(timings.js.win32[file]??timings.unknownJsMs,floor)!==Math.max(timings.js.linux[file]??timings.unknownJsMs,floor);
- });
+ for(const floor of Object.values(replayPlanningMinimumMs))for(const [name,ms]of Object.entries(floor)){
+  assert(files.includes('tests/'+name),'measured replay placement has a current test: '+name);
+  assert(Number.isSafeInteger(ms)&&ms>0,'positive replay case duration: '+name);
+ }
+ const asymmetric=files.find(file=>expectedPlanningWeight(file,'win32')!==expectedPlanningWeight(file,'linux'));
  assert.ok(asymmetric,'the observed platform maps contain distinct costs');
  for(const platform of ['win32','linux']){
   const native=jsPlanningWeights(files,platform);
-  for(const file of files)assert.equal(native[file],Math.max(timings.js[platform][file]??timings.unknownJsMs,timings.jsPlanning?.localLowerBounds?.[file]?.durationMs??0));
+  for(const file of files)assert.equal(native[file],expectedPlanningWeight(file,platform));
   const count=platform==='win32'?qualityShardMatrices.windows.length:qualityShardMatrices.posix.length;
   const bins=Array.from({length:count},(_,i)=>jsShard(files,`${i+1}/${count}`,platform).files),all=bins.flat();
   assert.equal(new Set(all).size,all.length,platform+' must not duplicate files');
@@ -134,12 +157,12 @@ test('platform-native placement covers every current file once and unknown platf
  assert.notEqual(jsPlanningWeights([asymmetric],'win32')[asymmetric],jsPlanningWeights([asymmetric],'linux')[asymmetric],'known platforms must not inherit the other platform cost');
  for(const platform of ['unknown-platform','toString']){
   const fallback=jsPlanningWeights(files,platform);
-  for(const file of files)assert.equal(fallback[file],Math.max(...Object.values(timings.js).map(map=>map[file]??timings.unknownJsMs),timings.jsPlanning?.localLowerBounds?.[file]?.durationMs??0));
+  for(const file of files)assert.equal(fallback[file],expectedPlanningWeight(file,platform));
  }
  assert.deepEqual(jsPlanningWeights(files),jsPlanningWeights(files,process.platform));
 });
 
-test('workflow uses the same balanced plan for materialization and execution without changing concurrency', () => {
+test('workflow uses the same balanced shard for materialization and isolated test execution', () => {
   const workflow = readFileSync('.github/workflows/quality.yml', 'utf8');
   assert.ok(workflow.includes("--workers ${{ inputs.runner_pool == 'local-special' && 1 || 2 }}"));
   assert.equal((workflow.match(/node scripts\/ci-shards.mjs --prepare=/g) ?? []).length, 2);
@@ -169,6 +192,40 @@ test('real executor preserves test failure, continues later files, reports timin
   const records = readFileSync(join(root, 'build/ci-js-timings.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
   assert.deepEqual(records.map(record => record.file).sort(), ['tests/a.test.mjs', 'tests/b.test.mjs']);
   assert.ok(records.every(record => Number.isFinite(record.durationMs) && record.durationMs > 0));
+});
+
+const hostedOS = { linux: 'Linux', win32: 'Windows' }[process.platform];
+test('hosted execution isolates checkout writes and combines both timing reports', {
+  skip: !hostedOS || availableParallelism() < 2,
+}, t => {
+  const parent = mkdtempSync(join(tmpdir(), 'abyss-ci-posix-executor-'));
+  t.after(() => rmSync(parent, { recursive: true, force: true }));
+  const root = join(parent, 'checkout'), copyTemp = join(parent, 'scratch');
+  for (const dir of ['.git', 'tests', 'scripts', 'build']) mkdirSync(join(root, dir), { recursive: true });
+  mkdirSync(copyTemp);
+  copyFileSync('scripts/ci-timing-reporter.mjs', join(root, 'scripts/ci-timing-reporter.mjs'));
+  for (const label of ['a', 'b']) writeFileSync(join(root, `tests/${label}.test.mjs`), `
+    import assert from 'node:assert/strict';
+    import {realpathSync,writeFileSync} from 'node:fs';
+    import test from 'node:test';
+    test('${label}',()=>{
+      assert.equal(process.env.GITHUB_WORKSPACE,realpathSync.native('.'));
+      writeFileSync('build/checkpoint','${label}',{flag:'wx'});
+      ${label === 'b' ? "throw Error('isolated failure');" : ''}
+    });`);
+  const env = { ...process.env, GITHUB_ACTIONS: 'true', RUNNER_OS: hostedOS, RUNNER_ENVIRONMENT: 'github-hosted',
+    GITHUB_WORKSPACE: root, RUNNER_TEMP: copyTemp };
+  delete env.NODE_TEST_CONTEXT;
+  const result = spawnSync(process.execPath, [resolve('scripts/ci-shards.mjs'), '--shard=1/1'], {
+    cwd: root, env, encoding: 'utf8', timeout: 30000,
+  });
+  assert.ifError(result.error);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stdout + result.stderr, /isolated failure/);
+  assert.equal(readFileSync(join(root, 'build/checkpoint'), 'utf8'), 'a');
+  assert.deepEqual(readdirSync(copyTemp), []);
+  const records = readFileSync(join(root, 'build/ci-js-timings.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.deepEqual(records.map(({file,success}) => [file,success]).sort(), [['tests/a.test.mjs',true],['tests/b.test.mjs',false]]);
 });
 
 
@@ -279,7 +336,7 @@ test('current timing records preserve all measured corrections without duplicate
   }else{
    assert.match(entry.environment,/local/);assert.match(entry.kind,/not .*hosted/);localFloorCount++;originalLocalFloorKeys.push(file);
   }
-  for(const platform of ['win32','linux'])assert.equal(jsPlanningWeights([file],platform)[file],Math.max(timings.js[platform][file]??timings.unknownJsMs,entry.durationMs));
+  for(const platform of ['win32','linux'])assert.equal(jsPlanningWeights([file],platform)[file],expectedPlanningWeight(file,platform,entry.durationMs));
  }
  assert.equal(localFloorCount,8,'all eight original local floor contracts remain checked');
  assert.deepEqual(originalLocalFloorKeys.sort(),[
@@ -413,7 +470,7 @@ test('complete local Game UI run raises only its planning floor and preserves ev
  assert.equal(JSON.stringify(expected,null,2)+'\n',source);
  for(const platform of ['win32','linux']){
   assert.equal(timings.js[platform][key],10000,'retain actual old observations separately from the new local planning floor');
-  assert.equal(jsPlanningWeights([key],platform)[key],Math.max(timings.js[platform][key],floor.durationMs));
+  assert.equal(jsPlanningWeights([key],platform)[key],expectedPlanningWeight(key,platform,floor.durationMs));
  }
  assert.equal(preGameUiLocalPlanningSource(path,source.replaceAll('\n','\r\n')),prior);
  assert.equal(preGameUiLocalPlanningSource('foreign/'+path,source),source);
@@ -443,7 +500,7 @@ test('partial successful source cases provide lower bounds without claiming thei
   assert.ok(text.includes(observation.rawSuccessLine+'\n'));
   assert.ok(readFileSync(file,'utf8').includes("test('"+floor.sourceCase+"'"),'explicit unique named case belongs to the declared file');
   assert.equal(floor.durationMs,Math.ceil(observation.durationMs));assert.equal(observation.planningFloorMs,floor.durationMs);
-  for(const platform of ['win32','linux'])assert.equal(jsPlanningWeights([file],platform)[file],Math.max(timings.js[platform][file]??timings.unknownJsMs,floor.durationMs));
+  for(const platform of ['win32','linux'])assert.equal(jsPlanningWeights([file],platform)[file],expectedPlanningWeight(file,platform,floor.durationMs));
  }
  const path='scripts/ci-test-timings.json',source=preCombinedPlanningSource(path,readFileSync(path,'utf8').replaceAll('\r\n','\n')),prior=prePartialCasePlanningSource(path,source);
  assert.notEqual(prior,source);const expected=JSON.parse(prior);

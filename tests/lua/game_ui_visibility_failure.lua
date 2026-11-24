@@ -100,6 +100,20 @@ for _,page in ipairs({'mapPanel','nodePanel'})do
 end
 
 
+-- An activation setter can fail after the inactive flag changes, before hiding actors.
+do
+ local host,root,panel,actor=fixture();local setter=panel.SetVisible;local first,second={},{}
+ panel.SetVisible=function(_,value)assert(value==false);error(first)end
+ local ok,why=pcall(host.openDeck,host)
+ assert(not ok and why==first and host.deckUI.visible and not host.battleUI.active)
+ assert(actor.alive and actor.visible,'first failure never committed the cover render')
+ panel.SetVisible=setter
+ root:GetChild('mapPanel').SetVisible=function()error(second)end
+ ok,why=pcall(host.refresh,host)
+ assert(not ok and why==second and actor.alive and not actor.visible,'cover retry must render before the sibling failure')
+ print('CASE uncommitted cover retry hides actor before sibling failure')
+end
+
 -- Two observable paints are required around arbitrary native callbacks. The
 -- first commits activation; the second reflects a successful reentrant command.
 do
@@ -107,6 +121,7 @@ do
  local ui=host.battleUI;local render,count=ui.render,0
  ui.render=function(self,...)count=count+1;return render(self,...)end
  assert(host:openDeck());assert(count==2 and actor.alive and not actor.visible)
+ count=0;host:refresh();assert(count==1 and actor.alive and not actor.visible,'covered refresh should paint only once')
  count=0;assert(host:closeDeck());assert(count==2 and actor.alive and actor.visible)
  print('CASE normal cover/uncover ordered renders=2')
 end

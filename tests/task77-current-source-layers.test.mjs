@@ -1,7 +1,6 @@
 import {preAcceptedPr323Source} from './helpers/pr323-accepted-source-inverse.mjs';
 import {preApprovedUiSource} from './helpers/approved-ui-inverse.mjs';
-import test from 'node:test';
-import {historicalTest} from './helpers/historical-baseline-inputs.mjs';
+import {runHistoricalCases} from './helpers/isolated-historical-cases.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -11,6 +10,8 @@ import {preRetirementSource} from './helpers/presentation-announcement-retiremen
 import {preRosterSource} from './helpers/competition-roster-source-inverse.mjs';
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const read=path=>preRosterSource(path,preAcceptedPr323Source(path,preTask77OuterSource(path,readFileSync(path,'utf8'))));
+const cases=[];
+const register=(name,body)=>cases.push([name,body]);
 function invert(source,binding){
  assert.equal(hash(source),binding.afterSha256);
  for(const edit of binding.edits){assert.equal(source.split(edit.after).length,2);source=source.replace(edit.after,edit.before);}
@@ -18,7 +19,7 @@ function invert(source,binding){
 }
 function acceptedSource(path){const source=preApprovedUiSource(path,read(path));return layers.competition[path]?invert(source,layers.competition[path]):source;}
 
-historicalTest('current Task77 source reverses only its owned edits and preserves the complete accepted confirmation/UI base',()=>{
+register('current Task77 source reverses only its owned edits and preserves the complete accepted confirmation/UI base',()=>{
  assert.equal(layers.acceptedBase,'77c2d5e6850f1758b821e5e2d45be60e8b5ed8a4');
  assert.equal(layers.canonicalBindingSha256,hash(read('docs/reviews/formal-entry-source-inverses-20261028.json')));
  assert.deepEqual(Object.keys(layers.competition),['src/lua/abyss_game_ui.lua','src/lua/abyss_ui.lua']);
@@ -34,7 +35,7 @@ historicalTest('current Task77 source reverses only its owned edits and preserve
  assert.match(read('src/lua/abyss_game_ui.lua'),/CharacterSelect\.options\(character\)[\s\S]*selection\.campaignProfile=platform\.campaignProfile[\s\S]*Run\.new/);
 });
 
-historicalTest('accepted UI source layers recover the original immutable formal bindings and reject incomplete or duplicated changes',()=>{
+register('accepted UI source layers recover the original immutable formal bindings and reject incomplete or duplicated changes',()=>{
  assert.deepEqual(Object.keys(layers.acceptedUi),['data/presentation/ui_theme.json','scripts/character-ui-layout.mjs','scripts/game-ui-layout.mjs','src/lua/abyss_game_ui.lua']);
  for(const [path,binding]of Object.entries(layers.acceptedUi)){
   const accepted=acceptedSource(path),canonical=invert(accepted,binding);
@@ -49,7 +50,7 @@ historicalTest('accepted UI source layers recover the original immutable formal 
  }
 });
 
-historicalTest('Task77 owns complete current sources before its unchanged formal guards and rejects current drift',()=>{
+register('Task77 owns complete current sources before its unchanged formal guards and rejects current drift',()=>{
  for(const path of Object.keys(layers.acceptedUi)){
   const live=readFileSync(path,'utf8').replaceAll('\r\n','\n');
   const prior=preTask77OuterSource(path,live);
@@ -65,3 +66,5 @@ historicalTest('Task77 owns complete current sources before its unchanged formal
   assert.equal(preTask77OuterSource(path,source),source,'unregistered path stays under its own historical owner');
  }
 });
+
+runHistoricalCases(import.meta.url,'Task77 historical source replay',cases);

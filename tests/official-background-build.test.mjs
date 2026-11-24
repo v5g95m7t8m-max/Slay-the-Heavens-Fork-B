@@ -46,7 +46,23 @@ test('real UI build registers one shared hidden background host and one native i
  const original=structuredClone(stage.children.slice(1));
  const strip=nodes=>{for(const node of nodes){if(node.children){node.children=node.children.filter(c=>!['artSamples','officialAvatar','officialFigure','officialSelectionFigure','monsterArt','lowpolyScene'].includes(c.name));strip(node.children);}}};
  const approved=JSON.parse(JSON.stringify(applyV25RewardLayout(gameLayout(),nativeTheme).controls));
- const assertControls=controls=>assert.ok(isDeepStrictEqual(controls,approved),'approved controls/input remain exact apart from explicit empty artwork hosts');
+ // The approved entrance groups move the existing controls without changing
+ // their bytes or adding input. Keep this expectation independent of the builder.
+ const shelf=approved.find(n=>n.name==='nodePanel').children.find(n=>n.name==='shopView');
+ const goods=shelf.children.filter(n=>/^(removal|relic|potion)/.test(n.name));
+ shelf.children=shelf.children.filter(n=>!goods.includes(n));
+ shelf.children.splice(shelf.children.findIndex(n=>n.name==='detail'),0,
+  {name:'goods',kind:'container',size:[1280,720],visible:false,children:goods});
+ const character=approved.find(n=>n.name==='characterPanel');
+ const details=character.children.find(n=>n.name==='details');
+ const infoNames=['name','stats','gold','v25Story','v25HealthIcon','v25GoldIcon',
+  'relicTag','relic','relicText','v25RelicIcon','deckRule','deckTitle','deckSummary'];
+ const info=details.children.filter(n=>infoNames.includes(n.name));
+ details.children=details.children.filter(n=>!info.includes(n));
+ details.children.push({name:'infoMotion',kind:'container',size:[1280,720],
+  children:Array.from({length:8},(_,i)=>({name:'info'+(i+1),kind:'container',size:[1280,720],visible:false,children:structuredClone(info)}))});
+ for(const name of ['confirm','cancel'])character.children.find(n=>n.name===name).visible=false;
+ const assertControls=controls=>assert.ok(isDeepStrictEqual(controls,approved),'approved controls/input and entrance groups remain exact apart from explicit empty artwork hosts');
  removeMenuEdgePlates(original);
  strip(original);
  assertControls(original);
@@ -63,7 +79,9 @@ test('real UI build registers one shared hidden background host and one native i
   c=>{const m=menuOf(c),e=edgeOf(c);m.children=m.children.filter(n=>n!==e);c[0].children.push(e);},
   c=>{const m=menuOf(c),e=edgeOf(c);m.children=m.children.filter(n=>n!==e);m.children.push(e);},
  ])assert.throws(()=>removeMenuEdgePlates(changed(mutate)),assert.AssertionError);
- for(const mutate of [c=>{menuOf(c).size[0]++;},c=>{menuOf(c).raycastTarget=true;}]){
+ for(const mutate of [c=>{menuOf(c).size[0]++;},c=>{menuOf(c).raycastTarget=true;},
+  c=>{c.find(n=>n.name==='nodePanel').children.find(n=>n.name==='shopView').children.find(n=>n.name==='goods').raycastTarget=true;},
+  c=>{c.find(n=>n.name==='characterPanel').children.find(n=>n.name==='details').children.find(n=>n.name==='infoMotion').children[0].children[0].size[0]++;}]){
   const drift=changed(mutate);removeMenuEdgePlates(drift);strip(drift);
   assert.throws(()=>assertControls(drift),assert.AssertionError,
    'the original full controls/input oracle must still reject unrelated drift');

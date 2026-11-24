@@ -1,9 +1,10 @@
 import {copyIntegrationSourceClosure} from './helpers/copy-integration-source-closure.mjs';
-import test from 'node:test';
+import nodeTest from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync,copyFileSync,mkdirSync,mkdtempSync,rmSync,symlinkSync,linkSync} from 'node:fs';
 import {join,dirname,resolve,relative,isAbsolute} from 'node:path';
-import {tmpdir} from 'node:os';
+import {availableParallelism,tmpdir} from 'node:os';
+import {hasTestNameFilter,runIsolatedTest} from './helpers/isolated-historical-cases.mjs';
 import {pathToFileURL} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {gameUiExtractionProof as proof,gameUiExtractionAddedPaths as added,preGameUiExtractionSource as project,preNativePageSource,gameUiExtractionReader,prepareGameUiExtractionModuleRetirement as prepare} from './helpers/game-ui-extraction-source-inverse.mjs';
@@ -13,21 +14,32 @@ import {sourceEpoch,preNoncombatDemandEpoch,preCursesEpoch as portraitDemandEpoc
 import {sourceSlice} from './helpers/closeout-source-epoch.mjs';
 import {beforePc13ThenV2UiHudSource} from './helpers/pc13-reward-cover-source.mjs';
 import {beforeLumineSource} from './helpers/lumine-portrait-source.mjs';
+import {pointerInputPath,readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
+const cases=[];
+const test=(name,body)=>cases.push([name,body]);
 // Keep the existing two/four-owner contracts in their original source epochs.
 const nativeRead=p=>preNativePageSource(p,readFileSync(p,'utf8').replaceAll('\r\n','\n'));
 const read=p=>preRelicQuerySource(p,nativeRead(p),{readSource:nativeRead});
 const host='src/lua/abyss_game_ui.lua',architecture='config/architecture.json';
 const paths=Object.keys(proof.files);
 const currentRaw=p=>readFileSync(p,'utf8');
-const cursesPriorRead=p=>{
- const source=sourceSlice(p,currentRaw(p),'cursesPrior',currentRaw);
- return beforeLumineSource(p,beforePc13ThenV2UiHudSource(p,source,currentRaw),currentRaw);
-};
-// The new potion source witness reads these owners again after the frozen layer's owner scan.
-const potionRereads=['src/lua/abyss_battle_card_gestures.lua','src/lua/abyss_battle_ui.lua'];
+function cursesPriorReader(){
+ const cohort=new Map();
+ return p=>{
+  if(!cohort.has(p)){
+   const current=p===retiredControllerPath?readRetiredController(currentRaw).source:currentRaw(p);
+   const source=p===architecture?sourceEpoch.preCombinedSource(p,current,{target:'cursesPrior',readSource:currentRaw}):sourceSlice(p,current,'cursesPrior',currentRaw);
+   cohort.set(p,beforeLumineSource(p,beforePc13ThenV2UiHudSource(p,source,currentRaw),currentRaw));
+  }
+  return cohort.get(p);
+ };
+}
+// The authenticated portrait continuation reads these linked owners after the frozen base scan.
+const portraitRereads=['battle_info_content','battle_render_hud','battle_card_glow','battle_render_hud','battle_render_hud']
+ .map(name=>'src/lua/abyss_'+name+'.lua');
 test('portrait demand layer authenticates fresh complete owners and rejects warm drift before entering the prior epoch',()=>{
  const sourceEpoch=portraitDemandEpoch;
- const path='src/lua/abyss_traveler_portraits.lua',raw=cursesPriorRead;
+ const path='src/lua/abyss_traveler_portraits.lua',raw=cursesPriorReader();
  const source=raw(path).replaceAll('\r\n','\n'),target=sourceEpoch.proof.targets.noncombatDemandPrior;
  assert.equal(sourceEpoch.proof.currentCommit,'6702ed26d779eec4d237aa991471b0344c3c3f92');
  assert.equal(target.commit,'bd9fc7ee15bca14a9ad7fe43f6fc9d1c35aa4bf9');
@@ -35,7 +47,7 @@ test('portrait demand layer authenticates fresh complete owners and rejects warm
  let reads=[];const reader=p=>{reads.push(p);return raw(p);};
  for(const input of [source,source.replaceAll('\n','\r\n')]){
   reads=[];assert.equal(sourceEpoch.preCombinedSource(path,input,{target:'noncombatDemandPrior',readSource:reader}),target.files[path].source);
-  assert.deepEqual(reads,[...sourceEpoch.proof.owners,...potionRereads]);
+  assert.deepEqual(reads,[...sourceEpoch.proof.owners,...portraitRereads]);
  }
  for(const input of [source+'\n',source.slice(1),target.files[path].source,null,{}]){
   reads=[];assert.equal(sourceEpoch.preCombinedSource(path,input,{target:'noncombatDemandPrior',readSource:p=>{reads.push(p);throw Error('foreign linked read');}}),input);assert.deepEqual(reads,[]);
@@ -43,12 +55,13 @@ test('portrait demand layer authenticates fresh complete owners and rejects warm
  let live=source;const mutable=p=>p===path?live:raw(p);
  assert.equal(sourceEpoch.preCombinedSource(path,source,{target:'noncombatDemandPrior',readSource:mutable}),target.files[path].source);
  for(const drift of [source+'\n',null]){live=drift;assert.throws(()=>sourceEpoch.preCombinedSource(path,source,{target:'noncombatDemandPrior',readSource:mutable}),/combined linked owner identity/);}
- for(const owner of potionRereads){
+ for(const [index,owner] of portraitRereads.entries()){
+  const occurrence=[...sourceEpoch.proof.owners,...portraitRereads.slice(0,index+1)].filter(path=>path===owner).length;
   let seen=0;
-  const late=p=>p===owner&&++seen===2?null:raw(p);
+  const late=p=>p===owner&&++seen===occurrence?null:raw(p);
   assert.throws(()=>sourceEpoch.preCombinedSource(path,source,{target:'noncombatDemandPrior',readSource:late}),
-   error=>error.message.includes('combined linked owner identity: '+owner+' changed during owner validation'));
-  assert.equal(seen,2);
+   error=>error.message.includes(owner)&&/linked owner/.test(error.message));
+  assert.equal(seen,occurrence);
  }
 });
 test('noncombat committed source layer authenticates all linked owners and rejects each new owner drift',()=>{
@@ -58,12 +71,12 @@ test('noncombat committed source layer authenticates all linked owners and rejec
  const current=epoch.proof.current,target=epoch.proof.targets.noncombatPrior;
  assert.equal(epoch.proof.currentCommit,'31886413b6140f7f666aa89e2ac3d9673c9524dd');
  assert.equal(target.commit,'3a061a76b5eb917ac0f4213c01a9cbafd28d1824');
- const raw=cursesPriorRead;
+ const raw=cursesPriorReader();
  const live=p=>sourceEpoch.preCombinedSource(p,raw(p),{target:'noncombatDemandPrior',readSource:raw});
  for(const path of changed){
   const source=live(path),fresh=[];let reads=0;
   assert.equal(epoch.preCombinedSource(path,source,{target:'noncombatPrior',readSource:p=>{fresh.push(p);return live(p);}}),target.files[path].source);
-  assert.deepEqual(fresh,[...epoch.proof.owners,...potionRereads],'every owner, including both potion rereads, is read freshly');
+  assert.deepEqual(fresh,[...epoch.proof.owners,...portraitRereads],'every frozen owner and continuation is read freshly');
   for(const input of [source+'\n',source.slice(1),target.files[path].source,null,{}]){
    reads=0;assert.equal(epoch.preCombinedSource(path,input,{target:'noncombatPrior',readSource:()=>{reads++;throw Error('foreign read');}}),input);
    assert.equal(reads,0,'old and foreign input cannot authorize linked reads');
@@ -266,10 +279,25 @@ test('combined retirement freshly authenticates every changed source owner and r
  const root=mkdtempSync(join(build,'combined-retirement-'));
  t.after(()=>{const rel=relative(build,root);assert(rel&&!isAbsolute(rel)&&!rel.startsWith('..'));rmSync(root,{recursive:true,force:true});});
  const live=join(root,'combined-live'),destination=join(root,'combined-copy');
- for(const path of sourceEpoch.proof.owners){const target=join(live,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(path,target);}
+ const visits=new Set();
+ const readClosure=path=>{visits.add(path);return currentRaw(path);};
+ for(const path of added){
+  const accepted=sourceEpoch.proof.targets.develop.files[path];
+  assert.equal(accepted.sha256,proof.files[path].afterSha256,'exact retirement predecessor identity: '+path);
+  const projected=sourceEpoch.preCombinedSource(path,currentRaw(path),{target:'develop',readSource:readClosure});
+  assert.equal(projected.replaceAll('\r\n','\n'),accepted.source,'exact live retirement owner: '+path);
+ }
+ assert(sourceEpoch.proof.owners.every(path=>visits.has(path)),'complete current linked owner set');
+ assert(visits.has(pointerInputPath),'complete live pointer replacement');
+ const owners=[...visits].filter(path=>path!==retiredControllerPath);
+ for(const path of owners){const target=join(live,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(path,target);}
  for(const path of added){const target=join(destination,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(path,target);}
  const retire=prepare(destination,{sourceRoot:live});
- for(const owner of sourceEpoch.proof.owners){
+ const restoredController=join(live,retiredControllerPath);
+ writeFileSync(restoredController,readRetiredController(currentRaw).source);
+ assert.throws(retire,/retirement module/,'even an exact retired controller cannot be reintroduced');
+ rmSync(restoredController);
+ for(const owner of owners){
   const file=join(live,owner),original=readFileSync(file,'utf8');
   writeFileSync(file,original+'\n-- late combined owner drift\n');assert.throws(retire,/retirement module/);
   for(const path of added)assert.doesNotThrow(()=>readFileSync(join(destination,path)),'no deletion before complete source admission');
@@ -357,3 +385,32 @@ test('real filesystem traces distinguish foreign/old inputs from fresh equivalen
  assert.deepEqual(opens,{foreign:0,old:0,equivalent:paths.length*2+lifecycleReads*4,'warm-drift':paths.length+lifecycleReads*2,'warm-missing':paths.length+lifecycleReads*2});
  process.stdout.write('GAME_UI_EXTRACTION_FS_READS '+JSON.stringify({reads,opens})+'\n');
 });
+
+// Windows job 137561143801 spent almost 42 minutes in this one file. The
+// expensive cases and their independent filesystem fixtures can run in pairs.
+const firstLane=new Set([
+ 'actual current Host reaches every direct and transitive consumer with frozen historical results',
+ 'one complete extraction restores immutable full Host/config and authenticates each fresh owner',
+ 'portrait demand layer authenticates fresh complete owners and rejects warm drift before entering the prior epoch',
+ 'retirement verifies the full isolated destination before deleting, and revalidates deferred cleanup',
+ 'retirement rejects live Lua directories and source ancestors before any deletion',
+]);
+const lanes=[cases.filter(([name])=>firstLane.has(name)),cases.filter(([name])=>!firstLane.has(name))];
+assert.equal(lanes[0].length,firstLane.size,'all first-lane cases are registered');
+assert.equal(new Set(cases.map(([name])=>name)).size,cases.length,'every registered case is unique');
+const laneFlag='--isolated-game-ui-source-lane';
+if(process.argv[2]===laneFlag){
+ const lane=lanes[Number(process.argv[3])];assert(lane,'registered GameUI source lane');
+ for(const entry of lane)nodeTest(...entry);
+}else if(process.platform==='win32'&&process.env.GITHUB_ACTIONS==='true'&&process.env.RUNNER_ENVIRONMENT==='github-hosted'
+ &&availableParallelism()>=2&&!hasTestNameFilter()){
+ nodeTest('Windows GameUI source replays',async()=>{
+  const outcomes=await Promise.allSettled(lanes.map((lane,index)=>runIsolatedTest(import.meta.url,[laneFlag,String(index)],[],lane.length)));
+  for(const result of outcomes){
+   if(result.status==='rejected')throw result.reason;
+   process.stdout.write(result.value);
+  }
+ });
+}else{
+ for(const entry of cases)nodeTest(...entry);
+}

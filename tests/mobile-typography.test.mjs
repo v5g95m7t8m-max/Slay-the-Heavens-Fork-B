@@ -64,10 +64,18 @@ test('real Lua host retains complete values and paged long reading with the enla
 test('single-glyph potion identities have a readable box and valid fixed font range',()=>{
  const b=child(tree(),'battlePanel');for(let i=1;i<=5;i++){const potion=child(i<4?b:child(b,'potionHelp'),'potion'+i);for(const state of states){const label=child(child(potion,state),'label');assert.ok(label.text.fontSize>=20);assert.equal(label.text.fontSize,label.text.minFontSize);assert.ok(label.size[0]>=label.text.fontSize);}}
 });
-test('pile totals, captions and library filter labels retain complete native lines',()=>{
+test('pile totals, captions and library sort and pagination labels retain complete native lines',()=>{
  const t=tree(),b=child(t,'battlePanel');
  for(const n of ['draw','discard']){budget(child(b,n),'999');const caption=child(b,n+'Label');budget(caption,caption.text.content);assert.ok(Math.abs(caption.position[1])+caption.size[1]/2<=340);}
- for(const name of ['All','Attack','Skill','Power','Status','Curse'])for(const state of states){const c=child(child(child(child(t,'deckPanel'),'filter'+name),'hit'),state);budget(child(c,'label'),child(c,'label').text.content);}
+ const deck=child(t,'deckPanel'),sort=child(deck,'deckSort');
+ assert.ok(!deck.children.some(c=>/^filter(?:All|Attack|Skill|Power|Status|Curse)$/.test(c.name)),'removed category filters must not return');
+ for(const [mode,copy] of [['original','获得顺序'],['type','类型'],['cost','耗能']]){
+   const label=child(child(sort,mode),'label');assert.equal(label.text.content,copy);budget(label,copy);
+ }
+ for(const [name,copy] of [['previous','上一页'],['next','下一页']])for(const state of states){
+   const label=child(child(child(child(deck,name),'hit'),state),'label');assert.equal(label.text.content,copy);budget(label,copy);
+ }
+ budget(child(deck,'pageHint'),'第 8/8 页 · 75 张');
 });
 test('full card reading uses 28-unit text and comfortable line pitch',()=>{
  const t=tree(),info=child(child(t,'battlePanel'),'statusInfo');assert.ok(child(child(t,'deckPanel'),'details').text.fontSize>=28);assert.ok(child(info,'text1').text.fontSize>=28);assert.ok(theme.layout.statusInfo.line>=34);

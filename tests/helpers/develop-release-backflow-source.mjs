@@ -1,9 +1,10 @@
+import { beforeUiEntrance, entranceInventory, entrancePredecessor, entranceReader } from './ui-entrance-source.mjs';
 // Exact Develop predecessors for historical replay. Live builds read current sources.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
-import {exactSourceMatches as matches} from './source-fingerprint.mjs';
+import {exactSourceMatches as matches,sourceConfigLayoutMatches} from './source-fingerprint.mjs';
 import {authenticateInputRetirement,beforeInputRetirement,beforeInputRetirementReader,inputRetirementOwns,isCurrentInputRetirementSource,beforeCombatEvents,combatEventsOwns,beforeDevelopUiBackflows,assertPointerInputSource,pointerInputPath,retiredControllerPath,readRetiredController} from './input-retirement-source.mjs';
 import {assertRelicDetailCurrent,authenticateRelicDetail,beforeRelicDetail,relicDetailOwns} from './relic-detail-source.mjs';
 import {beforeNativeFlowFixture} from './native-flow-fixture-source.mjs';
@@ -198,6 +199,7 @@ function currentRecentBackflowOwner(path,source){
  return matches(source,roomEntry.files[path].after);
 }
 export function assertDevelopBackflowCurrent(path,source){
+ source=beforeUiEntrance(path,source);
  source=beforeDevelopUiBackflows(path,source);
  const priorActions=beforeActionButtons(path,source);
  if(actionButtonsOwns(path)&&!recentBackflowOwns(path)&&!priorDevelopBackflowOwns(path)){
@@ -227,6 +229,7 @@ export function assertStasisUpgradeAdded(path,source){
  assert(Object.hasOwn(stasis.added,path)&&matches(source,stasis.added[path]),'fresh Stasis upgrade module: '+path);
 }
 export function assertActorFocusInventory(paths,read=path=>readFileSync(path,'utf8')){
+ paths=entranceInventory(paths,read);
  const expected=[...actorFocus.luaBefore,...actorFocusAdded,...deckPagesAdded];
  assert(expected.includes(retiredControllerPath),'exact controller predecessor in Actor/Focus Lua inventory');
  assert.deepEqual([...paths].sort(),[...expected.filter(path=>path!==retiredControllerPath),pointerInputPath].sort(),'complete current Actor/Focus Lua module inventory');
@@ -249,10 +252,11 @@ function mapRoomOwnerError(path){
 }
 function recentBackflowOwnerReader(read,historicalOwners){
  let epoch;
+ const readEntrancePrior=entranceReader(read);
  return path=>{
   // A frozen cohort must expose its original Controller identity or absence.
   const controller=path===retiredControllerPath&&(!historicalOwners||epoch==='current')?readRetiredController(read):undefined;
-  const source=controller?controller.source:read(path);
+  const source=controller?controller.source:readEntrancePrior(path);
   if(!recentBackflowOwns(path))return source;
   const current=(!controller||controller.restored)&&currentRecentBackflowOwner(path,source);
   const binding=historicalOwners&&Object.hasOwn(historicalOwners,path)?historicalOwners[path]:undefined;
@@ -304,15 +308,13 @@ function authenticatePriorDevelopBackflow(path,source,read){
  return prior;
 }
 
-export const configSourceTokens=source=>source.replace(/"(?:\\.|[^"\\])*"|[ \t\r\n]+/g,token=>token.startsWith('"')?token:'');
+export {configSourceTokens} from './source-fingerprint.mjs';
 export function isSessionRelicSuccessor(path,source,{allowConfigLayout=false}={}){
  if(!Object.hasOwn(sessionRelic.files,path))return false;
  source=predecessor(roomEntry.files,path,beforeDeckPages(path,source,{allowConfigLayout}));
  const expected=sessionRelic.files[path].after;
  if(matches(source,expected))return true;
- if(!allowConfigLayout||!expected.tokensSha256||typeof source!=='string'||source.includes('\r\r\n'))return false;
- if(hash(configSourceTokens(source))!==expected.tokensSha256)return false;
- try{JSON.parse(source);return true;}catch{return false;}
+ return allowConfigLayout&&sourceConfigLayoutMatches(source,expected.tokensSha256);
 }
 function beforeSessionRelic(path,source,options){
  if(!isSessionRelicSuccessor(path,source,options))return source;
@@ -320,6 +322,7 @@ function beforeSessionRelic(path,source,options){
  return source.includes('\r\n')?before.replaceAll('\n','\r\n'):before;
 }
 export function beforeDevelopBackflow(path,source,options){
+ source=beforeUiEntrance(path,source);
  source=predecessor(roomEntry.files,path,beforeDeckPages(path,source,options));
  source=beforeRelicDetail(path,source);
  return beforePriorDevelopBackflow(path,beforeSessionRelic(path,source,options));
@@ -330,12 +333,17 @@ export function assertCurrentSessionRelicOwner(path,source){
  }
 }
 export function authenticateDevelopBackflow(path,source,read,options){
+ ({source,read}=entrancePredecessor(path,source,read));
  return authenticateDevelopBackflowWithReaders(path,source,read,recentBackflowOwnerReader(read),options);
+}
+function readBackflowOwner(read,path){
+ try{return read(path);}
+ catch(error){assert.fail('combined linked owner missing: '+path+': '+String(error?.message??error));}
 }
 function authenticateDevelopBackflowWithReaders(path,source,readLive,readLinked,options){
  const priorUi=beforeDevelopUiBackflows(path,source);
  if(priorUi!==source){
-  const live=readLive(path);
+  const live=readBackflowOwner(readLive,path);
   assert(typeof live==='string'&&live.replaceAll('\r\n','\n')===source.replaceAll('\r\n','\n'),
    'combined linked owner identity: '+path+' during deck/potion backflow validation');
  }
@@ -344,7 +352,7 @@ function authenticateDevelopBackflowWithReaders(path,source,readLive,readLinked,
  const readActions=owner=>beforeActionButtons(owner,readUi(owner));
  const beforeCloseout=beforeCombatEvents(path,source);
  if(beforeCloseout!==source){
-  const live=readActions(path);
+  const live=readBackflowOwner(readActions,path);
   assert(typeof live==='string'&&live.replaceAll('\r\n','\n')===source.replaceAll('\r\n','\n'),
    'combined linked owner identity: '+path+' during combat/event backflow validation');
  }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
+import {createComposedSourceEpochProjector,createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const archive=readFileSync(new URL('./effects-target-group-source-epoch.json.gz',import.meta.url));
 assert.equal(hash(archive),'f22d0328aedd7b7e9c785482271483f9f083c5c6abd7cd55d19933b24a48c0c2','effects-target-group compressed identity');
@@ -17,7 +17,7 @@ export function extendEffectsTargetGroupEpoch(original){
  const proof={...prior,currentTreeCommitted:false,effectsTargetGroupSourceSliceCommit:outer.currentCommit,effectsTargetGroupLocalSourceSliceCommit:outer.localSourceSliceCommit,effectsTargetGroupSourceTree:outer.sourceTree,effectsTargetGroupCollectedBaseCommit:outer.collectedBaseCommit,effectsTargetGroupCurrentCommitRole:outer.currentCommitRole,current:{...prior.current,...outer.current},
   owners:[...new Set([...prior.owners,...outer.owners])],
   targets:{...prior.targets,effectsTargetGroupPrior:{commit:outer.targets.prior.commit,files:prior.current}}};
- const current=createSourceEpochProjector(proof,{allowConfigLayout:true}),live=p=>readFileSync(p,'utf8'),readers=new WeakMap();
+ const current=createComposedSourceEpochProjector(proof),live=p=>readFileSync(p,'utf8'),readers=new WeakMap();
  function preCombinedSource(path,source,{target,readSource=live}={}){
   readSource=readers.get(readSource)?.raw??readSource;
   const projected=current.preCombinedSource(path,source,{target,readSource});

@@ -38,7 +38,8 @@ test('current facade retains exact config identity and rechecks all 48 owners af
  let calls=0;assert.equal(sourceEpoch.preCombinedSource(file,source,{target,readSource:p=>{calls++;return raw(p);}}),proof.targets.actor.files[file].source);assert.equal(calls,48);
  const mapOwner='src/lua/abyss_traveler_portraits.lua',currentMapOwner=readLive(mapOwner);
  assert.notEqual(raw(mapOwner),currentMapOwner);
- assert.throws(()=>sourceEpoch.preCombinedSource(file,source,{target,readSource:p=>p===mapOwner?currentMapOwner:raw(p)}),/map-room validation/);
+ assert.throws(()=>sourceEpoch.preCombinedSource(file,source,{target,readSource:p=>p===mapOwner?currentMapOwner:raw(p)}),
+  /(?:linked owner identity: src\/lua\/abyss_traveler_portraits\.lua.*map-room validation|linked owner missing: src\/lua\/abyss_traveler_portraits\.lua: combined linked owner identity: config\/architecture\.json during entrance validation)/);
  for(const owner of proof.owners){
   let bad=false;const readSource=p=>bad&&p===owner?raw(p)+'\n':raw(p);
   sourceEpoch.preCombinedSource(file,source,{target,readSource});bad=true;

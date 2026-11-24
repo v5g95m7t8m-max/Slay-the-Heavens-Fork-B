@@ -64,5 +64,13 @@ async function run(message){
   process.send({type:'result',id,result:{...result,verificationRoot:runtime.directory,preparation},status:{prepared:true,executions}});
  }catch(error){process.send({type:'result',id,error:{message:error.message,stack:error.stack},status:{prepared:!!manifest,executions}});}
 }
-process.on('message',message=>{if(message.type==='run')void run(message);else if(message.type==='close'){runtime?.close();runtime=undefined;process.disconnect();}});
+process.on('message',message=>{
+ if(message.type==='run')void run(message);
+ else if(message.type==='close'){
+  // The parent already owns this root and deletes it after the worker exits.
+  // Windows directory removal need not consume the worker's shutdown deadline.
+  runtime=undefined;
+  process.disconnect();
+ }
+});
 process.on('disconnect',()=>{child?.kill();runtime?.close();});process.send({type:'ready'});

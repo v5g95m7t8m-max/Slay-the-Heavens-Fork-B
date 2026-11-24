@@ -74,7 +74,7 @@ test('current POSIX matrix consumes fifteen shared shards with serial full regre
   assert.deepEqual(qualityShardMatrices.posix,[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
   assert.ok(shards.includes('shard: ${{ fromJSON(needs.impact.outputs.posix_shards) }}'));
   assert.match(shards,/^    needs: impact\n    if: \$\{\{ !cancelled\(\) && needs\.impact\.result == 'success' && needs\.impact\.outputs\.mode == 'full' \}\}$/m);
-  assert.match(shards,/^    runs-on: ubuntu-24\.04\n    timeout-minutes: 30$/m);
+  assert.match(shards,/^    runs-on: ubuntu-24\.04\n    timeout-minutes: 90$/m);
   assert.match(shards,/^      fail-fast: false$/m);
   assert.match(shards,/^      max-parallel: 12$/m);
   assert.match(workflow,/^permissions:\n  contents: read$/m);
@@ -117,4 +117,10 @@ test('native Node four-shard selection executes every current JS file name exact
   }
   assert.equal(new Set(seen).size, seen.length, 'no test file can execute in both shards');
   assert.deepEqual(seen.sort(), files, 'every real tests/*.test.mjs name executes once');
+});
+
+test('current Fork POSIX aggregate retains its complete push and draft scope',()=>{
+  assert.ok(aggregate.includes("    if: ${{ !cancelled() && (github.event_name != 'push' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master' || (github.event.repository.id == 1460133275 && startsWith(github.ref, 'refs/heads/ci/full/'))) && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}"));
+  assert.match(aggregate,/^    needs: \[impact, engineering-posix-shards, fast\]$/m);
+  assert.doesNotMatch(aggregate,/continue-on-error:|\|\| true/);
 });

@@ -9,6 +9,9 @@ import {silentFinalEpoch} from './helpers/silent-final-source-epoch.mjs';
 import {copyIntegrationSourceClosure} from './helpers/copy-integration-source-closure.mjs';
 import {preComponentUiCiSource} from './helpers/component-ui-ci-source-inverse.mjs';
 import {sourceSlice} from './helpers/closeout-source-epoch.mjs';
+import {sourceEpoch as currentEpoch} from './helpers/combined-epoch/source-epoch.mjs';
+import {pointerInputPath,readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
+import {createHash} from 'node:crypto';
 // These original49-owner contracts authenticate the pre-component Silent epoch;
 // the public current68-owner facade is independently checked in Formation/Run.
 const readFileSync=(file,...args)=>preComponentUiCiSource(file,sourceSlice(file,diskReadFileSync(file,...args).replaceAll('\r\n','\n'),'componentUiPrior'));
@@ -99,15 +102,33 @@ test('outer foreign-source fallback preserves invalid raw-reader semantics',()=>
   assert.equal(sourceEpoch.preCombinedSource(path,source,{target,readSource}),source);
 });
 
-test('live LF and CRLF raw owner reads authenticate 49 current owners on every call',()=>{
- const config='config/architecture.json',input=readFileSync(config,'utf8'),expected=proof.targets.actor.files[config].source;
+test('live LF and CRLF raw owner reads authenticate the complete current closure on every call',()=>{
+ const config='config/architecture.json',input=diskReadFileSync(config,'utf8'),expected=proof.targets.actor.files[config].source;
+ const readLive=file=>diskReadFileSync(file,'utf8');
+ const retired=readRetiredController(readLive);
+ assert(retired.restored,'the live pointer owner authenticates controller retirement');
  for(const crlf of [false,true]){
   const seen=[];let corrupt=null,missing=null;
-  const live=file=>{seen.push(file);if(file===missing)return null;const bytes=readFileSync(file,'utf8').replaceAll('\r\n','\n');return file===corrupt?bytes+'\n':crlf?bytes.replaceAll('\n','\r\n'):bytes;};
-  for(let repeat=0;repeat<2;repeat++){seen.length=0;assert.equal(sourceEpoch.preCombinedSource(config,input,{target:'actor',readSource:live}),expected);assert.deepEqual(seen,proof.owners);}
+  const live=file=>{
+   seen.push(file);
+   if(file===missing)return null;
+   const bytes=(file===retiredControllerPath&&file===corrupt?retired.source:readLive(file)).replaceAll('\r\n','\n');
+   if(file===corrupt&&file!==retiredControllerPath)return bytes+'\n';
+   return crlf?bytes.replaceAll('\n','\r\n'):bytes;
+  };
+  for(let repeat=0;repeat<2;repeat++){
+   seen.length=0;
+   assert.equal(currentEpoch.preCombinedSource(config,input,{target:'actor',readSource:live}),expected);
+   assert.equal(seen.length,480);
+   assert.equal(createHash('sha256').update(JSON.stringify(seen)).digest('hex'),
+    'ad1c81a8f757224fa6520ca74d2a9b682f24925d2689141bc4b2eb1066d6a7fd');
+   for(const owner of proof.owners)assert(seen.includes(owner),'retained Silent owner: '+owner);
+  }
   for(const owner of proof.owners){
-   corrupt=owner;assert.throws(()=>sourceEpoch.preCombinedSource(config,input,{target:'actor',readSource:live}),/linked owner identity/,owner);corrupt=null;
-   missing=owner;assert.throws(()=>sourceEpoch.preCombinedSource(path,readFileSync(path,'utf8'),{target:'silentFinalPrior',readSource:live}),/linked owner identity/,owner);missing=null;
+   corrupt=owner;assert.throws(()=>currentEpoch.preCombinedSource(config,input,{target:'actor',readSource:live}),/linked owner identity/,owner);corrupt=null;
+   missing=owner===retiredControllerPath?pointerInputPath:owner;
+   assert.throws(()=>currentEpoch.preCombinedSource(path,readLive(path),{target:'silentFinalPrior',readSource:live}),/linked owner (?:identity|missing)/,owner);
+   missing=null;
   }
  }
 });

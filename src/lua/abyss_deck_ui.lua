@@ -204,10 +204,10 @@ function M.new(root, presentation, clickEvent, platform, onClose)
         rarityTip:SetVisible(active==true and self.pileKind=='draw' and not frozenEye(self.run))
         root:GetChild('title'):SetVisible(not sorting and not self.browserShell and not self.cardDetail)
         if self.browserShell then
-            local browserChrome=root:GetChild('pileChrome')
-            browserChrome:GetChild('heading'):SetVisible(self.detailPages~=nil)
-            browserChrome:GetChild('drawBadge'):SetVisible(active==true and self.pileKind=='draw')
-            browserChrome:GetChild('discardBadge'):SetVisible(active==true and self.pileKind=='discard')
+            local pileChrome=root:GetChild('pileChrome')
+            pileChrome:GetChild('heading'):SetVisible(self.detailPages~=nil)
+            pileChrome:GetChild('drawBadge'):SetVisible(active==true and self.pileKind=='draw')
+            pileChrome:GetChild('discardBadge'):SetVisible(active==true and self.pileKind=='discard')
         end
         local heading=root:GetChild('browseTitle')
         local legacySort=sorting and not self.browserShell

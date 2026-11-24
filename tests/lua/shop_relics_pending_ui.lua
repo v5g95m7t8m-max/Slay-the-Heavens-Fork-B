@@ -74,6 +74,29 @@ test('mandatory bottled relic has no leave action and selects a real deck UID',f
  local found=false;for _,c in ipairs(r.deck)do if c.uid==uid then assert(c.inBottleFlame);found=true end end
  assert(found)
 end)
+test('mandatory relic paging owns the footer and shade during shop entrance',function()
+ local r,m=R.new(D,42),Map.generate(D,42)
+ local Nodes=require('abyss_nodes')
+ while not r.nodeFlow do
+  local choices=Map.available(m)
+  for _,node in ipairs(choices)do if node.type=='shop'then assert(Nodes.enter(r,m,node.id));break end end
+  if not r.nodeFlow then assert(Map.choose(m,choices[1].id)) end
+ end
+ local root=control(find(L,'nodePanel'))
+ local presentation=require('abyss_character_presentation').prepare(P,r.data)
+ local ui=UI.new(root,r,m,presentation,'click')
+ ui:setVisible(true)
+ assert(ui:press('merchant/talk'));ui:update(.12)
+ local shelf,shade,back=root:GetChild('shopView'),root:GetChild('shopShade'),root:GetChild('back')
+ assert(shelf.y>0 and shade.visible)
+ assert(R.obtainRelic(r,'DollysMirror'));ui:render()
+ assert(ui:press('confirm'))
+ local x,y=back.x,back.y
+ ui:update(.25)
+ assert(back.x==x and back.y==y and not shade.visible and not shelf.visible)
+ assert(ui:press('eventView/option1') and not Pending.owner(r))
+ assert(shelf.visible and shade.visible)
+end)
 test('real GameUI gives relic modal priority over map reward and victory',function()
  local F=dofile('tests/lua/support/game_ui_fixture.lua')
  local ui,root=F.fixture();assert(F.start(ui))

@@ -1,3 +1,4 @@
+import {beforeForkPush} from './helpers/fork-preflight-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync,writeFileSync,mkdtempSync,mkdirSync,rmSync } from 'node:fs';
@@ -218,13 +219,13 @@ test('distributed measured work beyond a develop Fast job uses the existing Full
   assert.equal(impact(changed, input, event, weights).mode, 'full', 'Windows alone can exceed its job ceiling');
   assert.equal(impact(changed, input, { ...event, base: 'release/v2.0.0' }, weights).mode, 'fast');
 
-  const workflow = readFileSync('.github/workflows/quality.yml', 'utf8').replaceAll('\r\n', '\n');
+  const workflow = beforeForkPush('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml', 'utf8')).replaceAll('\r\n', '\n');
   const fastJob = workflow.split('\n  fast:\n')[1].split('\n  rules:\n')[0];
   assert.match(fastJob, /timeout-minutes: \$\{\{ matrix\.os == 'windows-2025' && 45 \|\| 30 \}\}/);
 });
 
 test('actual required gate commands reject every missing, failed, cancelled or skipped selected execution', () => {
-  const workflow = readFileSync('.github/workflows/quality.yml', 'utf8').replaceAll('\r\n', '\n');
+  const workflow = beforeForkPush('.github/workflows/quality.yml',readFileSync('.github/workflows/quality.yml', 'utf8')).replaceAll('\r\n', '\n');
   const shell = process.platform === 'win32' ? `${process.env.ProgramFiles}/Git/bin/bash.exe` : '/bin/bash';
   for (const job of ['check', 'engineering-posix']) {
     const body = (workflow + '\n  end:\n').match(new RegExp(`^  ${job}:\\n([\\s\\S]*?)(?=^  [\\w-]+:)`, 'm'))[1];

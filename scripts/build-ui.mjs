@@ -14,6 +14,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { toLua } from './build-lua-data.mjs';
 import { battleLayout, enemyPowerTemplate } from './ui-layout.mjs';
+import { attachEntranceLayers } from './ui-entrance-layout.mjs';
 import { gameLayout } from './game-ui-layout.mjs';
 import { withViewport } from './viewport-layout.mjs';
 import { buildUiTheme } from './build-ui-theme.mjs';
@@ -203,8 +204,11 @@ export function buildUI(outputDirectory = 'build/lua', python = process.env.ABYS
     applyV25RewardLayout(layout,theme);
   }
   if (!officialAssets) templates.push(plainBrowserCardTemplate(templates[0]));
-  const child = (node, name) => (node.controls ?? node.children).find(control => control.name === name);
-  const picker = child(child(child(layout, 'stage') ?? layout, 'nodePanel'), 'pickerView');
+  const child = (node, name) => (node.controls ?? node.children ?? []).find(control => control.name === name);
+  const stage = child(layout, 'stage') ?? layout;
+  const nodePanel = child(stage, 'nodePanel');
+  attachEntranceLayers(stage, theme, officialAssets && options.experimentalCharacters === false);
+  const picker = child(nodePanel, 'pickerView');
   const forgeCard = structuredClone(child(child(picker, 'forgeGrid'), 'card1'));
   Object.assign(forgeCard, { name: 'AbyssForgeCard', position: [0, 0], visible: true });
   forgeCard.children = forgeCard.children.filter(control => control.name !== 'matchBack');

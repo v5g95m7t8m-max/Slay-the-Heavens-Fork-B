@@ -29,6 +29,18 @@ export function materialize(kind,sourceRoot=root){
  const text=fs.readFileSync(f,'utf8'),needle='return NativeContract.control(self,spec)';
  assert.equal(text.split(needle).length,2);
  fs.writeFileSync(f,text.replace(needle,'if ABYSS_HOST_CONTROL then ABYSS_HOST_CONTROL(self) end\n    '+needle));
+ const trace=path.join(dir,'tests/lua/support/game_ui_host_trace.lua');
+ const collector=fs.readFileSync(trace,'utf8'),pathStart=/^ local function path\(\)(\r?\n)/gm;
+ assert.equal([...collector.matchAll(pathStart)].length,1);
+ // The archived collector evaluates path() before record() can discard an
+ // event outside the selected window. Avoid walking the parent chain for
+ // those discarded events in both historical VMs.
+ fs.writeFileSync(trace,collector.replace(pathStart,(_,eol)=>[
+  ' local function path()',
+  '  local nextCheckpoint=count+1',
+  '  if not ABYSS_HOST_FULL_TRACE or nextCheckpoint<(ABYSS_HOST_FROM or 1) or nextCheckpoint>(ABYSS_HOST_TO or 35) then return end',
+  '',
+ ].join(eol)));
  return dir;
 }
 export function execute(dir,seed,constructor='',from=1,to=35){

@@ -56,6 +56,8 @@ function M.new(root, run, map, presentation, clickEvent, onChange, options)
 
     function ctx.path(key)
         local control = ctx.root
+        local product = key:match('^shopView/([^/]+)$')
+        if product then return assert(ctx.shopControl(product), key) end
         for part in key:gmatch("[^/]+") do control = assert(control:GetChild(part), "missing node UI control " .. key) end
         return control
     end
@@ -244,7 +246,7 @@ function M.new(root, run, map, presentation, clickEvent, onChange, options)
         ctx.show(back, backLabel ~= nil) ctx.show(confirm, confirmLabel ~= nil)
         if backLabel then back:GetChild("label").text = backLabel ctx.state(back, true) end
         if confirmLabel then confirm:GetChild("label").text = confirmLabel ctx.state(confirm, confirmOk, false, true) end
-        ctx.action("back", backLabel ~= nil, function()
+        ctx.action("back", backLabel ~= nil and not ctx.shopBackRetiring(), function()
             if ctx.self.view.node and ctx.self.view.node.type=='shop' and ctx.self.mode=='main' and not ctx.shopSelection.selected then return ctx.closeShop() end
             if ctx.shopSelection:cancel() then return true end
             if ctx.options.enhancedRooms and ctx.self.picker=='upgrade' and ctx.self.selected then

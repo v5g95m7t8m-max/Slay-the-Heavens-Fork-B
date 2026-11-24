@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
+import {createComposedSourceEpochProjector} from './combined-epoch/source-epoch-runtime.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const bytes=readFileSync(new URL('./noncombat-source-epoch.json.gz',import.meta.url));
 assert.equal(hash(bytes),'748b7965ddf39f1e297da92094f1ed865204177ca344aacca7e78a826d78f279','noncombat source archive');
@@ -19,7 +19,7 @@ export function extendNoncombatEpoch(prior){
  const targets=Object.fromEntries(Object.entries(prior.proof.targets).map(([name,target])=>[name,{...target,files:complete(target.files)}]));
  targets.noncombatPrior={commit:archive.beforeCommit,files:complete(prior.proof.current)};
  const owners=paths.filter(p=>Object.values(targets).some(t=>t.files[p]?.sha256!==current[p]?.sha256));
- return createSourceEpochProjector({...prior.proof,currentCommit:archive.afterCommit,
+ return createComposedSourceEpochProjector({...prior.proof,currentCommit:archive.afterCommit,
   currentCommitRole:'committed complete noncombat production source slice',currentTreeCommitted:true,
-  current,targets,owners},{allowConfigLayout:true});
+  current,targets,owners});
 }

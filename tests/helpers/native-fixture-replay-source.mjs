@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
+import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 
 const sha256=source=>createHash('sha256').update(source).digest('hex');
 const blob=source=>createHash('sha1').update(`blob ${Buffer.byteLength(source)}\0`).update(source).digest('hex');
@@ -51,11 +52,12 @@ function currentSource(source,after){
 
 export function assertNativeFixturesCurrent(read){
  for(const [path,{after}] of Object.entries(files))
-  assert(currentSource(read(path,'utf8'),after),'fresh complete native fixture source: '+path);
+  assert(currentSource(beforeUiEntranceWitness(path,read(path,'utf8')),after),'fresh complete native fixture source: '+path);
 }
 
 export function beforeNativeFixtureReplay(path,source){
  if(!Object.hasOwn(files,path))return source;
+ source=beforeUiEntranceWitness(path,source);
  const {before,after}=files[path];
  if(!currentSource(source,after))return source;
  return source.includes('\r\n')?before.source.replaceAll('\n','\r\n'):before.source;

@@ -11,7 +11,9 @@ test('foreign tokens avoid owner reads while equivalent sources freshly reject a
  try{
   for(const mode of ['foreign','equivalent','fresh-owner']){
    const output=join(directory,mode+'.json');
-   const result=spawnSync(process.execPath,['--trace-event-file-pattern='+output,fileURLToPath(new URL('./helpers/architecture-token-read-probe.mjs',import.meta.url)),mode],{encoding:'utf8',timeout:30000,maxBuffer:1024*1024,windowsHide:true});
+   // Each probe imports and authenticates the complete historical source chain.
+   // Leave room for that real work on hosted shards; keep every FS/read assertion.
+   const result=spawnSync(process.execPath,['--trace-event-file-pattern='+output,fileURLToPath(new URL('./helpers/architecture-token-read-probe.mjs',import.meta.url)),mode],{encoding:'utf8',timeout:180000,maxBuffer:1024*1024,windowsHide:true});
    assert.ifError(result.error);assert.equal(result.status,0,result.stdout+result.stderr);
    const events=JSON.parse(readFileSync(output,'utf8')).traceEvents;
    if(process.env.ABYSS_SOURCE_EVIDENCE_DIR){

@@ -10,7 +10,9 @@ import {generatedRuntimeModules} from '../scripts/build-native-candidate.mjs';
 import {currentDefectActorReader} from './helpers/m7-core-final-source-inverse.mjs';
 import {sourceEpoch,ciRepairSourceEpoch} from './helpers/closeout-source-epoch.mjs';
 import {beforeCurrentProductionSource} from './helpers/character-preparation-source.mjs';
-import {actorFocusAdded,assertActorFocusInventory,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
+import {entranceInventory} from './helpers/ui-entrance-source.mjs';
+import {actorFocusAdded,assertActorFocusInventory,deckPagesAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
+import {beforeCombatEvents,beforeInputRetirementReader,pointerInputPath,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 const require=createRequire(import.meta.url),luaparse=require('luaparse');
 const utility='src/lua/abyss_defect_utility_cards.lua',queued='src/lua/abyss_combat_queued_play.lua';
 const fixture='tests/lua/defect_utility_build.lua',protocol='tests/lua/support/m9_combat_protocol_baseline.lua';
@@ -22,10 +24,15 @@ const actorRead=currentDefectActorReader(read);
 function capabilityPreStyle(raw=discoverSources()){
  const config='config/architecture.json',live={...raw,[config]:read(config)},proof=sourceEpoch.proof;
  const readLive=path=>Object.hasOwn(live,path)?live[path]:read(path);
- assert.deepEqual(Object.keys(live).sort(),[...Object.keys(proof.current),...actorFocusAdded,...stasisUpgradeAddedPaths].sort(),'complete live source inventory before preStyle');
+ const expected=[...Object.keys(proof.current),...actorFocusAdded,...stasisUpgradeAddedPaths,...deckPagesAdded];
+ assert(expected.includes(retiredControllerPath),'preStyle inventory includes the historical controller');
+ assert.deepEqual(entranceInventory(Object.keys(live).sort(),readLive),[...expected.filter(path=>path!==retiredControllerPath),pointerInputPath].sort(),'complete live source inventory before preStyle');
  assertActorFocusInventory(Object.keys(raw),readLive);
- for(const [path,binding]of Object.entries(proof.current))
-  assert.equal(beforeCurrentProductionSource(path,live[path],readLive).replaceAll('\r\n','\n'),binding.source,'live preStyle input identity: '+path);
+ const historicalRead=beforeInputRetirementReader(readLive);
+ for(const [path,binding]of Object.entries(proof.current)){
+  const source=path===retiredControllerPath?historicalRead(path):live[path];
+  assert.equal(beforeCurrentProductionSource(path,source,readLive).replaceAll('\r\n','\n'),binding.source,'live preStyle input identity: '+path);
+ }
  const admitted=sourceEpoch.preCombinedSource(config,live[config],{target:'stsStylePrior',readSource:readLive});
  assert.equal(admitted,ciRepairSourceEpoch.proof.current[config].source,'fresh complete current owners authorize the cb view');
  const prior=proof.targets.stsStylePrior.files;
@@ -91,7 +98,7 @@ test('production changes remain the two narrow capability edits and one policy r
  assert.equal(read(utility).replace('local M={}\n',"local M={}\nlocal Actors=require('abyss_actor')\n")
   .replace('function M.prepareEffect(state,effect,target,actorHost)','function M.prepareEffect(state,effect,target)')
   .replaceAll('        local Actors=actorHost()\n',''),original[utility]);
- assert.equal(read(queued).replace("local function utilityActorHost()return require('abyss_actor')end\n",'')
+ assert.equal(beforeCombatEvents(queued,read(queued)).replace("local function utilityActorHost()return require('abyss_actor')end\n",'')
   .replace('utility.prepareEffect(state,e,target,utilityActorHost)','utility.prepareEffect(state,e,target)'),original[queued]);
  const policy=JSON.parse(actorRead('config/architecture.json')),prior=JSON.parse(original['config/architecture.json']);
  const view=capabilityPreStyle(),livePolicy=JSON.parse(view.read('config/architecture.json'));
@@ -102,7 +109,7 @@ test('production changes remain the two narrow capability edits and one policy r
  assert.deepEqual(rule.from,['abyss_defect_utility_cards']);
  assert.deepEqual(rule.forbiddenTargets,['abyss_actor','abyss_combat','abyss_combat_queued_play','abyss_card_actions']);
  const foreign=discoverSources();foreign['src/lua/abyss_page_reveal.lua']+='\n-- unrelated drift';
- assert.throws(()=>capabilityPreStyle(foreign),{message:'fresh current production owner: src/lua/abyss_page_reveal.lua'},'historical policy cannot conceal current owner drift');
+ assert.throws(()=>capabilityPreStyle(foreign),{message:'combined linked owner identity: src/lua/abyss_page_reveal.lua during entrance validation'},'historical policy cannot conceal current owner drift');
  const updated='src/lua/abyss_character_presentation.lua';
  const reverted={...discoverSources(),[updated]:sourceEpoch.proof.current[updated].source};
  assert.throws(()=>capabilityPreStyle(reverted),{message:'fresh current production owner: '+updated},'frozen predecessor bytes cannot pass as current input');
@@ -127,7 +134,8 @@ test('all original 345 modules plus the admitted idle retain complete graphs and
  assert.deepEqual(report.edges.filter(e=>e.from==='abyss_defect_utility_cards').map(e=>e.to),['abyss_relic_queries']);
  const hosts=report.edges.filter(e=>e.from==='abyss_combat_queued_play'&&e.to==='abyss_actor');
  assert.equal(hosts.length,3,'original eager Actor, untouched Watcher host and new Utility host');
- for(const name of ['utilityActorHost','watcherActorHost'])assert(hosts.some(e=>read(queued).split('\n')[e.line-1].includes(`local function ${name}()`)));
+ const queuedLines=raw[queued].split('\n');
+ for(const name of ['utilityActorHost','watcherActorHost'])assert(hosts.some(e=>queuedLines[e.line-1].includes(`local function ${name}()`)));
  // Parse the complete changed module for each mutant, then replace its edges
  // in this run's freshly collected FULL graph. Every other owner and edge is
  // retained, avoiding six redundant parses of 345 unchanged source files.

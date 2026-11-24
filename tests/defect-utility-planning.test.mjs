@@ -7,6 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,writeFileSync,rmSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {gunzipSync} from 'node:zlib';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {runLua} from '../scripts/test-lua.mjs';
@@ -39,9 +40,17 @@ test('the explicit historical reader requires current owners and rejects a stale
  const expected=defectActorEpoch.proof.current[config].source;
  assert.equal(reader(config),expected);
  const admittedReads=[...reads];
- assert.equal(admittedReads.length,418);
+ const entranceBytes=readFileSync('tests/fixtures/ui-entrance-source.json.gz');
+ assert.equal(createHash('sha256').update(entranceBytes).digest('hex'),
+  '7ac3f53b242819cdb569c0a1ebf60de0605b72297a1072ea612bfeb11b0597c9');
+ const entranceOwners=Object.keys(JSON.parse(gunzipSync(entranceBytes)).files);
+ assert.equal(entranceOwners.length,20);
+ assert.deepEqual(admittedReads.slice(1,21),entranceOwners,'complete fresh entrance owner admission');
+ assert.equal(admittedReads.length,481);
  assert.equal(createHash('sha256').update(JSON.stringify(admittedReads)).digest('hex'),
-  '5a6e1ad0b3362c34562f566c1a8b3c5496a1c1cebb6c302930cc1efe6976e1bc','exact raw Actor admission before historical bytes');
+  '020fb0e5445e67c44775c716f475dee3a856f7f67f1f7d1e46573c614ddc8de2','complete current Actor admission order');
+ assert.equal(createHash('sha256').update(JSON.stringify([admittedReads[0],...admittedReads.slice(21)])).digest('hex'),
+  'f6930061a5fe2d5db08649eddf310bf9afe106ed91fb204433124f98352260bb','exact raw Actor admission before historical bytes');
  let preceding=-1;
  for(const owner of [config,...proof.owners,...currentProductionRereads]){
   preceding=admittedReads.indexOf(owner,preceding+1);

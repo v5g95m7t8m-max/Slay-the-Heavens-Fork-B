@@ -12,6 +12,7 @@ import {preCompendiumSource} from './helpers/compendium-source-inverse.mjs';
 import {preGameUiExtractionSource} from './helpers/game-ui-extraction-source-inverse.mjs';
 import * as extractionEpoch from './helpers/game-ui-extraction-source-inverse.mjs';
 import {sourceEpoch} from './helpers/combined-epoch/source-epoch.mjs';
+import {readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
 const path='config/architecture.json';
 // Keep the original native-page hunk/oracle test in its immutable three-owner
 // source epoch. The actual integrated tree is admitted separately below.
@@ -51,8 +52,11 @@ test('combined native-page admission preserves the old oracle and freshly binds 
  const raw=p=>readFileSync(p,'utf8');
  assert.equal(hash(expected),'0e75d9e1f08cfb7738215b9a31cce141f03cc2469077bce0db3376fe1f446a9c');
  assert.equal(extractionEpoch.preNativePageSource(path,current,{readSource:raw}),expected);
+ const retired=readRetiredController(raw);
+ assert(retired.restored,'the current pointer input authenticates controller retirement');
  for(const owner of sourceEpoch.proof.owners){
-  assert.throws(()=>extractionEpoch.preNativePageSource(path,current,{readSource:p=>raw(p)+(p===owner?'\n-- combined owner drift\n':'')}),/linked owner/);
+  const drifted=owner===retiredControllerPath?retired.source:raw(owner)+'\n-- combined owner drift\n';
+  assert.throws(()=>extractionEpoch.preNativePageSource(path,current,{readSource:p=>p===owner?drifted:raw(p)}),/linked owner/);
   assert.throws(()=>extractionEpoch.preNativePageSource(path,current,{readSource:p=>{if(p===owner)throw Error('combined missing owner '+owner);return raw(p);}}),/linked owner missing/);
  }
 });

@@ -12,6 +12,7 @@ import {historicalStsStyleFixtures} from './historical-sts-style-runner.mjs';
 import {discoverJs} from '../../scripts/ci-shards.mjs';
 import {beforeInputRetirement,beforeInputRetirementStsSuite} from './input-retirement-source.mjs';
 import {inputRetirementStsFixtureSource,inputRetirementStsWitness} from './input-retirement-sts-binding.mjs';
+import {beforeCurrentHistoricalStsSource} from './calibration-replay-sources.mjs';
 import {runLua} from '../../scripts/test-lua.mjs';
 const script=process.argv[2],timeout=Number(process.argv[3]),started=Date.now(),root=fileURLToPath(new URL('../..',import.meta.url));
 assert(historicalStsStyleFixtures.includes(script));assert(Number.isSafeInteger(timeout)&&timeout>0);
@@ -19,7 +20,7 @@ const remaining=()=>{const value=timeout-(Date.now()-started);assert(value>0,'hi
 const raw=p=>readFileSync(join(root,p),'utf8');
 const config='config/architecture.json';
 assert.equal(sourceEpoch.preCombinedSource(config,raw(config),{target:'stsStylePrior',readSource:raw}),ciRepairSourceEpoch.proof.current[config].source,'all current production owners authenticate before historical materialization');
-const suite=beforeInputRetirementStsSuite(discoverJs(),(p,e)=>inputRetirementStsFixtureSource(p,readFileSync(join(root,p),e)),inputRetirementStsWitness);
+const suite=beforeInputRetirementStsSuite(discoverJs(),(p,e)=>inputRetirementStsFixtureSource(p,beforeCurrentHistoricalStsSource(p,readFileSync(join(root,p),e))),inputRetirementStsWitness);
 assertStsStyleCiCurrent(suite.paths,suite.read);
 assert.equal(createHash('sha256').update(beforeInputRetirement(script,raw(script)).replaceAll('\r\n','\n')).digest('hex'),stsStylePriorRuntime.files[script].sha256,'full original Lua contract is unchanged');
 const directory=mkdtempSync(join(tmpdir(),'abyss-sts-style-'));

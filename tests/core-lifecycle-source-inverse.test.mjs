@@ -70,9 +70,12 @@ test('the outer inverse rejects unknown and old epochs without linked reads and 
 test('every recognized direct or public call freshly validates all four owners and nested readers retain the raw source closure',()=>{
  fourOwners();assert.equal(typeof core.coreLifecycleReader,'function');
  const old=Object.fromEntries(paths.map(path=>[path,before(path)]));
+ // Prepare the exact four-owner epoch once for the injected reader. That reader
+ // still supplies every fresh success or fault to the unchanged historical guard.
+ const sources=Object.fromEntries(owners.map(path=>[path,read(path)]));
  for(const consume of [prior,publicPrior])for(const host of paths)for(const linked of owners){
-  const source=read(host),expected=consume(host,source);let mode='good',reads=[];
-  const readSource=p=>{reads.push(p);if(p===linked){if(mode==='throw')throw Error('reader failed');if(mode==='missing')return undefined;if(mode==='drift')return read(p)+'\n';if(mode==='old')return old[p];}return read(p);};
+  const source=sources[host],expected=consume(host,source);let mode='good',reads=[];
+  const readSource=p=>{reads.push(p);if(p===linked){if(mode==='throw')throw Error('reader failed');if(mode==='missing')return undefined;if(mode==='drift')return sources[p]+'\n';if(mode==='old')return old[p];}return sources[p]??read(p);};
   assert.equal(consume(host,source,{readSource}),expected);assert.deepEqual(reads.slice(0,4),owners);
   for(mode of ['throw','missing','drift','old']){
    reads=[];assert.throws(()=>consume(host,source,{readSource}),/lifecycle linked/);

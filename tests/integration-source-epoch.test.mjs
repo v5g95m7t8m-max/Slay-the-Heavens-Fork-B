@@ -6,8 +6,9 @@ import {beforePc13RewardCover,beforePc13ThenV2UiHudSource,pc13RewardCoverSourceP
 import {beforeAuthenticatedReleaseUiRestore,beforeReleaseControlsGuideRemoval,beforeReleaseUiRestore,releaseControlsGuideRemovalSourcePaths} from './helpers/release-ui-restore-source.mjs';
 import {assertCharacterPreparationSources,beforeCharacterPreparationSource,beforeCurrentProductionSource,characterPreparationOwners} from './helpers/character-preparation-source.mjs';
 import {authenticateInputRetirement,beforeDeckBrowserBackflow,beforePotionBackflow,beforeInputRetirement,beforeInputRetirementReader,assertPointerInputSource,pointerInputPath,retiredControllerPath} from './helpers/input-retirement-source.mjs';
-import {actorFocusAdded,deckPagesAdded,assertDevelopBackflowCurrent,assertStasisUpgradeAdded,authenticateDevelopBackflow,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
+import {actorFocusAdded,deckPagesAdded,assertActorFocusInventory,assertDevelopBackflowCurrent,assertStasisUpgradeAdded,authenticateDevelopBackflow,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 import test from 'node:test';
+import {addedEntranceModules,beforeUiEntrance,entranceInventory,entrancePredecessor} from './helpers/ui-entrance-source.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync,mkdtempSync,mkdirSync,writeFileSync,existsSync,linkSync,unlinkSync,rmSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -31,7 +32,11 @@ test('input retirement preserves exact older bytes and rejects tampered successo
  const prior=beforeInputRetirement(path,source);
  assert.notEqual(prior,source);
  assert.equal(authenticateInputRetirement(path,source,read),prior);
- assert.equal(authenticateInputRetirement(path,source.replaceAll('\n','\r\n'),read),prior.replaceAll('\n','\r\n'));
+ const crlf=text=>text.replaceAll('\r\n','\n').replaceAll('\n','\r\n');
+ assert.equal(authenticateInputRetirement(path,crlf(source),read),crlf(prior));
+ const doubleCr=crlf(source).replaceAll('\n','\r\n');
+ assert.notEqual(doubleCr,crlf(source));
+ assert.equal(authenticateInputRetirement(path,doubleCr,()=>assert.fail('double CR bytes authorized linked reads')),doubleCr);
  assert.throws(()=>authenticateInputRetirement(path,source,()=>source+'\n'),/input retirement validation/);
  assert.equal(authenticateInputRetirement(path,source+'\n',()=>assert.fail('foreign bytes authorized reads')),source+'\n');
  const retired=beforeInputRetirementReader(read)(retiredControllerPath);
@@ -182,8 +187,8 @@ test('fresh authorization covers the complete changed-owner union without cachin
 test('combined epoch authenticates the complete current production tree',()=>{
  const files=['config/architecture.json',...readdirSync('src/lua').filter(p=>p.endsWith('.lua')).map(p=>'src/lua/'+p)].sort();
  const recorded=Object.keys(proof.current).filter(path=>path!==retiredControllerPath&&proof.current[path]!==null).sort();
- assert.deepEqual(files,[...recorded,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort());
  const readDisk=path=>readFileSync(path,'utf8');
+ assert.deepEqual(entranceInventory(files,readDisk),[...recorded,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort());
  assert.throws(()=>readDisk(retiredControllerPath),{code:'ENOENT'});
  const retired=beforeInputRetirementReader(readDisk)(retiredControllerPath);
  assert.equal(beforeCharacterPreparationSource(retiredControllerPath,retired,readDisk),raw(retiredControllerPath));
@@ -214,6 +219,35 @@ test('combined epoch authenticates the complete current production tree',()=>{
    assert.throws(()=>beforeCurrentProductionSource(path,latest,owner=>owner===path?invalid:read(owner)),/fresh .*source|(?:combined|map deck) linked owner identity/);
   }
  }
+});
+test('entrance replay freshly checks the complete changed cohort and preserves foreign inputs',()=>{
+ const config='config/architecture.json',read=path=>readFileSync(path,'utf8');
+ const source=read(config),prior=beforeUiEntrance(config,source);
+ const live=[config,...readdirSync('src/lua').filter(name=>name.endsWith('.lua')).map(name=>'src/lua/'+name)];
+ const changed=live.filter(path=>beforeUiEntrance(path,read(path))!==read(path));
+ assert.notEqual(prior,source);
+ assert.equal(addedEntranceModules.length,2);
+ for(const path of addedEntranceModules)assert(changed.includes(path),path);
+ const incomplete=live.filter(path=>!addedEntranceModules.includes(path));
+ assert.throws(()=>entranceInventory(incomplete,read),/complete entrance module inventory/);
+ assert.throws(()=>entranceInventory([...live,addedEntranceModules[0]],read),/complete entrance module inventory/);
+ assert.throws(()=>assertActorFocusInventory(incomplete.filter(path=>path!==config),read),/complete entrance module inventory/);
+ const project=input=>entrancePredecessor(config,source,input).source;
+ assert.equal(project(read),prior);
+ for(const changedPath of changed){
+  const current=read(changedPath);
+  for(const invalid of [beforeUiEntrance(changedPath,current),current+'\n',null]){
+   assert.throws(()=>project(path=>path===changedPath?invalid:read(path)),error=>
+    /linked owner identity/.test(error.message)&&error.message.includes(changedPath));
+  }
+  assert.throws(()=>project(path=>{
+   if(path===changedPath)throw Error('removed');
+   return read(path);
+  }),/linked owner missing/);
+ }
+ const foreign=source+'\n';
+ assert.equal(entrancePredecessor(config,foreign,()=>assert.fail('foreign bytes read linked owners')).source,foreign);
+ assert.equal(project(read),prior);
 });
 test('combined replay rejects a menu owner from before the controls guide removal',()=>{
  const read=path=>readFileSync(path,'utf8');
@@ -278,9 +312,22 @@ for(const [file,name,target,module]of cases){
  const exported=await import(`./helpers/${file}-source-inverse.mjs`),fn=exported[name];
  test(`${name}: current source and configuration match original target projection`,()=>{
   const targetRead=p=>proof.targets[target].files[p]?.source??null;
+  // The M7 Actor adapter authenticates its current admission against physical
+  // owners before exposing the frozen target; a captured epoch is not live IO.
+  const currentRead=name==='preM7FinalSource'?p=>readFileSync(p,'utf8'):raw;
   for(const path of [`src/lua/${module}.lua`,'config/architecture.json']){
    const expected=fn(path,targetRead(path),{readSource:targetRead});
-   assert.equal(fn(path,raw(path),{readSource:raw}),expected,path);
+   const inputs=name==='preM7FinalSource'?new Set([raw(path),currentRead(path)]):[raw(path)];
+   for(const input of inputs){
+    const projected=fn(path,input,{readSource:currentRead});
+    assert.equal(projected,expected,path);
+    if(name==='preM7FinalSource'){
+     assert.notEqual(projected,input,'current M7 input must actually project to its frozen target');
+     if(path==='config/architecture.json'&&input===currentRead(path))
+      assert.throws(()=>fn(path,input,{readSource:raw}),/combined linked owner/,
+       'a captured configuration cannot authenticate current M7 owners');
+    }
+   }
   }
  });
  test(`${name}: foreign input stays opaque and performs no linked reads`,()=>{

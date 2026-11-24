@@ -1,6 +1,7 @@
 local function plainCardTitle(text)return (text:gsub('<color=#[%x]+>',''):gsub('</color>',''))end
 package.path='src/lua/?.lua;build/lua/?.lua;'..package.path
 local F=dofile('tests/lua/support/game_ui_fixture.lua')
+local advanceShop=dofile('tests/lua/support/shop_timeline.lua')
 local Run,Map,Nodes=require('abyss_run'),require('abyss_map'),require('abyss_nodes')
 local P=require('abyss_character_presentation')
 local BattleUI,DeckUI,NodeUI=require('abyss_battle_ui'),require('abyss_deck_ui'),require('abyss_node_ui')
@@ -43,7 +44,7 @@ for _=1,17 do
 end
 shopRun.nodeFlow.cards[1].id='FR2-053'
 local node=NodeUI.new(root:GetChild('nodePanel'),shopRun,map,presentation,'click',function()end,platform)
-node:render()
+node:setVisible(true);assert(node:press('merchant/talk'));advanceShop(node)
 assertLong(root:GetChild('nodePanel'):GetChild('shopView'):GetChild('card1'),false,'shop')
 -- Reusing the actual battle/deck slots must clear the relocated marker. X costs
 -- and repeatable upgrade counts retain their existing rule-derived values.

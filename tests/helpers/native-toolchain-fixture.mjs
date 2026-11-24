@@ -62,7 +62,9 @@ export function addClientTemplate({mapPath,name,...template}){
  record('scene_add_client_template',{mapPath,template:{name,...template}});
  const indices={AbyssDeckCard:1073741846,AbyssReadyCardImage:1073741847,AbyssReadyCardGroup:1073741848,
   AbyssMonsterActor:1073741849,AbyssMonsterPower:1073741850,AbyssOfficialBackgroundImage:1073741851,
-  AbyssSelectionHalfTriangle:1073741852,AbyssBattlePileCard:1073741853,AbyssForgeCard:1073741854};
+  AbyssSelectionHalfTriangle:1073741852,AbyssBattlePileCard:1073741853,AbyssForgeCard:1073741854,
+  AbyssDeckBrowserBack:1073741855,AbyssDeckBrowserBanner:1073741856,
+  AbyssDeckBrowserFrame0:1073741857,AbyssDeckBrowserFrame1:1073741858,AbyssDeckBrowserFrame2:1073741859};
  if(!Object.hasOwn(indices,name))throw Error('Unregistered native template '+name);
  return {mapPath,templateIndex:indices[name]};
 }

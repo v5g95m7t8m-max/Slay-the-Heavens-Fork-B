@@ -37,7 +37,7 @@ try{
   for(let i=1;i<50;i++){const key=d.lua_getupvalue(L,-1,i);if(!key)break;if(Buffer.from(key).toString()===name){d.lua_setglobal(L,enc(target));found=true;break;}d.lua_pop(L,1);}d.lua_settop(L,top);assert(found,name+' observer unavailable');
  }
  bind('OnUpdate','view','__SELECTION_VIEW');bind('OnDestroy','portraits','__SELECTION_PORTRAITS');
- session.runtime.runChunk(L,`function __SELECTION_STATUS() local v=__SELECTION_VIEW;return {mode=v.mode,open=v.characterOpen,selected=v.characterSelection.info and v.characterSelection.info.id,portraits=__SELECTION_PORTRAITS:status()}end`,'SELECTION_OBSERVER');
+ session.runtime.runChunk(L,`function __SELECTION_STATUS() local v=__SELECTION_VIEW;return {mode=v.mode,open=v.characterOpen,covered=v.pageReveal and v.pageReveal:covered(),selected=v.characterSelection.info and v.characterSelection.info.id,portraits=__SELECTION_PORTRAITS:status()}end`,'SELECTION_OBSERVER');
  const state=()=>{const top=d.lua_gettop(L);d.lua_getglobal(L,enc('__SELECTION_STATUS'));assert.equal(d.lua_pcall(L,0,1,0),0);const value=luaValue(L,-1);d.lua_settop(L,top);return value;};
  const find=trail=>{let n=session.runtime.roots[0];for(const name of trail.split('/')){const found=n.children.filter(c=>c.name===name);assert.equal(found.length,1,trail);n=found[0];}return n;};
  const all=n=>[n,...(n.children??[]).flatMap(all)];
@@ -66,10 +66,36 @@ try{
    &&node.fillAmount>0&&node.fillAmount<1,'Constellation uses an unsupported or missing arc mask; refuse handoff');
  }
  assert.equal(state().portraits.selection.owned,0,'Menu must not allocate hidden background');
+ function waitUntil(predicate,limit){
+  let frames=0;
+  for(;frames<limit&&!predicate();frames++)step();
+  assert(predicate(),JSON.stringify(state()));
+  return frames;
+ }
+ function openSelection(){
+  tap('stage/menuPanel/start/hit');
+  waitUntil(()=>state().open&&!state().covered,120);
+  assert(state().selected===undefined,'Selection must open without a selected role');
+  tap('stage/characterPanel/traveler/hit');
+ }
  await render('menu');
- const openAt=performance.now();tap('stage/menuPanel/start/hit');let frames=0;
- for(;frames<2000&&state().portraits.selection.phase!=='ready';frames++)step();
- assert(frames<2000,JSON.stringify(state()));report.firstSelectionMs=performance.now()-openAt;report.prepareFrames=frames;
+ const openAt=performance.now();openSelection();
+ const frames=waitUntil(()=>state().portraits.selection.phase==='ready'&&!state().covered,2000);
+ report.firstSelectionMs=performance.now()-openAt;report.prepareFrames=frames;
+ // The source texture must be fully opaque for the two-layer composition.
+ // Render while the existing landscape still contributes, then measure its
+ // decoded source image rather than inferring opacity from a screenshot.
+ if(!images.has('StaticReference:107271'))await render('selection-entry');
+ const landscape=images.get('StaticReference:107271');
+ assert(landscape,'The selection landscape atlas entry was not decoded');
+ const atlas=canvas.createCanvas(landscape.width,landscape.height),context=atlas.getContext('2d');
+ context.drawImage(landscape,0,0);
+ const pixels=context.getImageData(0,0,landscape.width,landscape.height).data;
+ let translucent=0;
+ for(let i=3;i<pixels.length;i+=4)if(pixels[i]!==255)translucent++;
+ report.landscapeOpacity={imageId:107271,width:landscape.width,height:landscape.height,translucent};
+ assert.equal(translucent,0,'The pinned landscape does not provide an opaque composition surface');
+ for(let i=0;i<40;i++)step();
  report.firstState=state();
  const host=find('stage/characterPanel/lumineSelectionBackground'),facets=all(host).filter(n=>n.kind==='image');assert.equal(facets.length,1600);
  report.halfTriangles=facets.filter(n=>n.enableMask).length;
@@ -83,11 +109,13 @@ try{
  const count=session.runtime.controlsById.size;report.residentControls=count;
  for(let i=0;i<20;i++){
   tap('stage/characterPanel/cancel/hit');assert(!state().open);const t=performance.now();
-  tap('stage/menuPanel/start/hit');assert(state().open&&state().portraits.selection.phase==='ready');
+  waitUntil(()=>!state().covered,120);openSelection();
+  waitUntil(()=>state().portraits.selection.phase==='ready'&&!state().covered,120);
+  for(let frame=0;frame<40;frame++)step();
   assert.equal(session.runtime.controlsById.size,count,'Roundtrip leaked controls');assert.deepEqual(all(symbol).map(n=>n.Id),symbolIds,'Constellation rebuilt');
   report.roundtrips.push({modelMs:performance.now()-t,controls:count});
  }
- session.runtime.runChunk(L,`local v=__SELECTION_VIEW;local ok,why=v:selectCharacter('hutao');assert(not ok and why=='competition_character_unavailable');assert(v.characterSelection.info.id=='ironclad');__SELECTION_PORTRAITS:sync('menu',true,false,'hutao');assert(not __SELECTION_VIEW.root:GetChild('characterPanel'):GetChild('lumineSelectionBackground').visible);__SELECTION_PORTRAITS:sync('menu',true,false,'ironclad');assert(__SELECTION_PORTRAITS:status().selection.phase=='ready')`,'SELECTION_ROLE_BOUNDARY');
+ session.runtime.runChunk(L,`local v=__SELECTION_VIEW;local ok,why=v:selectCharacter('hutao');assert(not ok and why=='competition_character_unavailable');assert(v.characterSelection.info.id=='ironclad');__SELECTION_PORTRAITS:sync('menu',true,false,'hutao');local host=__SELECTION_VIEW.root:GetChild('characterPanel'):GetChild('lumineSelectionBackground');assert(not (host:GetChild('figure') or host).visible);__SELECTION_PORTRAITS:sync('menu',true,false,'ironclad');assert(__SELECTION_PORTRAITS:status().selection.phase=='ready')`,'SELECTION_ROLE_BOUNDARY');
  assert.equal(session.runtime.controlsById.size,count);
  assert(!all(find('stage/characterPanel/details')).some(n=>n.name==='deckOpen'),'Unexpected starter deck entry');
  report.faults=session.runtime.logs.filter(l=>l.level==='lua-error'||/ABYSS_UI failed|command_failed|prepare_failed/.test(l.text));assert.deepEqual(report.faults,[]);

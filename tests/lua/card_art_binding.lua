@@ -1,4 +1,5 @@
 local H = dofile("tests/lua/support/battle_gesture_fixture.lua")
+local advanceShop = dofile("tests/lua/support/shop_timeline.lua")
 local Theme = require("abyss_theme")
 local Display = require("abyss_card_display")
 local function picture(control,id) control:SetImage("static",id) end
@@ -39,10 +40,15 @@ for _=1,17 do
 end
 local offer = assert(Nodes.view(run,map).node.cards[1])
 Theme.icon.cardPortraits[offer.id] = {id=102035,status="test-native-asset",size={288,128}}
-host.nodeUI.run,host.nodeUI.map = run,map
-host.nodeUI:render()
+local shopRoot = H.F.Viewport.apply(H.F.control({children=H.F.Layout}),1280,720)
+local shopPanel = shopRoot:GetChild("nodePanel")
+local shopPresentation = require("abyss_character_presentation").prepare(H.F.Presentation,run.data)
+local shopUI = require("abyss_node_ui").new(shopPanel,run,map,shopPresentation,"click",nil,
+    {imageSource="static",color=function(...) return {...} end})
+shopUI:setVisible(true)
+assert(shopUI:press("merchant/talk"));advanceShop(shopUI)
 local shown = 0
-for name,control in pairs(root:GetChild("nodePanel"):GetChild("shopView"):GetChild("card1").children) do
+for name,control in pairs(shopPanel:GetChild("shopView"):GetChild("card1").children) do
     if name:match("^art_") and control.visible then
         assert(control.imageId == 102035,"node card ignores the shared artwork binding")
         assert(control.sizeDeltaX==144 and control.sizeDeltaY==64,"shop portrait geometry diverged")
