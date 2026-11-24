@@ -67,7 +67,7 @@ function M.install(ctx)
   for _,name in ipairs({'before','after','target','arrow','label','hint'})do
    ctx.show(picker:GetChild(name),false)
   end
-  for _,name in ipairs({'page','empty'})do ctx.show(picker:GetChild(name),true)end
+  ctx.show(picker:GetChild('page'),true)
   local position=layout.page;picker:GetChild('page'):SetAnchoredPosition(position[1],position[2])
  end
  local function choose(uid,required)
@@ -100,9 +100,8 @@ function M.install(ctx)
    end)
   end
   picker:GetChild('page').text='第 '..ctx.self.pickPage..'/'..pages..' 页 · 已选 '..#state.selected..'/'..event.selection.count..' 张'
-  picker:GetChild('empty').text=#rows<event.selection.count and '可选卡牌不足；原版强制选牌仍待处理，不能跳过或退款。'
-   or '依次点选卡牌；再次点选可取消勾选。'
-  return event.body..' · 请选择 '..event.selection.count..' 张，不能跳过'
+  if #rows<event.selection.count then return '可选卡牌不足，不能跳过或退款。' end
+  return event.body..' 不能跳过。再次点选可取消。'
  end
  function ctx.eventCardsFooter(node)
   local selected=ctx.eventCards.selected;local needed=node.event.selection.count

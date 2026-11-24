@@ -186,17 +186,27 @@ function M.new(root, run, map, presentation, clickEvent, onChange, options)
         return screen,hint,recallSource,treasureSource
     end
 
-    function ctx.refreshNodeNotice(node,active,hint)
+    function ctx.refreshNodeNotice(node,active,hint,screen)
         -- The merchant speaks in his own dialogue box; the notice keeps only shop facts.
         if node and node.type == "shop" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then
             ctx.self.merchantNode, ctx.self.merchantRun = node.id, ctx.self.run
             ctx.merchant:enter(ctx.self.run)
         end
         ctx.merchant:setVisible(merchantVisible(ctx, node, active))
-        local message=ctx.self.notice ~= "" and ctx.self.notice or hint
+        local message=ctx.self.notice ~= "" and ctx.self.notice or hint or ""
+        local notice=ctx.child("notice")
+        if screen == "pickerView" and not ctx.enhancedForge(node) and not MatchUI.isBoard(node.event) then
+            -- Keep prompts and errors in the same coordinate space as the paged cards.
+            notice.text = ""
+            notice = ctx.child("pickerView"):GetChild("empty")
+            ctx.show(notice, message ~= "")
+            notice.text = message
+            ctx.ink(notice, ctx.self.failed and C.danger or C.text)
+            return
+        end
         if repeatedEventNotice(ctx,node,message)then message=''end
-        ctx.child("notice").text = message
-        ctx.ink(ctx.child("notice"), ctx.self.failed and ctx.self.notice ~= "" and C.danger or C.text)
+        notice.text = message
+        ctx.ink(notice, ctx.self.failed and ctx.self.notice ~= "" and C.danger or C.text)
 
     end
 
@@ -294,13 +304,13 @@ function M.new(root, run, map, presentation, clickEvent, onChange, options)
         if not active or node.type ~= 'shop' or self.mode ~= 'main' then ctx.shopSelection:clear() end
         ctx.renderTopBar(node)
         local screen,hint,recallSource,treasureSource=ctx.renderNodePage(view,node,result,active)
-        ctx.refreshNodeNotice(node,active,hint)
+        ctx.refreshNodeNotice(node,active,hint,screen)
         local back, confirm = ctx.child("back"), ctx.child("confirm")
         local backLabel,confirmLabel,confirmOk,confirmFn,skipRestReward,recallObserve
         backLabel,confirmLabel,confirmOk,confirmFn,skipRestReward,recallObserve=ctx.chooseFooter(result,node,view,screen,recallSource,treasureSource,confirm)
         ctx.bindFooter(back,confirm,backLabel,confirmLabel,confirmOk,skipRestReward)
         ctx.bindTreasureBack(back,node,active)
-        ctx.action("confirm", confirmOk, confirmFn, screen == "pickerView" and "请先在上方选择一张卡牌" or nil, nil, recallObserve)
+        ctx.action("confirm", confirmOk, confirmFn, screen == "pickerView" and "请先选择一张卡牌" or nil, nil, recallObserve)
         ctx.bindStagedEventActions(node);ctx.clearUnusedNativeArt(previousArt)
         self.failed = false
         ctx.roomMotion:paint()

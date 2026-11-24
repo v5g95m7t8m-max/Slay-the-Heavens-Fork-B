@@ -269,7 +269,7 @@ test("removal service selects a uid first, confirms with the core price and is s
     local before = Combat.copy(ui.run)
     assert(not shown("pickerView/target") and get("pickerView/empty").text ~= "")
     assert(not click("confirm")) same(ui.run, before)
-    assert(get("notice").text == "请先在上方选择一张卡牌")
+    assert(get("pickerView/empty").text == "请先选择一张卡牌")
     assert(click("pickerView/card2")) same(ui.run, before)
     assert(shown("pickerView/target") and get("pickerView/card2").children.glow.visible)
     assert(get("pickerView/hint").text == "牌组 10 → 9 张")
@@ -305,7 +305,7 @@ test("an external removal invalidates a selected removal before charging gold", 
     local before = Combat.copy(ui.run)
     assert(not click("confirm")) same(ui.run, before)
     assert(ui.run.deck[1].uid == second and ui.run.shopRemoveCount == 1)
-    assert(get("notice").text == "本店删牌服务已使用")
+    assert(get("pickerView/empty").text == "本店删牌服务已使用")
     assert(#changes == 1 and changes[1].reason == "removal_unavailable" and not changes[1].ok)
 end)
 
@@ -406,7 +406,7 @@ test("forge previews the real before/after card and commits only the confirmed u
     for _, card in ipairs(ui.run.deck) do assert(card.upgraded == (card.uid == target)) end
     assert(ui.run.phase == "map" and ui:holding() and shown("pickerView"))
     assert(shown("pickerView/after") and get("pickerView/label").text == "已升级" and not shown("pickerView/card1"))
-    assert(get("notice").text == "已升级「" .. display.name .. "」→「" .. display.name .. "+」")
+    assert(get("pickerView/empty").text == "已升级「" .. display.name .. "」→「" .. display.name .. "+」")
     assert(click("confirm") and not ui:holding())
 end)
 
@@ -489,7 +489,7 @@ test("Cleric stale affordability is revalidated by Nodes without consuming the e
     assert(click("eventView/option2") and click("pickerView/card1")) ui.run.gold = 49
     local before = Combat.copy(ui.run)
     assert(not click("confirm")) same(ui.run, before)
-    assert(get("notice").text == "金币不足" and is(get("notice").fontColor, C.danger))
+    assert(get("pickerView/empty").text == "金币不足" and is(get("pickerView/empty").fontColor, C.danger))
     assert(click("back") and click("eventView/option3") and ui.run.phase == "map")
 end)
 

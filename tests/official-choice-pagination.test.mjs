@@ -30,7 +30,7 @@ test('official choice profile keeps two unchanged faces while default retains te
  assert.deepEqual(nativeTheme,snapshot);
 });
 
-test('generated official two-face choice pages ten real discard candidates with ordered commit and stale guards',t=>{
+test('generated official two-face choice pages ten real discard candidates with ordered commit and stale guards',async t=>{
  const root=resolve('.artifacts/test-tmp');mkdirSync(root,{recursive:true});
  const dir=mkdtempSync(join(root,'official-choice-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));
  buildLuaData('data',join(dir,'abyss_data.lua'));
@@ -44,17 +44,23 @@ test('generated official two-face choice pages ten real discard candidates with 
  for(const slot of slots.slice(3)){assert.equal(slot.visible,false);assert.deepEqual(slot.children,[]);}
  assert.equal(parts(parts(picker).find(n=>n.name==='forgeGrid')).length,12);
  const modules=readdirSync(dir).filter(n=>n.endsWith('.lua')).map(n=>n.slice(0,-4));
- const body=`
+ const prelude=`
 local generated=${luaString(dir.replaceAll('\\','/'))}
 package.path=generated..'/?.lua;src/lua/?.lua'
 for _,name in ipairs(${toLua(modules)})do package.preload[name]=assert(loadfile(generated..'/'..name..'.lua'))end
-dofile('tests/lua/support/official_choice_pagination.lua')
-dofile('tests/lua/support/official_node_picker_pagination.lua')
 `;
- const result=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',body],{
-  cwd:process.cwd(),encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''},
- });
- assert.equal(result.status,0,result.stdout+result.stderr+String(result.error??''));
- assert.match(result.stdout,/OFFICIAL_CHOICE_PAGINATION_PASS/);
- assert.match(result.stdout,/OFFICIAL_NODE_PICKER_PAGINATION_PASS/);
+ function runFixture(name,expected){
+  const body=prelude+`dofile('tests/lua/support/${name}.lua')`;
+  const result=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',body],{
+   cwd:process.cwd(),encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''},
+  });
+  assert.equal(result.status,0,result.stdout+result.stderr+String(result.error??''));
+  assert.match(result.stdout,expected);
+ }
+ await t.test('combat choices retain ordered selection and reject stale gestures',()=>
+  runFixture('official_choice_pagination',/OFFICIAL_CHOICE_PAGINATION_PASS/));
+ await t.test('room pickers and Match preserve their existing flows',()=>
+  runFixture('official_node_picker_pagination',/OFFICIAL_NODE_PICKER_PAGINATION_PASS/));
+ await t.test('room picker text, cards and actions have disjoint resolved bounds',()=>
+  runFixture('official_node_picker_layout',/OFFICIAL_NODE_PICKER_LAYOUT_PASS/));
 });

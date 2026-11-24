@@ -89,7 +89,11 @@ function M.install(ctx)
                     { dim = not available, veil = stamp ~= nil, stamp = stamp, selected = ctx.self.selected == (library and instance.offerToken or instance.uid),instance=owned or instance })
                     local uid = library and instance.offerToken or instance.uid
                     ctx.action("pickerView/card" .. i, available, function()
-                        ctx.self.selected, ctx.self.notice = uid, "" ctx.self:render() return true
+                        local selectedUid = uid
+                        if ctx.self.picker == "remove" and ctx.self.selected == uid then selectedUid = nil end
+                        ctx.self.selected, ctx.self.notice = selectedUid, ""
+                        ctx.self:render()
+                        return true
                     end, stamp and ("这张卡牌" .. stamp) or "这张卡牌无法升级")
                 end
             end
@@ -102,17 +106,16 @@ function M.install(ctx)
                 ctx.self.pickPage, ctx.self.notice = ctx.self.pickPage - 1, "" ctx.self:render() return true end)
             ctx.action("pickerView/next", ctx.self.pickPage < pageCount, function()
                 ctx.self.pickPage, ctx.self.notice = ctx.self.pickPage + 1, "" ctx.self:render() return true end)
-            picker:GetChild("page").text = not result and pageCount > 1 and ("第 " .. ctx.self.pickPage .. "/" .. pageCount .. " 页 · 共 " .. #rows .. " 张"
-            .. (ctx.self.swipeEnabled and " · 左右拖动翻页" or "")) or ""
+            picker:GetChild("page").text = not result and pageCount > 1 and ("第 " .. ctx.self.pickPage .. "/" .. pageCount .. " 页 · 共 " .. #rows .. " 张") or ""
         end
         bindPickerPaging()
         ctx.show(before, upgrade and selected) ctx.show(after, upgrade and selected)
         ctx.show(picker:GetChild("arrow"), upgrade and selected) ctx.show(target, not upgrade and selected)
-        local function writePickerPrompt()
-            picker:GetChild("empty").text = selected and "" or (library and '点选一张卡牌加入牌组，不能跳过' or dream and '点选一张卡牌加入牌组，也可以跳过' or upgrade and "点选上方卡牌，查看升级前后对比" or copying and '点选上方要复制的卡牌' or transform and '点选上方要变换的卡牌' or "点选上方要移除的卡牌")
+        for _, name in ipairs({'label','hint'}) do
+            local control=picker:GetChild(name)
+            ctx.show(control, selected)
+            control.text=''
         end
-        writePickerPrompt()
-        picker:GetChild("label").text, picker:GetChild("hint").text = "", ""
         if selected and upgrade then
             local function renderUpgradePreview()
                 local display = ctx.self.presentation[selected.cardId] or {}
@@ -148,11 +151,11 @@ function M.install(ctx)
             if ctx.self.picker=='beggar_purge' then
                 return '已支付75金币 · 必须移除卡牌，遗物绑定牌除外；不能取消'
             end
-            if library then return '图书馆 · 从20张不同的卡牌中选择一张，不能跳过' end
+            if library then return '图书馆 · 选择一张卡牌加入牌组，不能跳过' end
             if dream then return '捕梦网 · 选择一张卡牌加入牌组，或跳过奖励' end
             if upgrade then return "选择一张卡牌升级 · 剩余 " .. (result and 0 or node.upgradesLeft) .. " 次" end
             if transform then return '选择一张卡牌变换' end
-            if ctx.self.picker == "remove" then return "选择要移除的卡牌 · 本店删牌服务限一次" end
+            if ctx.self.picker == "remove" then return "选择要移除的卡牌" end
             return "选择要净化的卡牌"
         end
         return pickerHint()
