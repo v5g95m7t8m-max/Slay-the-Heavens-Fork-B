@@ -2361,6 +2361,109 @@ const bindings = new Map([
     "after": " fs.writeFileSync(f,text.replace(needle,'if ABYSS_HOST_CONTROL then ABYSS_HOST_CONTROL(self) end\\n    '+needle));\n const trace=path.join(dir,'tests/lua/support/game_ui_host_trace.lua');\n const collector=fs.readFileSync(trace,'utf8'),pathStart=/^ local function path\\(\\)(\\r?\\n)/gm;\n assert.equal([...collector.matchAll(pathStart)].length,1);\n // The archived collector evaluates path() before record() can discard an\n // event outside the selected window. Avoid walking the parent chain for\n // those discarded events in both historical VMs.\n fs.writeFileSync(trace,collector.replace(pathStart,(_,eol)=>[\n  ' local function path()',\n  '  local nextCheckpoint=count+1',\n  '  if not ABYSS_HOST_FULL_TRACE or nextCheckpoint<(ABYSS_HOST_FROM or 1) or nextCheckpoint>(ABYSS_HOST_TO or 35) then return end',\n  '',\n ].join(eol)));\n return dir;"
    }
   ]
+ },
+ {
+  "path": "src/lua/abyss_node_ui.lua",
+  "beforeSha256": "49585cd927a1b92c501de623104c7795c58f753cf9cbbe05079106c36d091b71",
+  "afterSha256": "db051c944b1324b425c0ebd1d10144f44e6d4debfac9581f95ee9ee295508a2e",
+  "hunks": [
+   {
+    "at": 186,
+    "before": "    end\n\n    function ctx.refreshNodeNotice(node,active,hint)\n        -- The merchant speaks in his own dialogue box; the notice keeps only shop facts.\n        if node and node.type == \"shop\" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then",
+    "after": "    end\n\n    function ctx.refreshNodeNotice(node,active,hint,screen)\n        -- The merchant speaks in his own dialogue box; the notice keeps only shop facts.\n        if node and node.type == \"shop\" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then"
+   },
+   {
+    "at": 193,
+    "before": "        end\n        ctx.merchant:setVisible(merchantVisible(ctx, node, active))\n        local message=ctx.self.notice ~= \"\" and ctx.self.notice or hint\n        if repeatedEventNotice(ctx,node,message)then message=''end\n        ctx.child(\"notice\").text = message\n        ctx.ink(ctx.child(\"notice\"), ctx.self.failed and ctx.self.notice ~= \"\" and C.danger or C.text)\n\n    end",
+    "after": "        end\n        ctx.merchant:setVisible(merchantVisible(ctx, node, active))\n        local message=ctx.self.notice ~= \"\" and ctx.self.notice or hint or \"\"\n        local notice=ctx.child(\"notice\")\n        if screen == \"pickerView\" and not ctx.enhancedForge(node) and not MatchUI.isBoard(node.event) then\n            -- Keep prompts and errors in the same coordinate space as the paged cards.\n            notice.text = \"\"\n            notice = ctx.child(\"pickerView\"):GetChild(\"empty\")\n            ctx.show(notice, message ~= \"\")\n            notice.text = message\n            ctx.ink(notice, ctx.self.failed and C.danger or C.text)\n            return\n        end\n        if repeatedEventNotice(ctx,node,message)then message=''end\n        notice.text = message\n        ctx.ink(notice, ctx.self.failed and ctx.self.notice ~= \"\" and C.danger or C.text)\n\n    end"
+   },
+   {
+    "at": 304,
+    "before": "        ctx.renderTopBar(node)\n        local screen,hint,recallSource,treasureSource=ctx.renderNodePage(view,node,result,active)\n        ctx.refreshNodeNotice(node,active,hint)\n        local back, confirm = ctx.child(\"back\"), ctx.child(\"confirm\")\n        local backLabel,confirmLabel,confirmOk,confirmFn,skipRestReward,recallObserve",
+    "after": "        ctx.renderTopBar(node)\n        local screen,hint,recallSource,treasureSource=ctx.renderNodePage(view,node,result,active)\n        ctx.refreshNodeNotice(node,active,hint,screen)\n        local back, confirm = ctx.child(\"back\"), ctx.child(\"confirm\")\n        local backLabel,confirmLabel,confirmOk,confirmFn,skipRestReward,recallObserve"
+   },
+   {
+    "at": 310,
+    "before": "        ctx.bindFooter(back,confirm,backLabel,confirmLabel,confirmOk,skipRestReward)\n        ctx.bindTreasureBack(back,node,active)\n        ctx.action(\"confirm\", confirmOk, confirmFn, screen == \"pickerView\" and \"请先在上方选择一张卡牌\" or nil, nil, recallObserve)\n        ctx.bindStagedEventActions(node);ctx.clearUnusedNativeArt(previousArt)\n        self.failed = false",
+    "after": "        ctx.bindFooter(back,confirm,backLabel,confirmLabel,confirmOk,skipRestReward)\n        ctx.bindTreasureBack(back,node,active)\n        ctx.action(\"confirm\", confirmOk, confirmFn, screen == \"pickerView\" and \"请先选择一张卡牌\" or nil, nil, recallObserve)\n        ctx.bindStagedEventActions(node);ctx.clearUnusedNativeArt(previousArt)\n        self.failed = false"
+   }
+  ]
+ },
+ {
+  "path": "data/presentation/ui_theme.json",
+  "beforeSha256": "eb2a080bbd74b1c8c49fabea6ca1f7c5363bc59709d85acc22a920cd54f0ef1d",
+  "afterSha256": "b3a1fa63354f5fc9986aa0d3c32e856c605931f6fe741097a67381e00b1b4a0c",
+  "hunks": [
+   {
+    "at": 2392,
+    "before": "      },\n      \"picker\": {\n        \"cardY\": 116,\n        \"columns\": [\n          -410,",
+    "after": "      },\n      \"picker\": {\n        \"cardY\": 76,\n        \"columns\": [\n          -410,"
+   },
+   {
+    "at": 2403,
+    "before": "        \"previous\": [\n          -530,\n          116,\n          44,\n          208",
+    "after": "        \"previous\": [\n          -530,\n          76,\n          44,\n          208"
+   },
+   {
+    "at": 2409,
+    "before": "        \"next\": [\n          530,\n          116,\n          44,\n          208\n        ],\n        \"page\": [\n          0,\n          -12,\n          600,\n          40\n        ],\n        \"previewY\": -150,\n        \"before\": -170,\n        \"after\": 170,",
+    "after": "        \"next\": [\n          530,\n          76,\n          44,\n          208\n        ],\n        \"page\": [\n          -450,\n          -78,\n          340,\n          40\n        ],\n        \"previewY\": -164,\n        \"before\": -170,\n        \"after\": 170,"
+   },
+   {
+    "at": 2425,
+    "before": "        \"arrow\": [\n          0,\n          -150,\n          48,\n          48",
+    "after": "        \"arrow\": [\n          0,\n          -164,\n          48,\n          48"
+   },
+   {
+    "at": 2443,
+    "before": "        \"empty\": [\n          0,\n          -150,\n          480,\n          40\n        ]",
+    "after": "        \"empty\": [\n          0,\n          213,\n          1000,\n          40\n        ]"
+   }
+  ]
+ },
+ {
+  "path": "tests/lua/support/node_ui_cases.lua",
+  "beforeSha256": "945dd8126b0fe92ea65ac6248b36f1744b220a11c702b58a2eb303882cf8e183",
+  "afterSha256": "593b6e6a91941a7cdb110045bd953db0633eb2d13424d25edec0ddd34ad2aaa0",
+  "hunks": [
+   {
+    "at": 269,
+    "before": "    assert(not shown(\"pickerView/target\") and get(\"pickerView/empty\").text ~= \"\")\n    assert(not click(\"confirm\")) same(ui.run, before)\n    assert(get(\"notice\").text == \"请先在上方选择一张卡牌\")\n    assert(click(\"pickerView/card2\")) same(ui.run, before)\n    assert(shown(\"pickerView/target\") and get(\"pickerView/card2\").children.glow.visible)",
+    "after": "    assert(not shown(\"pickerView/target\") and get(\"pickerView/empty\").text ~= \"\")\n    assert(not click(\"confirm\")) same(ui.run, before)\n    assert(get(\"pickerView/empty\").text == \"请先选择一张卡牌\")\n    assert(click(\"pickerView/card2\")) same(ui.run, before)\n    assert(shown(\"pickerView/target\") and get(\"pickerView/card2\").children.glow.visible)"
+   },
+   {
+    "at": 305,
+    "before": "    assert(not click(\"confirm\")) same(ui.run, before)\n    assert(ui.run.deck[1].uid == second and ui.run.shopRemoveCount == 1)\n    assert(get(\"notice\").text == \"本店删牌服务已使用\")\n    assert(#changes == 1 and changes[1].reason == \"removal_unavailable\" and not changes[1].ok)\nend)",
+    "after": "    assert(not click(\"confirm\")) same(ui.run, before)\n    assert(ui.run.deck[1].uid == second and ui.run.shopRemoveCount == 1)\n    assert(get(\"pickerView/empty\").text == \"本店删牌服务已使用\")\n    assert(#changes == 1 and changes[1].reason == \"removal_unavailable\" and not changes[1].ok)\nend)"
+   },
+   {
+    "at": 406,
+    "before": "    assert(ui.run.phase == \"map\" and ui:holding() and shown(\"pickerView\"))\n    assert(shown(\"pickerView/after\") and get(\"pickerView/label\").text == \"已升级\" and not shown(\"pickerView/card1\"))\n    assert(get(\"notice\").text == \"已升级「\" .. display.name .. \"」→「\" .. display.name .. \"+」\")\n    assert(click(\"confirm\") and not ui:holding())\nend)",
+    "after": "    assert(ui.run.phase == \"map\" and ui:holding() and shown(\"pickerView\"))\n    assert(shown(\"pickerView/after\") and get(\"pickerView/label\").text == \"已升级\" and not shown(\"pickerView/card1\"))\n    assert(get(\"pickerView/empty\").text == \"已升级「\" .. display.name .. \"」→「\" .. display.name .. \"+」\")\n    assert(click(\"confirm\") and not ui:holding())\nend)"
+   },
+   {
+    "at": 489,
+    "before": "    local before = Combat.copy(ui.run)\n    assert(not click(\"confirm\")) same(ui.run, before)\n    assert(get(\"notice\").text == \"金币不足\" and is(get(\"notice\").fontColor, C.danger))\n    assert(click(\"back\") and click(\"eventView/option3\") and ui.run.phase == \"map\")\nend)",
+    "after": "    local before = Combat.copy(ui.run)\n    assert(not click(\"confirm\")) same(ui.run, before)\n    assert(get(\"pickerView/empty\").text == \"金币不足\" and is(get(\"pickerView/empty\").fontColor, C.danger))\n    assert(click(\"back\") and click(\"eventView/option3\") and ui.run.phase == \"map\")\nend)"
+   }
+  ]
+ },
+ {
+  "path": "tests/official-choice-pagination.test.mjs",
+  "beforeSha256": "a2349c18f29837a21700151336403536cb033a41a8a02ca98a07a61fb1ff5546",
+  "afterSha256": "2f8794a5d9f7e7c87578672afd0069929947e0de5217f8e805ee1b43c93ba321",
+  "hunks": [
+   {
+    "at": 30,
+    "before": "});\n\ntest('generated official two-face choice pages ten real discard candidates with ordered commit and stale guards',t=>{\n const root=resolve('.artifacts/test-tmp');mkdirSync(root,{recursive:true});\n const dir=mkdtempSync(join(root,'official-choice-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));",
+    "after": "});\n\ntest('generated official two-face choice pages ten real discard candidates with ordered commit and stale guards',async t=>{\n const root=resolve('.artifacts/test-tmp');mkdirSync(root,{recursive:true});\n const dir=mkdtempSync(join(root,'official-choice-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));"
+   },
+   {
+    "at": 44,
+    "before": " assert.equal(parts(parts(picker).find(n=>n.name==='forgeGrid')).length,12);\n const modules=readdirSync(dir).filter(n=>n.endsWith('.lua')).map(n=>n.slice(0,-4));\n const body=`\nlocal generated=${luaString(dir.replaceAll('\\\\','/'))}\npackage.path=generated..'/?.lua;src/lua/?.lua'\nfor _,name in ipairs(${toLua(modules)})do package.preload[name]=assert(loadfile(generated..'/'..name..'.lua'))end\ndofile('tests/lua/support/official_choice_pagination.lua')\ndofile('tests/lua/support/official_node_picker_pagination.lua')\n`;\n const result=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',body],{\n  cwd:process.cwd(),encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''},\n });\n assert.equal(result.status,0,result.stdout+result.stderr+String(result.error??''));\n assert.match(result.stdout,/OFFICIAL_CHOICE_PAGINATION_PASS/);\n assert.match(result.stdout,/OFFICIAL_NODE_PICKER_PAGINATION_PASS/);\n});\n",
+    "after": " assert.equal(parts(parts(picker).find(n=>n.name==='forgeGrid')).length,12);\n const modules=readdirSync(dir).filter(n=>n.endsWith('.lua')).map(n=>n.slice(0,-4));\n const prelude=`\nlocal generated=${luaString(dir.replaceAll('\\\\','/'))}\npackage.path=generated..'/?.lua;src/lua/?.lua'\nfor _,name in ipairs(${toLua(modules)})do package.preload[name]=assert(loadfile(generated..'/'..name..'.lua'))end\n`;\n function runFixture(name,expected){\n  const body=prelude+`dofile('tests/lua/support/${name}.lua')`;\n  const result=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',body],{\n   cwd:process.cwd(),encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''},\n  });\n  assert.equal(result.status,0,result.stdout+result.stderr+String(result.error??''));\n  assert.match(result.stdout,expected);\n }\n await t.test('combat choices retain ordered selection and reject stale gestures',()=>\n  runFixture('official_choice_pagination',/OFFICIAL_CHOICE_PAGINATION_PASS/));\n await t.test('room pickers and Match preserve their existing flows',()=>\n  runFixture('official_node_picker_pagination',/OFFICIAL_NODE_PICKER_PAGINATION_PASS/));\n await t.test('room picker text, cards and actions have disjoint resolved bounds',()=>\n  runFixture('official_node_picker_layout',/OFFICIAL_NODE_PICKER_LAYOUT_PASS/));\n});\n"
+   }
+  ]
  }
 ].map(row=>[row.path,row]));
 

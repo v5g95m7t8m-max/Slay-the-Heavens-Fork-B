@@ -94,9 +94,11 @@ export function beforeCurrentHistoricalStsSource(path,source){
  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
 export function beforeCurrentReplayCopier(path,source){
- if(path===copierPath&&matches(source,{
+ if(path===copierPath&&[{
+  sha256:'671b58e9d1e880f9f70eb34ff43723fdbbf4475b470a27dc9e4c665a4faa0c73',gitBlob:'33fffacf70bcaf38308f694c9e94a7f34e03ea63',
+ },{
   sha256:'ad44ff0c3e89eaab4fd126c3e396ad55d3b065a1c25a11e7456a5a6abcf2ae12',gitBlob:'46885bb04b623eb9e0cc1010c93fe4c178f167f4',
- })){
+ }].some(revision=>matches(source,revision))){
   const prior=lf(source).replace(/const entranceFiles=Object.freeze\(\{\n[\s\S]+?\n\}\);\n/,'')
    .replace('Object.entries(entranceFiles)','Object.entries(currentReplayFiles)');
   assert.equal(hash(prior),'98ff5c37986a48db7ec6257a537193a57156cbdcce8e20cf48f5d206ff64aa40','exact merged entrance copier predecessor');

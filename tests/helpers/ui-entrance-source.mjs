@@ -18,7 +18,8 @@ const owners=Object.keys(files);
 export const addedEntranceModules=Object.freeze(owners.filter(path=>files[path].before===null));
 const readLive=path=>readFileSync(path,'utf8');
 const binding=path=>Object.hasOwn(files,path)?files[path]:undefined;
-const currentInput=(path,source)=>['src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua',
+const currentOnlyInputs=['src/lua/abyss_node_ui.lua','src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua'];
+const currentInput=(path,source)=>[...currentOnlyInputs,'data/presentation/ui_theme.json','tests/lua/support/node_ui_cases.lua',
  'tests/lua/shop_entry.lua','tests/helpers/combined-epoch/source-epoch-runtime.mjs',
  'tests/integration-source-epoch.test.mjs','tests/session-menu-navigation.test.mjs','tests/tiny-house-pending-ui.cases.mjs',
  'tests/helpers/develop-release-backflow-source.mjs','tests/sts-style-source-epoch.test.mjs',
@@ -28,8 +29,7 @@ const currentInput=(path,source)=>['src/lua/abyss_node_ui_faces.lua','src/lua/ab
  ?beforeCurrentReplayFixes(path,source):source;
 function currentMatches(path,source,expected){
  const normalized=currentInput(path,source);
- if(['src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua'].includes(path)
-  &&normalized===source)return false;
+ if(currentOnlyInputs.includes(path)&&normalized===source)return false;
  return matches(normalized,expected);
 }
 const predecessors=new Map();
