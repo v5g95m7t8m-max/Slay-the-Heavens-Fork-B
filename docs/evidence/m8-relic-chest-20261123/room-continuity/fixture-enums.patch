@@ -1,0 +1,11 @@
+--- actual-map-room-transition-fixture.lua	2026-11-24 12:20:56.154958917 +0800
++++ tests/lua/support/map_room_transition_fixture.lua	2026-11-24 12:20:56.157000700 +0800
+@@ -62,7 +62,7 @@
+         containerTemplateIndex=actors.containerTemplateIndex,powerTemplateIndex=actors.powerTemplateIndex}
+     script={object=canvas,GetParam=function()return false end,
+         EnableUpdate=function(self,value)self.updating=value end}
+-    Enum={CursorEventType={CursorClick='click',CursorDown='down',CursorUp='up'},ImageSource={StaticReference='static'},
++    Enum={CursorEventType={CursorClick='click',CursorDown='down',CursorUp='up',CursorEnter='enter',CursorExit='exit',CursorEndDrag='dragEnd'},ImageSource={StaticReference='static'},
+         Device={Mobile='mobile',Controller='controller',MobileController='mobile-controller'}}
+     Color=function(r,g,b,a)return {r=r,g=g,b=b,a=a}end
+     game={IsTestPlay=function()return true end,GetUICanvasSize=function()return width,720 end,

@@ -1,0 +1,70 @@
+ABYSS_UI init Color=function
+ABYSS_UI viewport_ready
+ABYSS_PAGE_REVEAL preparing page=menuPanel epoch=1
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_UI ready
+ABYSS_PAGE_REVEAL visible page=menuPanel epoch=1
+ABYSS_PAGE_REVEAL preparing page=characterPanel epoch=2
+ABYSS_PAGE_REVEAL visible page=characterPanel epoch=2
+ABYSS_PAGE_REVEAL updated page=characterPanel epoch=3
+ABYSS_RUN seed=42 source=explicit
+ABYSS_PAGE_REVEAL preparing page=nodePanel epoch=4
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+ABYSS_PAGE_REVEAL visible page=nodePanel epoch=4
+ABYSS_PAGE_REVEAL updated page=nodePanel epoch=5
+ABYSS_PAGE_REVEAL updated page=nodePanel epoch=6
+ABYSS_PAGE_REVEAL preparing page=mapPanel epoch=7
+ABYSS_UI_PAGES mode=map nodeNativeActive=false choiceNativeActive=false
+ABYSS_PAGE_REVEAL visible page=mapPanel epoch=7
+ABYSS_PAGE_REVEAL preparing page=mapPanel epoch=8
+ABYSS_PAGE_REVEAL visible page=mapPanel epoch=8
+ABYSS_ROOM_ENTRY phase=input_received request=1 lua_clock_ms=3609.115 detail=f6_l1
+ABYSS_ROOM_ENTRY phase=feedback_submitted request=1 lua_clock_ms=3609.693 detail=veil
+ABYSS_ROOM_ENTRY phase=core_enter_start request=1 lua_clock_ms=3610.088 detail=f6_l1
+ABYSS_ROOM_ENTRY phase=core_enter_end request=1 lua_clock_ms=3628.853 detail=
+ABYSS_ROOM_ENTRY phase=native_preparation_start request=1 lua_clock_ms=3629.600 detail=nodePanel
+ABYSS_PAGE_REVEAL preparing page=nodePanel epoch=9
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+ABYSS_ROOM_ENTRY phase=projection_built request=1 lua_clock_ms=3653.843 detail=node
+ABYSS_ROOM_ENTRY phase=native_preparation_end request=1 lua_clock_ms=3654.516 detail=nodePanel
+ABYSS_ROOM_ENTRY phase=page_ready request=1 lua_clock_ms=3654.565 detail=nodePanel
+ABYSS_PAGE_REVEAL visible page=nodePanel epoch=9
+ABYSS_ROOM_ENTRY phase=input_enabled request=1 lua_clock_ms=3656.285 detail=nodePanel
+M8_TASK_4_7_HOOK camp down=true up=true
+ABYSS_PAGE_REVEAL preparing page=nodePanel epoch=10
+M8_TASK_4_7_PASS camp room=f6_l1 checkpointEdges=6
+ABYSS_UI init Color=function
+ABYSS_UI viewport_ready
+ABYSS_PAGE_REVEAL preparing page=menuPanel epoch=1
+ABYSS_UI_PAGES mode=menu nodeNativeActive=false choiceNativeActive=false
+ABYSS_UI ready
+ABYSS_PAGE_REVEAL visible page=menuPanel epoch=1
+ABYSS_PAGE_REVEAL preparing page=characterPanel epoch=2
+ABYSS_PAGE_REVEAL visible page=characterPanel epoch=2
+ABYSS_PAGE_REVEAL updated page=characterPanel epoch=3
+ABYSS_RUN seed=42 source=explicit
+ABYSS_PAGE_REVEAL preparing page=nodePanel epoch=4
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+ABYSS_PAGE_REVEAL visible page=nodePanel epoch=4
+ABYSS_PAGE_REVEAL updated page=nodePanel epoch=5
+ABYSS_PAGE_REVEAL updated page=nodePanel epoch=6
+ABYSS_PAGE_REVEAL preparing page=mapPanel epoch=7
+ABYSS_UI_PAGES mode=map nodeNativeActive=false choiceNativeActive=false
+ABYSS_PAGE_REVEAL visible page=mapPanel epoch=7
+ABYSS_PAGE_REVEAL preparing page=mapPanel epoch=8
+ABYSS_PAGE_REVEAL visible page=mapPanel epoch=8
+ABYSS_ROOM_ENTRY phase=input_received request=1 lua_clock_ms=5593.538 detail=f9_l1
+ABYSS_ROOM_ENTRY phase=feedback_submitted request=1 lua_clock_ms=5593.893 detail=veil
+ABYSS_ROOM_ENTRY phase=core_enter_start request=1 lua_clock_ms=5594.281 detail=f9_l1
+ABYSS_ROOM_ENTRY phase=core_enter_end request=1 lua_clock_ms=5620.069 detail=
+ABYSS_ROOM_ENTRY phase=native_preparation_start request=1 lua_clock_ms=5620.455 detail=nodePanel
+ABYSS_PAGE_REVEAL preparing page=nodePanel epoch=9
+ABYSS_UI_PAGES mode=node nodeNativeActive=true choiceNativeActive=false
+ABYSS_ROOM_ENTRY phase=projection_built request=1 lua_clock_ms=5636.997 detail=node
+ABYSS_ROOM_ENTRY phase=native_preparation_end request=1 lua_clock_ms=5638.256 detail=nodePanel
+ABYSS_ROOM_ENTRY phase=page_ready request=1 lua_clock_ms=5638.305 detail=nodePanel
+ABYSS_PAGE_REVEAL visible page=nodePanel epoch=9
+ABYSS_ROOM_ENTRY phase=input_enabled request=1 lua_clock_ms=5639.262 detail=nodePanel
+M8_TASK_4_7_HOOK treasure down=true up=true
+ABYSS_PAGE_REVEAL updated page=nodePanel epoch=10
+M8_TASK_4_7_PASS treasure room=f9_l1 checkpointEdges=9
