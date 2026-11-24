@@ -1,0 +1,88 @@
+--- a/src/lua/abyss_battle_actions.lua
++++ b/src/lua/abyss_battle_actions.lua
+@@ -174,6 +174,7 @@
+     end
+     function owner:setActive(active, suspend, deferRender)
+         assert(type(active) == "boolean", "active must be boolean")
++        if self.active and not active and self.run and self.run.phase=="combat" then dependencies.notice("") end
+         self.active = active
+         -- Only the host may request a temporary same-battle cover. Plain false still unmounts.
+         self.suspendedBattle = not active and suspend == true and self.run and self.run.combat or nil
+--- a/tests/helpers/ui-entrance-source.mjs
++++ b/tests/helpers/ui-entrance-source.mjs
+@@ -18,6 +18,16 @@
+ export const addedEntranceModules=Object.freeze(owners.filter(path=>files[path].before===null));
+ const readLive=path=>readFileSync(path,'utf8');
+ const binding=path=>Object.hasOwn(files,path)?files[path]:undefined;
++// One exact stale-notice continuation; older entrance archive remains unchanged.
++const battleNotice=Object.freeze({"path":"src/lua/abyss_battle_actions.lua","beforeSha256":"d2c8c6ee93f4c205bb594500e419975f9314cc99fa78f5cafe1565cc8a72e5fc","afterSha256":"be1697060af1f919aad5668230de6c3c7db25472ac17081166bd33773573e90d","hunks":[{"at":175,"before":"        assert(type(active) == \"boolean\", \"active must be boolean\")","after":"        assert(type(active) == \"boolean\", \"active must be boolean\")\n        if self.active and not active and self.run and self.run.phase==\"combat\" then dependencies.notice(\"\") end"}]});
++const noticeCurrent={sha256:battleNotice.afterSha256,gitBlob:'3303efbfb1b4ce798487d157760110f54a5c04c6'};
++const noticePrior={sha256:battleNotice.beforeSha256,gitBlob:'ecb5e4db52fa85c5fae15f58bec2408673cf30ce'};
++function beforeBattleNotice(path,source){
++ if(path!==battleNotice.path||!matches(source,noticeCurrent))return source;
++ const prior=restoreExactFixtureHunks(battleNotice,path,source);
++ assert(matches(prior,noticePrior),'exact prior battle notice source');
++ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
++}
+ const currentInput=(path,source)=>['src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua',
+  'tests/lua/shop_entry.lua','tests/helpers/combined-epoch/source-epoch-runtime.mjs',
+  'tests/integration-source-epoch.test.mjs','tests/session-menu-navigation.test.mjs','tests/tiny-house-pending-ui.cases.mjs',
+@@ -50,7 +60,7 @@
+ }
+ 
+ export function beforeUiEntrance(path,source){
+- return project(path,source,binding(path));
++ return project(path,beforeBattleNotice(path,source),binding(path));
+ }
+ 
+ export function beforeUiEntranceWitness(path,source){
+@@ -70,7 +80,7 @@
+  return owner=>{
+   const source=read(owner);
+   const row=binding(owner);
+-  if(!row)return source;
++  if(!row)return beforeBattleNotice(owner,source);
+   if(authenticated)assert(currentMatches(owner,source,row.after),'combined linked owner identity: '+owner+' during entrance validation');
+   const prior=beforeUiEntrance(owner,source);
+   if(prior!==source&&!authenticated){
+@@ -82,6 +92,7 @@
+ }
+ 
+ export function assertCurrentUiEntrance(path,source){
++ if(path===battleNotice.path)assert(matches(source,noticeCurrent),'fresh current production owner: '+path);
+  const row=binding(path);
+  if(row)assert(currentMatches(path,source,row.after),'fresh current production owner: '+path);
+ }
+@@ -101,6 +112,7 @@
+  }
+  const predecessor=beforeUiEntrance(path,source);
+  if(predecessor===source)return {source:input,read};
++ if(path===battleNotice.path)assert(matches(read(path),noticeCurrent),'combined linked owner identity: '+path+' during notice validation');
+  authenticateUiEntrance(read);
+  return {source:predecessor,read:entranceReader(read,true)};
+ }
+--- a/tests/helpers/copy-integration-source-closure.mjs
++++ b/tests/helpers/copy-integration-source-closure.mjs
+@@ -353,7 +353,7 @@
+  'tests/helpers/develop-release-backflow-source.mjs':'4ac2a7c073d78f0029d85e9834f6063a4a797f215a529e349bdfc4f19ab5484c',
+  'tests/helpers/native-fixture-replay-source.mjs':'5a9de41dfd4ee6d5438c24c9c7c9f068eeaeba66bc6fc8abec16d9c08d32864b',
+  'tests/helpers/native-flow-fixture-source.mjs':'303770de22647a8eea4090cefa8e75cafa9c8643a2048441698ed8c02633a732',
+- 'tests/helpers/ui-entrance-source.mjs':'55bbaca21af744a48dff1c5b445160b993bcf0862f813ce328a630408247e315',
++ 'tests/helpers/ui-entrance-source.mjs':'9a2f389cbc79686eccc6b3b78c0aa75f65bf2eeead1f016772f29d18f823c425',
+  'tests/helpers/exact-fixture-hunks.mjs':'83f9cb15d9d745c86c555a77875b6b2bfc283a12ec380bcd2af518aa6526a935',
+  'tests/fixtures/ui-entrance-source.json.gz':'7ac3f53b242819cdb569c0a1ebf60de0605b72297a1072ea612bfeb11b0597c9',
+  'tests/helpers/combined-epoch/source-epoch-runtime.mjs':'e4d3f37edd23a2040290b1091540d17776fe6f7f7a129f4c31e48e71a8f9a0c0',
+--- a/tests/helpers/calibration-replay-sources.mjs
++++ b/tests/helpers/calibration-replay-sources.mjs
+@@ -94,6 +94,11 @@
+  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+ }
+ export function beforeCurrentReplayCopier(path,source){
++ if(path===copierPath&&matches(source,{sha256:'f121098a4ed220b350856bccacdad6a35f292346b3ff9352ca46e1a23deff615',gitBlob:'fd7b57af9dcb86a4a650cc20d567115ed7d64765'})){
++  const prior=lf(source).replace('9a2f389cbc79686eccc6b3b78c0aa75f65bf2eeead1f016772f29d18f823c425','55bbaca21af744a48dff1c5b445160b993bcf0862f813ce328a630408247e315');
++  assert(matches(prior,{sha256:'9c0b358a3b75b59ebe7218f988297661b71a42b47d20e34a3b9734a2c0a71a10',gitBlob:'143ce2350c049fa4fe641e86dc34b18d094a8c73'}),'exact pre-notice entrance copier');
++  source=source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
++ }
+  if(path===copierPath&&matches(source,{
+   sha256:'9c0b358a3b75b59ebe7218f988297661b71a42b47d20e34a3b9734a2c0a71a10',gitBlob:'143ce2350c049fa4fe641e86dc34b18d094a8c73',
+  })){
