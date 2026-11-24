@@ -346,10 +346,11 @@ const currentReplayFiles=Object.freeze({
 });
 const entranceFiles=Object.freeze({
  ...currentReplayFiles,
+ 'tests/helpers/rebased-release-source.mjs':'197902259b4ea4da99c3783011cc4728bdaa540befccd027d08d7790d978023f',
  'tests/helpers/m7-core-final-source-inverse.mjs':'8e0d432cd1ecf668bad14a614a61772e495e13cce67ab0168babcaac5bfda1e6',
  'tests/helpers/release-ui-restore-source.mjs':'d2f34bef11ae4cb35c5df68556afc37d3de8d4ce7268a988bcef8fc39495b47a',
- 'tests/helpers/current-replay-fix-sources.mjs':'0bfacfdba799009bd64e5a9fb63b4ea9534e9cc069cc12742084e5ef04313137',
- 'tests/helpers/character-preparation-source.mjs':'ae3b89b99224cf8bb86b8e569e6488db68ac2d30bf1233ed6652c90808df1984',
+ 'tests/helpers/current-replay-fix-sources.mjs':'45f56b0a0b96ce32adfb20cc2fd31539a6028711cf41bde7d0e7f3fc2fc1ceab',
+ 'tests/helpers/character-preparation-source.mjs':'83f181b65b01668316bdd80c39531cdb6a37cb99dc14ae9a55c3bd2c7d904686',
  'tests/helpers/develop-release-backflow-source.mjs':'4ac2a7c073d78f0029d85e9834f6063a4a797f215a529e349bdfc4f19ab5484c',
  'tests/helpers/native-fixture-replay-source.mjs':'5a9de41dfd4ee6d5438c24c9c7c9f068eeaeba66bc6fc8abec16d9c08d32864b',
  'tests/helpers/native-flow-fixture-source.mjs':'303770de22647a8eea4090cefa8e75cafa9c8643a2048441698ed8c02633a732',

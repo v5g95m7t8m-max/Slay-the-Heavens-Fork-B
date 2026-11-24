@@ -2464,6 +2464,45 @@ const bindings = new Map([
     "after": " assert.equal(parts(parts(picker).find(n=>n.name==='forgeGrid')).length,12);\n const modules=readdirSync(dir).filter(n=>n.endsWith('.lua')).map(n=>n.slice(0,-4));\n const prelude=`\nlocal generated=${luaString(dir.replaceAll('\\\\','/'))}\npackage.path=generated..'/?.lua;src/lua/?.lua'\nfor _,name in ipairs(${toLua(modules)})do package.preload[name]=assert(loadfile(generated..'/'..name..'.lua'))end\n`;\n function runFixture(name,expected){\n  const body=prelude+`dofile('tests/lua/support/${name}.lua')`;\n  const result=spawnSync(process.execPath,[require.resolve('fengari-node-cli/src/lua-cli.js'),'-e',body],{\n   cwd:process.cwd(),encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024,env:{...process.env,LUA_INIT:'',LUA_INIT_5_3:''},\n  });\n  assert.equal(result.status,0,result.stdout+result.stderr+String(result.error??''));\n  assert.match(result.stdout,expected);\n }\n await t.test('combat choices retain ordered selection and reject stale gestures',()=>\n  runFixture('official_choice_pagination',/OFFICIAL_CHOICE_PAGINATION_PASS/));\n await t.test('room pickers and Match preserve their existing flows',()=>\n  runFixture('official_node_picker_pagination',/OFFICIAL_NODE_PICKER_PAGINATION_PASS/));\n await t.test('room picker text, cards and actions have disjoint resolved bounds',()=>\n  runFixture('official_node_picker_layout',/OFFICIAL_NODE_PICKER_LAYOUT_PASS/));\n});\n"
    }
   ]
+ },
+ {
+  "path": "src/lua/abyss_node_ui_event_cards.lua",
+  "beforeSha256": "a905b09e5640cee84d6cebaa005718131a97ec5f84a9731ee9efff92681aa0c8",
+  "afterSha256": "36901e8c5c37abcf526c9bfa808153c484ef27ae752937bb1213788ef9fff504",
+  "hunks": [
+   {
+    "at": 67,
+    "before": "   ctx.show(picker:GetChild(name),false)\n  end\n  for _,name in ipairs({'page','empty'})do ctx.show(picker:GetChild(name),true)end\n  local position=layout.page;picker:GetChild('page'):SetAnchoredPosition(position[1],position[2])\n end",
+    "after": "   ctx.show(picker:GetChild(name),false)\n  end\n  ctx.show(picker:GetChild('page'),true)\n  local position=layout.page;picker:GetChild('page'):SetAnchoredPosition(position[1],position[2])\n end"
+   },
+   {
+    "at": 100,
+    "before": "  end\n  picker:GetChild('page').text='第 '..ctx.self.pickPage..'/'..pages..' 页 · 已选 '..#state.selected..'/'..event.selection.count..' 张'\n  picker:GetChild('empty').text=#rows<event.selection.count and '可选卡牌不足；原版强制选牌仍待处理，不能跳过或退款。'\n   or '依次点选卡牌；再次点选可取消勾选。'\n  return event.body..' · 请选择 '..event.selection.count..' 张，不能跳过'\n end\n function ctx.eventCardsFooter(node)",
+    "after": "  end\n  picker:GetChild('page').text='第 '..ctx.self.pickPage..'/'..pages..' 页 · 已选 '..#state.selected..'/'..event.selection.count..' 张'\n  if #rows<event.selection.count then return '可选卡牌不足，不能跳过或退款。' end\n  return event.body..' 不能跳过。再次点选可取消。'\n end\n function ctx.eventCardsFooter(node)"
+   }
+  ]
+ },
+ {
+  "path": "src/lua/abyss_node_ui_rewards.lua",
+  "beforeSha256": "b06e57883010c356de7374fb9e97ec9c7d6177ea6b9874b803796c9624aff5b8",
+  "afterSha256": "c3f0de881fa9deaa46d2d6f40cb2dc80f361be7e6d6f6e0a3d396ce91a8935a0",
+  "hunks": [
+   {
+    "at": 89,
+    "before": "                    local uid = library and instance.offerToken or instance.uid\n                    ctx.action(\"pickerView/card\" .. i, available, function()\n                        ctx.self.selected, ctx.self.notice = uid, \"\" ctx.self:render() return true\n                    end, stamp and (\"这张卡牌\" .. stamp) or \"这张卡牌无法升级\")\n                end",
+    "after": "                    local uid = library and instance.offerToken or instance.uid\n                    ctx.action(\"pickerView/card\" .. i, available, function()\n                        local selectedUid = uid\n                        if ctx.self.picker == \"remove\" and ctx.self.selected == uid then selectedUid = nil end\n                        ctx.self.selected, ctx.self.notice = selectedUid, \"\"\n                        ctx.self:render()\n                        return true\n                    end, stamp and (\"这张卡牌\" .. stamp) or \"这张卡牌无法升级\")\n                end"
+   },
+   {
+    "at": 106,
+    "before": "            ctx.action(\"pickerView/next\", ctx.self.pickPage < pageCount, function()\n                ctx.self.pickPage, ctx.self.notice = ctx.self.pickPage + 1, \"\" ctx.self:render() return true end)\n            picker:GetChild(\"page\").text = not result and pageCount > 1 and (\"第 \" .. ctx.self.pickPage .. \"/\" .. pageCount .. \" 页 · 共 \" .. #rows .. \" 张\"\n            .. (ctx.self.swipeEnabled and \" · 左右拖动翻页\" or \"\")) or \"\"\n        end\n        bindPickerPaging()\n        ctx.show(before, upgrade and selected) ctx.show(after, upgrade and selected)\n        ctx.show(picker:GetChild(\"arrow\"), upgrade and selected) ctx.show(target, not upgrade and selected)\n        local function writePickerPrompt()\n            picker:GetChild(\"empty\").text = selected and \"\" or (library and '点选一张卡牌加入牌组，不能跳过' or dream and '点选一张卡牌加入牌组，也可以跳过' or upgrade and \"点选上方卡牌，查看升级前后对比\" or copying and '点选上方要复制的卡牌' or transform and '点选上方要变换的卡牌' or \"点选上方要移除的卡牌\")\n        end\n        writePickerPrompt()\n        picker:GetChild(\"label\").text, picker:GetChild(\"hint\").text = \"\", \"\"\n        if selected and upgrade then\n            local function renderUpgradePreview()",
+    "after": "            ctx.action(\"pickerView/next\", ctx.self.pickPage < pageCount, function()\n                ctx.self.pickPage, ctx.self.notice = ctx.self.pickPage + 1, \"\" ctx.self:render() return true end)\n            picker:GetChild(\"page\").text = not result and pageCount > 1 and (\"第 \" .. ctx.self.pickPage .. \"/\" .. pageCount .. \" 页 · 共 \" .. #rows .. \" 张\") or \"\"\n        end\n        bindPickerPaging()\n        ctx.show(before, upgrade and selected) ctx.show(after, upgrade and selected)\n        ctx.show(picker:GetChild(\"arrow\"), upgrade and selected) ctx.show(target, not upgrade and selected)\n        for _, name in ipairs({'label','hint'}) do\n            local control=picker:GetChild(name)\n            ctx.show(control, selected)\n            control.text=''\n        end\n        if selected and upgrade then\n            local function renderUpgradePreview()"
+   },
+   {
+    "at": 151,
+    "before": "                return '已支付75金币 · 必须移除卡牌，遗物绑定牌除外；不能取消'\n            end\n            if library then return '图书馆 · 从20张不同的卡牌中选择一张，不能跳过' end\n            if dream then return '捕梦网 · 选择一张卡牌加入牌组，或跳过奖励' end\n            if upgrade then return \"选择一张卡牌升级 · 剩余 \" .. (result and 0 or node.upgradesLeft) .. \" 次\" end\n            if transform then return '选择一张卡牌变换' end\n            if ctx.self.picker == \"remove\" then return \"选择要移除的卡牌 · 本店删牌服务限一次\" end\n            return \"选择要净化的卡牌\"\n        end",
+    "after": "                return '已支付75金币 · 必须移除卡牌，遗物绑定牌除外；不能取消'\n            end\n            if library then return '图书馆 · 选择一张卡牌加入牌组，不能跳过' end\n            if dream then return '捕梦网 · 选择一张卡牌加入牌组，或跳过奖励' end\n            if upgrade then return \"选择一张卡牌升级 · 剩余 \" .. (result and 0 or node.upgradesLeft) .. \" 次\" end\n            if transform then return '选择一张卡牌变换' end\n            if ctx.self.picker == \"remove\" then return \"选择要移除的卡牌\" end\n            return \"选择要净化的卡牌\"\n        end"
+   }
+  ]
  }
 ].map(row=>[row.path,row]));
 

@@ -95,7 +95,7 @@ export function beforeCurrentHistoricalStsSource(path,source){
 }
 export function beforeCurrentReplayCopier(path,source){
  if(path===copierPath&&[{
-  sha256:'671b58e9d1e880f9f70eb34ff43723fdbbf4475b470a27dc9e4c665a4faa0c73',gitBlob:'33fffacf70bcaf38308f694c9e94a7f34e03ea63',
+  sha256:'9be791e17ad466b1b80807ce7bf3606b0f68e35dee1580444c00a8f5f09d6fea',gitBlob:'b9e1d25667cbc074dc6ba39625e0e6205696608e',
  },{
   sha256:'ad44ff0c3e89eaab4fd126c3e396ad55d3b065a1c25a11e7456a5a6abcf2ae12',gitBlob:'46885bb04b623eb9e0cc1010c93fe4c178f167f4',
  }].some(revision=>matches(source,revision))){

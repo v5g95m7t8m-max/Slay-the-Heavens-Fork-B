@@ -3,7 +3,7 @@ import {assertCurrentDevelopUiSource,readRetiredController,retiredControllerPath
 import {assertDevelopBackflowCurrent,authenticateDevelopBackflow,developBackflowOwns} from './develop-release-backflow-source.mjs';
 import {beforeSlimeSplitReceipt,slimeSplitSourcePaths} from './slime-split-source.mjs';
 import {beforeStsSelectionFade,beforeAuthenticatedStsSelectionFade} from './sts-selection-fade-source.mjs';
-import {authorizeRebasedDevelop,beforeRebasedCi,rebasedDevelopOwns} from './rebased-release-source.mjs';
+import {assertCurrentPickerHotfix,authorizeRebasedDevelop,beforeRebasedCi,rebasedDevelopOwns} from './rebased-release-source.mjs';
 import {authorizeCardFeedbackOwners,beforeCardFeedbackOwner,cardFeedbackOwnerPaths} from './card-feedback-owner-source.mjs';
 import {authorizeSts1MapSource,beforeSts1MapSource,sts1MapSourcePaths} from './sts1-map-source.mjs';
 import {beforeReleaseGuideSource,beforeAuthenticatedReleaseGuideSource,releaseGuideSourcePaths} from './release-guide-backflow-source.mjs';
@@ -140,6 +140,7 @@ const currentContinuationOwners = new Set([
 ]);
 
 export function beforeCurrentProductionSource(path, source, read = readRaw) {
+  assertCurrentPickerHotfix(path,source);
   assertCurrentUiEntrance(path,source);
   const entranceInput=source;
   ({source,read}=entrancePredecessor(path,source,read));

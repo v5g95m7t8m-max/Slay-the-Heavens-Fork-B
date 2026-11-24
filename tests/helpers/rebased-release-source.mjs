@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import {exactSourceMatches as matches} from './source-fingerprint.mjs';
 import {authenticateInputRetirement,beforeInputRetirement} from './input-retirement-source.mjs';
+import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
 const hash=(s,algorithm='sha256')=>createHash(algorithm).update(s).digest('hex');
 const archive=readFileSync(new URL('./rebased-release-source.json.gz',import.meta.url));
 assert.equal(hash(archive),'9ae910d679bdc8386063c58043a43e496ee34b7c6f22fc1a27cbaeca7b27222d','exact reconciled source archive');
@@ -45,7 +46,12 @@ const nativeButtonRepair=Object.freeze({
   ],
  },
 });
+const pickerHotfixOwners=['src/lua/abyss_node_ui_event_cards.lua','src/lua/abyss_node_ui_rewards.lua'];
+export function assertCurrentPickerHotfix(path,source){
+ if(pickerHotfixOwners.includes(path))assert.notEqual(beforeCurrentReplayFixes(path,source),source,'fresh current production owner: '+path);
+}
 export function beforeNativeButtonRepair(path,source){
+ if(pickerHotfixOwners.includes(path))source=beforeCurrentReplayFixes(path,source);
  source=beforeInputRetirement(path,source);
  const row=Object.hasOwn(nativeButtonRepair,path)?nativeButtonRepair[path]:null;
  if(!row||typeof source!=='string'||source.includes('\r\r\n'))return source;
