@@ -17,6 +17,10 @@ assert.equal(bindings.size,files.length,'unique card reading backflow paths');
 const projections=new Map();
 
 export const cardReadingOwns=path=>bindings.has(path);
+export function matchesCardReadingPredecessor(path,source){
+ const row=bindings.get(path);
+ return Boolean(row&&typeof source==='string'&&hash(source.replaceAll('\r\n','\n'))===row.beforeSha256);
+}
 export function beforeCardReadingBackflow(path,source){
  const row=bindings.get(path);
  if(!row||typeof source!=='string')return source;

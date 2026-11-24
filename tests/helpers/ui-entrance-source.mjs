@@ -7,7 +7,7 @@ import {gunzipSync} from 'node:zlib';
 import {exactSourceMatches as matches} from './source-fingerprint.mjs';
 import {restoreExactFixtureHunks} from './exact-fixture-hunks.mjs';
 import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
-import {beforeCardReadingBackflow,beforeCardReadingProductionInventory,cardReadingOwns,currentCardReadingConfigLayout} from './card-reading-backflow-source.mjs';
+import {beforeCardReadingBackflow,beforeCardReadingProductionInventory,cardReadingOwns,currentCardReadingConfigLayout,matchesCardReadingPredecessor} from './card-reading-backflow-source.mjs';
 
 const archive=readFileSync(new URL('../fixtures/ui-entrance-source.json.gz',import.meta.url));
 assert.equal(createHash('sha256').update(archive).digest('hex'),
@@ -29,12 +29,14 @@ const replayInputs=[...currentOnlyInputs,'data/presentation/ui_theme.json','test
  'tests/defect-integration-source.test.mjs','tests/defect-final-source-epoch.test.mjs'];
 const currentInput=(path,source)=>replayInputs.includes(path)
  ?beforeCurrentReplayFixes(path,source):beforeCardReadingBackflow(path,source);
-function currentMatches(path,source,expected){
+function currentMatches(path,source,expected,acceptCardReadingPrior=false){
+ if(!acceptCardReadingPrior&&cardReadingOwns(path)&&beforeCardReadingBackflow(path,source)===source)return false;
  const normalized=currentInput(path,source);
  if(currentOnlyInputs.includes(path)&&normalized===source)return false;
  return matches(normalized,expected);
 }
 const predecessors=new Map();
+const projectedCardReadingReaders=new WeakSet();
 
 function project(path,source,row){
  if(row)source=currentInput(path,source);
@@ -59,28 +61,35 @@ export function beforeUiEntranceWitness(path,source){
  return project(path,beforeCardReadingBackflow(path,source),Object.hasOwn(witnesses,path)?witnesses[path]:undefined);
 }
 
-export function authenticateUiEntrance(read){
+function authenticateEntrance(read,acceptCardReadingPrior){
  assert.equal(typeof read,'function','linked owner reader');
  for(const owner of owners){
   let source;
   try{source=read(owner);}catch(error){assert.fail('combined linked owner missing: '+owner+': '+error.message);}
-  assert(currentMatches(owner,source,files[owner].after),'combined linked owner identity: '+owner+' during entrance validation');
+  assert(currentMatches(owner,source,files[owner].after,acceptCardReadingPrior),'combined linked owner identity: '+owner+' during entrance validation');
  }
 }
 
+export function authenticateUiEntrance(read){
+ authenticateEntrance(read,false);
+}
+
 export function entranceReader(read,authenticated=false){
- return owner=>{
+ const acceptCardReadingPrior=projectedCardReadingReaders.has(read);
+ const projected=owner=>{
   const source=read(owner);
   const row=binding(owner);
   if(!row)return source;
-  if(authenticated)assert(currentMatches(owner,source,row.after),'combined linked owner identity: '+owner+' during entrance validation');
+  if(authenticated)assert(currentMatches(owner,source,row.after,acceptCardReadingPrior),'combined linked owner identity: '+owner+' during entrance validation');
   const prior=beforeUiEntrance(owner,source);
   if(prior!==source&&!authenticated){
-   authenticateUiEntrance(read);
+   authenticateEntrance(read,acceptCardReadingPrior);
    authenticated=true;
   }
   return prior;
  };
+ if(acceptCardReadingPrior)projectedCardReadingReaders.add(projected);
+ return projected;
 }
 
 export function assertCurrentUiEntrance(path,source){
@@ -89,7 +98,7 @@ export function assertCurrentUiEntrance(path,source){
  if(row)assert(currentMatches(path,source,row.after),'fresh current production owner: '+path);
 }
 
-export function entrancePredecessor(path,source,read=readLive,{allowConfigLayout=false}={}){
+export function entrancePredecessor(path,source,read=readLive,{allowConfigLayout=false,requireCurrentCardReading=false}={}){
  const input=source;
  let cardReadingPrior=beforeCardReadingBackflow(path,source);
  if(cardReadingPrior===input&&allowConfigLayout&&path==='config/architecture.json'&&currentCardReadingConfigLayout(input)){
@@ -99,11 +108,20 @@ export function entrancePredecessor(path,source,read=readLive,{allowConfigLayout
  }
  const cardReading=cardReadingPrior!==input;
  const readLiveCardReading=read;
+ let cardReadingRevision=cardReading||requireCurrentCardReading?'current':undefined;
  read=owner=>{
   const current=readLiveCardReading(owner),prior=beforeCardReadingBackflow(owner,current);
-  if(cardReading&&cardReadingOwns(owner))assert.notEqual(prior,current,'combined linked owner identity: '+owner+' during card reading validation');
+  if(cardReadingOwns(owner)){
+   const revision=prior!==current?'current':matchesCardReadingPredecessor(owner,current)?'prior':undefined;
+   const expected=cardReadingRevision??revision;
+   if(expected==='current'||revision!==undefined){
+    assert(revision===expected,'combined linked owner identity: '+owner+' during card reading validation');
+   }
+   cardReadingRevision=expected;
+  }
   return prior;
  };
+ projectedCardReadingReaders.add(read);
  source=cardReadingPrior;
  if(allowConfigLayout&&path==='config/architecture.json'&&typeof source==='string'
   &&!matches(source,files[path].after)){
@@ -121,7 +139,7 @@ export function entrancePredecessor(path,source,read=readLive,{allowConfigLayout
   if(cardReading)assert.equal(read(path)?.replaceAll('\r\n','\n'),source.replaceAll('\r\n','\n'),'combined linked owner identity: '+path+' during card reading validation');
   return {source:cardReading?source:input,read};
  }
- authenticateUiEntrance(read);
+ authenticateEntrance(read,true);
  return {source:predecessor,read:entranceReader(read,true)};
 }
 

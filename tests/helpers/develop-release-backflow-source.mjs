@@ -1,4 +1,5 @@
 import { beforeUiEntrance, entranceInventory, entrancePredecessor, entranceReader } from './ui-entrance-source.mjs';
+import {beforeCardReadingBackflow} from './card-reading-backflow-source.mjs';
 // Exact Develop predecessors for historical replay. Live builds read current sources.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
@@ -199,7 +200,7 @@ function currentRecentBackflowOwner(path,source){
  return matches(source,roomEntry.files[path].after);
 }
 export function assertDevelopBackflowCurrent(path,source){
- source=beforeUiEntrance(path,source);
+ source=beforeUiEntrance(path,beforeCardReadingBackflow(path,source));
  source=beforeDevelopUiBackflows(path,source);
  const priorActions=beforeActionButtons(path,source);
  if(actionButtonsOwns(path)&&!recentBackflowOwns(path)&&!priorDevelopBackflowOwns(path)){
