@@ -14,7 +14,12 @@ export function changedBacklogTasks(files) {
     .map(path => path.split('/').at(-1).split(' - ')[0]).join(' '));
 }
 
-export function backlogDeclaration(body, changedTaskIds = []) {
+export function changedCompletedBacklogTasks(files) {
+  return changedBacklogTasks(files.filter(file=>file.filename?.startsWith('backlog/completed/')&&file.status!=='removed')
+    .map(({filename})=>({filename})));
+}
+
+export function backlogDeclaration(body, changedTaskIds, titleTaskIds = []) {
   const visible = visibleBody(body);
   const lines = visible.split(/\r?\n/).filter(line => /^Backlog:/.test(line));
   const errors = [], actions = new Map();
@@ -38,15 +43,18 @@ export function backlogDeclaration(body, changedTaskIds = []) {
     errors.push('Empty Backlog disposition');
   }
   const scope = value === 'none' ? visible : visible.split(/\r?\n/).filter(line => /^Tracks:/.test(line)).join(' ');
-  for (const id of new Set([...changedTaskIds, ...mentionedTasks(scope)])) {
+  for (const id of new Set([...(changedTaskIds??[]), ...titleTaskIds, ...mentionedTasks(scope)])) {
     if (!actions.has(id)) errors.push(`${id}: missing Backlog disposition`);
+  }
+  if(changedTaskIds)for(const [id,action] of actions) {
+    if(action==='recorded'&&!changedTaskIds.includes(id))errors.push(`${id}: recorded must change the task record in this PR`);
   }
   return { actions, errors };
 }
 
 // Explicit instructions in the merged PR, never inference from age or green CI.
-export function planBacklogCloseout({body,records,mergeSha,prNumber,changedTaskIds=[]}) {
-  const {actions,errors}=backlogDeclaration(body,changedTaskIds);
+export function planBacklogCloseout({body,records,mergeSha,prNumber,changedTaskIds=[],titleTaskIds=[],completedTaskIds=[]}) {
+  const {actions,errors}=backlogDeclaration(body,changedTaskIds,titleTaskIds);
   const commands=[];
   if(!/^[a-f0-9]{40}$/.test(mergeSha??'')||!Number.isSafeInteger(prNumber)||prNumber<1)errors.push('Invalid merged delivery identity');
   const byId=new Map();
@@ -65,7 +73,11 @@ export function planBacklogCloseout({body,records,mergeSha,prNumber,changedTaskI
         errors.push(`${id}: recorded cleanup has inconsistent status or AC`);
     } else if(action==='done') {
       if(!task.acCount||task.acCompleted!==task.acCount){errors.push(`${id}: done requires every existing AC checked with evidence`);continue;}
-      if(task.location==='completed'&&task.status==='Done')continue;
+      if(task.location==='completed'&&task.status==='Done'){
+        if(!completedTaskIds.includes(id)&&!task.source?.split(/\r?\n/).some(line=>line.startsWith(note)))
+          errors.push(`${id}: completed task requires a delivery receipt or a committed completion`);
+        continue;
+      }
       if(task.location!=='tasks'){errors.push(`${id}: archived work cannot be silently completed`);continue;}
       const noted=task.source.includes(marker);
       if(task.status!=='Done'||!noted)commands.push(['task','edit',id,'-s','Done','--remove-label','待验,delivery-verify',...(!noted?['--append-notes',note]:[])]);
@@ -120,10 +132,10 @@ export function runBacklog(args,{root=process.cwd()}={}) {
 
 export function syncBacklogCloseout({pr,files,targetSha,readTargetSha,root=process.cwd()},run=runBacklog) {
   if(pr?.merged!==true||pr?.base?.ref!=='develop')throw Error('Backlog synchronization requires a verified merged develop PR');
-  const changedTaskIds=[...changedBacklogTasks(files),...mentionedTasks(pr.title)];
   const declaration=visibleBody(pr.body).split(/\r?\n/).filter(line=>/^Backlog:/.test(line)).join('\n');
   const ids=new Set(mentionedTasks(declaration));
-  const input={body:pr.body,mergeSha:pr.merge_commit_sha,prNumber:pr.number,changedTaskIds};
+  const input={body:pr.body,mergeSha:pr.merge_commit_sha,prNumber:pr.number,changedTaskIds:changedBacklogTasks(files),
+    titleTaskIds:mentionedTasks(pr.title),completedTaskIds:changedCompletedBacklogTasks(files)};
   const records=readBacklogRecords(root,ids),plan=planBacklogCloseout({...input,records});
   if(plan.errors.length)throw Error('Backlog pending: '+plan.errors.join('; '));
   // Do not let an old PR/worktree overwrite a task that evolved on develop.

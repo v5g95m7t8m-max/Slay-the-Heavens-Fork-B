@@ -10,6 +10,7 @@ import { verifyDelivery, verifyMergedDelivery, collectPrDelivery, collectMergedD
 import {qualityShardMatrices,qualityShardJobs} from '../scripts/ci-quality-shape.mjs';
 import * as delivery from '../scripts/verify-delivery.mjs';
 import { auditBacklogDelivery, auditHistory } from '../scripts/branch-hygiene-history.mjs';
+import {backlogDeclaration,changedBacklogTasks,mentionedTasks,readBacklogRecords} from '../scripts/backlog-closeout.mjs';
 
 const handoffRepo = 'FurinyaWorks/Slay-the-Heavens';
 const handoffSha = '1'.repeat(40);
@@ -254,6 +255,34 @@ function closeoutFixture(t) {
   const mergeSha=git('rev-parse','HEAD');
   return {root,path,source,git,mergeSha,pr:{number:10,merged:true,base:{ref:'develop'},merge_commit_sha:mergeSha,body:'Backlog: TASK-1=verify'},files:[]};
 }
+test('recorded closeout requires a task file changed by the PR, including when its title mentions the task',t=>{
+  const f=closeoutFixture(t),body='Backlog: TASK-1=recorded';
+  const files=[{filename:'src/lua/unrelated.lua'}],changed=changedBacklogTasks(files);
+  for(const title of ['Unrelated fix','TASK-1 unrelated fix']){
+    const pr={...f.pr,body,title};
+    assert.match(backlogDeclaration(body,changed,mentionedTasks(title)).errors.join(' '),/must change the task record/);
+    assert.throws(()=>delivery.syncBacklogCloseout({...f,pr,files,targetSha:f.mergeSha},
+      ()=>assert.fail('an unrecorded task cannot write')),/must change the task record/);
+  }
+  assert.throws(()=>readFileSync(join(f.root,'build/delivery',`backlog-${f.pr.number}-${f.mergeSha}.json`)),/ENOENT/);
+});
+test('a committed completed task is a done receipt for closeout and audit',async t=>{
+  const f=closeoutFixture(t),filename='backlog/completed/task-1 - 交付.md';
+  renameSync(f.path,join(f.root,filename));
+  writeFileSync(join(f.root,filename),f.source.replace('In Progress','Done').replace('- [ ]','- [x]'));
+  f.git('add','.');f.git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','task completion');
+  const targetSha=f.git('rev-parse','HEAD'),pr={...f.pr,state:'closed',merged_at:'2026-11-24T00:00:00Z',
+    merge_commit_sha:targetSha,body:'Backlog: TASK-1=done'};
+  const files=[{filename,status:'renamed',previous_filename:'backlog/tasks/task-1 - 交付.md'}];
+  const tasks=readBacklogRecords(f.root);
+  assert.throws(()=>delivery.syncBacklogCloseout({...f,pr,files:[],targetSha},
+    ()=>assert.fail('old completion cannot write')),/completed task requires a delivery receipt/);
+  assert.equal(delivery.syncBacklogCloseout({...f,pr,files,targetSha},
+    ()=>assert.fail('committed completion needs no CLI write')).commands,0);
+  assert.deepEqual(await auditBacklogDelivery({prs:[pr],tasks,loadFiles:async()=>files}),[]);
+  const [missing]=await auditBacklogDelivery({prs:[pr],tasks,loadFiles:async()=>[{...files[0],status:'removed'}]});
+  assert.match(missing.drift.join(' '),/receipt missing/);
+});
 test('closeout refuses an old worktree and a task revised after the verified merge without writing',t=>{
   const f=closeoutFixture(t),run=()=>assert.fail('must not write an obsolete task');
   assert.throws(()=>delivery.syncBacklogCloseout({...f,targetSha:'a'.repeat(40)},run),/current develop SHA/);
@@ -269,13 +298,13 @@ test('closeout reports CLI failure and false success/readback instead of claimin
 });
 test('current task snapshots outrank same-ID legacy archives while real active duplicates still fail',t=>{
   for(const id of ['25.3','61','64']) {
-    const f=closeoutFixture(t),current=join(f.root,`backlog/tasks/task-${id} - 当前任务.md`);
+    const f=closeoutFixture(t),filename=`backlog/tasks/task-${id} - 当前任务.md`,current=join(f.root,filename);
     const source=f.source.replace('TASK-1',`TASK-${id}`);
     renameSync(f.path,current);writeFileSync(current,source);
     writeFileSync(join(f.root,`backlog/archive/tasks/task-${id} - 历史同号.md`),source+'\nUnrelated legacy identity.\n');
     f.git('add','.');f.git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','legacy archive');
     f.pr.merge_commit_sha=f.git('rev-parse','HEAD');f.pr.body=`Backlog: TASK-${id}=recorded`;
-    const input={...f,targetSha:f.pr.merge_commit_sha};
+    const input={...f,files:[{filename}],targetSha:f.pr.merge_commit_sha};
     assert.equal(delivery.syncBacklogCloseout(input,()=>assert.fail('recorded cleanup never mutates')).state,'backlog_synced',id);
     writeFileSync(join(f.root,`backlog/tasks/task-${id} - 冲突.md`),source);
     assert.throws(()=>delivery.syncBacklogCloseout(input,()=>assert.fail('duplicate must fail before writes')),/ambiguous/,id);
@@ -1503,7 +1532,8 @@ test('closeout stops before writing when the remote develop SHA advances',t=>{
 
 test('recorded-only closeout rejects a stale remote without writing a receipt',t=>{
   const f=closeoutFixture(t),pr={...f.pr,body:'Backlog: TASK-1=recorded'};
-  assert.throws(()=>delivery.syncBacklogCloseout({...f,pr,targetSha:f.mergeSha,readTargetSha:()=> 'a'.repeat(40)},
+  const files=[{filename:'backlog/tasks/task-1 - 交付.md'}];
+  assert.throws(()=>delivery.syncBacklogCloseout({...f,pr,files,targetSha:f.mergeSha,readTargetSha:()=> 'a'.repeat(40)},
     ()=>assert.fail('recorded-only must not invoke the CLI')),/remote develop advanced/);
   assert.throws(()=>readFileSync(join(f.root,'build/delivery',`backlog-${pr.number}-${f.mergeSha}.json`)),/ENOENT/);
 });

@@ -98,7 +98,7 @@ export function checkHostedSlice(env = process.env) {
   if (pr.base.ref === 'develop') {
     const files = execFileSync('git', ['diff', '--name-only', '-z', '--no-renames', base, candidate, '--'],
       { encoding: 'utf8' }).split('\0').filter(Boolean).map(filename => ({filename}));
-    const { errors } = backlogDeclaration(pr.body, [...changedBacklogTasks(files), ...mentionedTasks(pr.title)]);
+    const { errors } = backlogDeclaration(pr.body, changedBacklogTasks(files), mentionedTasks(pr.title));
     if (errors.length) throw Error(errors.join('\n'));
   }
 }
