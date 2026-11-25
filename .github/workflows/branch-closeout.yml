@@ -1,0 +1,111 @@
+name: Branch closeout
+on:
+  delete:
+  pull_request_target:
+    types: [closed]
+  workflow_run:
+    workflows: [Quality, Licenses, Quick feedback]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to verify absent
+        type: string
+      pull_request:
+        description: Pull request number to verify closed
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify:
+    if: >-
+      (github.event_name == 'delete' && github.event.ref_type == 'branch' && !startsWith(github.event.ref, 'gh-readonly-queue/')) ||
+      github.event_name == 'pull_request_target' || github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && contains(fromJSON('["failure","timed_out","action_required","startup_failure","stale"]'), github.event.workflow_run.conclusion))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Verify closeout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync } from 'node:fs';
+
+          const { GITHUB_REPOSITORY: repo, GITHUB_EVENT_NAME: trigger, GITHUB_EVENT_PATH: eventPath,
+            GITHUB_API_URL: api, GH_TOKEN: token } = process.env;
+          let branch;
+          let number;
+
+          async function get(path) {
+            return fetch(`${api}/repos/${repo}${path}`, {
+              headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
+              redirect: 'error',
+              signal: AbortSignal.timeout(15_000),
+            });
+          }
+
+          function escape(value) {
+            return String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+          }
+
+          async function reportCiFailure(run) {
+            const { id, run_attempt: attempt, head_sha: sha, name, conclusion, html_url: url } = run;
+            const context = `[CI] ${repo} ${name} ${sha} attempt ${attempt} ${conclusion} ${url}`;
+            try {
+              const latest = await get(`/actions/runs/${id}`);
+              if (!latest.ok) throw new Error(`Run lookup returned HTTP ${latest.status}`);
+              if ((await latest.json()).run_attempt !== attempt) return;
+              const response = await get(`/actions/runs/${id}/attempts/${attempt}/jobs?per_page=100`);
+              if (!response.ok) throw new Error(`Job lookup returned HTTP ${response.status}`);
+              const failures = (await response.json()).jobs.filter(job =>
+                ['failure', 'timed_out', 'action_required', 'startup_failure', 'stale'].includes(job.conclusion));
+              const names = failures.slice(0, 6).map(job => job.name).join(', ');
+              const remainder = failures.length > 6 ? ` +${failures.length - 6}` : '';
+              return names ? `${context} | ${names}${remainder}` : context;
+            } catch (error) {
+              return `${context} | ${error.message}`;
+            }
+          }
+
+          try {
+            const event = JSON.parse(readFileSync(eventPath, 'utf8'));
+            if (trigger === 'workflow_run') {
+              const failure = await reportCiFailure(event.workflow_run);
+              if (failure) throw new Error(failure);
+              process.exit(0);
+            }
+            branch = trigger === 'delete' ? event.ref : event.inputs?.branch;
+            number = trigger === 'pull_request_target' ? event.number : event.inputs?.pull_request;
+            if (!branch && !number) throw new Error('Supply a branch or pull request number');
+
+            if (number) {
+              if (!/^[1-9]\d*$/.test(String(number))) throw new Error('Invalid pull request number');
+              const response = await get(`/pulls/${number}`);
+              if (!response.ok) throw new Error(`Pull request lookup returned HTTP ${response.status}`);
+              const current = await response.json();
+              if (current.state !== 'closed') throw new Error('Pull request is still open');
+              if (event.pull_request?.merged && !current.merged) throw new Error('Merge was not confirmed');
+            }
+
+            if (branch) {
+              if (branch.split('/').some(part => !part || part.startsWith('.'))) throw new Error('Invalid branch name');
+              const repository = await get('');
+              if (!repository.ok) throw new Error(`Repository lookup returned HTTP ${repository.status}`);
+              const ref = branch.split('/').map(encodeURIComponent).join('/');
+              const response = await get(`/git/ref/heads/${ref}`);
+              if (response.ok) throw new Error('Branch still exists');
+              if (response.status !== 404) throw new Error(`Branch lookup returned HTTP ${response.status}`);
+            }
+          } catch (error) {
+            const target = [branch && `branch=${branch}`, number && `PR=#${number}`].filter(Boolean).join(' ');
+            const context = trigger === 'workflow_run' ? error.message
+              : `[Branch closeout] ${repo} ${trigger} ${target}: ${error.message}`;
+            console.error(`::error::${escape(context.slice(0, 1600))}`);
+            process.exitCode = 1;
+          }
+          JS
