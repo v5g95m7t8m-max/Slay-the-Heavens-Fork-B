@@ -35,6 +35,7 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           import { readFileSync } from 'node:fs';
+          import { spawnSync } from 'node:child_process';
 
           const { GITHUB_REPOSITORY: repo, GITHUB_EVENT_NAME: trigger, GITHUB_EVENT_PATH: eventPath,
             GITHUB_API_URL: api, GH_TOKEN: token } = process.env;
@@ -93,7 +94,10 @@ jobs:
             }
 
             if (branch) {
-              if (branch.split('/').some(part => !part || part.startsWith('.'))) throw new Error('Invalid branch name');
+              const validation = spawnSync('git', ['check-ref-format', `refs/heads/${branch}`],
+                { stdio: 'ignore', timeout: 5000 });
+              if (validation.error) throw new Error('Could not run Git branch validation');
+              if (validation.status !== 0) throw new Error('Invalid branch name');
               const repository = await get('');
               if (!repository.ok) throw new Error(`Repository lookup returned HTTP ${repository.status}`);
               const ref = branch.split('/').map(encodeURIComponent).join('/');
