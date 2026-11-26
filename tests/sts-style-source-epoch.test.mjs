@@ -1,6 +1,7 @@
 import {actorFocusAdded,assertActorFocusInventory,deckPagesAdded,stasisUpgradeAddedPaths} from './helpers/develop-release-backflow-source.mjs';
 import {pointerInputPath,readRetiredController,retiredControllerPath} from './helpers/input-retirement-source.mjs';
-import {beforeCharacterPreparationSource} from './helpers/character-preparation-source.mjs';
+import {beforeCharacterPreparationSource,beforeCurrentProductionSource} from './helpers/character-preparation-source.mjs';
+import {reviewedSelectionRead} from './helpers/reviewed-selection-current-source.mjs';
 import {entranceInventory} from './helpers/ui-entrance-source.mjs';
 import {assertCurrentJsInventory,assertCurrentLuaInventory,beforeShopEntryInventory} from './helpers/fork-preflight-source.mjs';
 import test from 'node:test';
@@ -245,8 +246,14 @@ test('feedback real current source and CI preserve all four immutable archives a
   assert.equal(p.targets.stsFeedbackPrior.files[path],null,'new module has no invented predecessor');
   for(const name of Object.keys(stsStyleEpoch.proof.targets))assert.equal(p.targets[name].files[path],null,name+'/'+path);
  }
- for(const [path,row]of Object.entries(p.current))assert.equal(beforeCharacterPreparationSource(path,readProductionHistory(path)).replaceAll('\r\n','\n'),row.source,path);
- const anchor=feedbackProductionPaths[0],raw=readProduction;
+ const raw=reviewedSelectionRead();
+ for(const [path,row]of Object.entries(p.current)){
+  const source=path===retiredControllerPath
+   ?beforeCharacterPreparationSource(path,readRetiredController(raw).source,raw)
+   :beforeCurrentProductionSource(path,raw(path),raw);
+  assert.equal(source.replaceAll('\r\n','\n'),row.source,path);
+ }
+ const anchor=feedbackProductionPaths[0];
  assert.equal(sourceEpoch.preCombinedSource(anchor,raw(anchor),{target:'stsFeedbackPrior',readSource:raw}),stsStyleEpoch.proof.current[anchor].source);
  for(const path of feedbackProductionPaths){
   assert(p.owners.includes(path),'current owner must guard every changed feedback source: '+path);

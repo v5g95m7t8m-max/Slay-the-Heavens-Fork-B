@@ -7,7 +7,7 @@ import {gunzipSync} from 'node:zlib';
 import {readRetiredInputLuaReceipt,readRetiredInputTestReceipt} from './input-retirement-inventory.mjs';
 import {beforeCombatEvents,beforeDevelopUiBackflows,beforePotionBackflow,readRetiredController,retiredControllerPath} from './input-retirement-source.mjs';
 import {beforeActionButtons} from './action-buttons-source.mjs';
-import {beforeDeckPages} from './develop-release-backflow-source.mjs';
+import {authenticateDevelopBackflow,beforeDeckPages} from './develop-release-backflow-source.mjs';
 import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
 import {beforeUiEntranceWitness} from './ui-entrance-source.mjs';
 import {stsStylePriorRuntime} from './sts-style-prior-runtime.mjs';
@@ -135,9 +135,32 @@ function matchesCurrentReceipt(path,source,expected){
   .some(prior=>matches(prior,expected));
 }
 
+const relicEquipReceipt={
+ path:'src/lua/abyss_relic_hooks.lua',
+ current:{sha256:'c03ea48ca4375b1fd08cafc4d59e64ab0c6af387c490edfddb8136703fff28e0',gitBlob:'24a61843c9f6bc4a39baa4a2a13282469d858900'},
+ prior:{sha256:'19b0ba4fcd2c5ca37219623868b8cdd978787e8861e50e2e43fefb8c70be2f2f',gitBlob:'792504a367f4488fb08942e0030d5376ea4de73c'},
+};
+
+function readRelicEquipReceipt(readCurrent){
+ const {path,current,prior}=relicEquipReceipt;
+ const source=readCurrent(path,'utf8');
+ assert(matches(source,current)&&(!source.includes('\r')||lf(source).replaceAll('\n','\r\n')===source),
+  'current relic equip receipt input changed: '+path);
+ // This receipt predates unrelated closeout owners. Reuse the sealed session
+ // relic transition and require the same live bytes on the linked re-read.
+ const archived=authenticateDevelopBackflow(path,source,owner=>{
+  const live=readCurrent(owner,'utf8');
+  if(owner===path)assert(live===source,'current relic equip receipt input changed during replay: '+path);
+  return live;
+ });
+ assert(matches(archived,prior),'exact relic equip receipt predecessor: '+path);
+ return lf(archived);
+}
+
 // A frozen receipt may read a registered old blob only after checking the
 // corresponding current file. Raw Full discovery and inputs use their normal readers.
 export function readCalibrationReceiptInput(path,digest,read,readCurrent=readFileSync){
+ if(path===relicEquipReceipt.path&&digest===relicEquipReceipt.prior.sha256)return readRelicEquipReceipt(readCurrent);
  const fallback=()=>{
   const source=read(),prior=beforeCurrentReplayFixes(path,source);
   return typeof prior==='string'&&hash(lf(prior))===digest?prior:source;

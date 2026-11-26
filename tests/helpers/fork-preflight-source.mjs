@@ -118,6 +118,11 @@ export function beforeForkPush(path,source){
 // Receipt readers retain the actual Q1 current-source predecessor before their existing replay layers.
 for(const row of Object.values(forkPushPacket.receiptSuccessors??{}))assert.equal(hash(row.before),row.beforeSha256);
 export function beforeForkReceiptSource(path,source){
+ if(path===cursesReceiptFixture.path){
+  const prior=beforeCursesReceiptFixture(path,source);
+  assert.notEqual(prior,source,'current receipt input changed: '+path);
+  return beforeForkPush(path,prior);
+ }
  const row=forkPushPacket.receiptSuccessors?.[path];
  if(row&&typeof source==='string'&&!source.includes('\r\r\n')&&hash(normalize(source))===row.afterSha256)
   return source.includes('\r\n')?row.before.replaceAll('\n','\r\n'):row.before;
@@ -954,7 +959,32 @@ function beforeRelicCloseoutIntegratedFixture(path,source){
  assert.equal(blob(prior),'2f628ab1013c999dc38c55b87537d573c4bbcd40','exact #1010 integration fixture predecessor');
  return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
+const reviewedStsFeedbackFixture={
+ "path": "tests/sts-style-source-epoch.test.mjs",
+ "beforeSha256": "d5dab6191c676a0520ecf6052ce7ffe6b8f60318a8b31c6022e84df191a59d45",
+ "afterSha256": "1b937677280a1e5f72063528e7188773d3493207166582bf0805dfe43a1e2669",
+ "hunks": [
+  {
+   "at": 2,
+   "before": "import {beforeCharacterPreparationSource} from './helpers/character-preparation-source.mjs';",
+   "after": "import {beforeCharacterPreparationSource,beforeCurrentProductionSource} from './helpers/character-preparation-source.mjs';\nimport {reviewedSelectionRead} from './helpers/reviewed-selection-current-source.mjs';"
+  },
+  {
+   "at": 248,
+   "before": " for(const [path,row]of Object.entries(p.current))assert.equal(beforeCharacterPreparationSource(path,readProductionHistory(path)).replaceAll('\\r\\n','\\n'),row.source,path);\n const anchor=feedbackProductionPaths[0],raw=readProduction;",
+   "after": " const raw=reviewedSelectionRead();\n for(const [path,row]of Object.entries(p.current)){\n  const source=path===retiredControllerPath\n   ?beforeCharacterPreparationSource(path,readRetiredController(raw).source,raw)\n   :beforeCurrentProductionSource(path,raw(path),raw);\n  assert.equal(source.replaceAll('\\r\\n','\\n'),row.source,path);\n }\n const anchor=feedbackProductionPaths[0];"
+  }
+ ]
+};
+const reviewedStsFeedbackIdentity=['1b937677280a1e5f72063528e7188773d3493207166582bf0805dfe43a1e2669','bf1dd5f099f9c8536bf1b1bb5a73b0f37725d815'];
+function beforeReviewedStsFeedbackFixture(path,source){
+ if(path!==luaInventoryTest||!exactCheckoutSource(source,reviewedStsFeedbackIdentity))return source;
+ const prior=restoreExactFixtureHunks(reviewedStsFeedbackFixture,path,source);
+ assert.equal(blob(prior),'72e15c6ebec71499025aea8bd80a91e0c418f7e7','exact StS feedback fixture predecessor');
+ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
 function beforeCalibrationReplayOwner(path,source){
+ source=beforeReviewedStsFeedbackFixture(path,source);
  source=beforeReviewedOfficialAssetReplay(path,source);
  source=beforeBattleSceneCopyClosure(path,source);
  if(path===integratedFixture)source=beforeChapterBattleScene(path,beforeRelicCloseoutIntegratedFixture(path,source));
@@ -1193,9 +1223,11 @@ function responsiveReplayCurrentRead(read){
 export function currentReviewedSelectionRead(read){
  return (path,encoding)=>{
   const source=read(path,encoding);
-  if(path!==reviewedSelectionFixture&&path!==officialLegibilityFixture&&path!==officialAssetsFixture)return source;
+  if(path!==reviewedSelectionFixture&&path!==officialLegibilityFixture&&path!==officialAssetsFixture&&path!==luaInventoryTest)return source;
   const raw=Buffer.isBuffer(source)?source.toString('utf8'):source;
-  if(path===reviewedSelectionFixture){
+  if(path===luaInventoryTest){
+   assert(exactCheckoutSource(raw,reviewedStsFeedbackIdentity),'fresh complete integration source: '+path);
+  }else if(path===reviewedSelectionFixture){
    assert.notEqual(beforeReviewedOfficialAssetReplay(path,raw),raw,'fresh current reviewed Selection replay fixture: '+path);
    assert.notEqual(beforeCalibrationReplayOwner(path,raw),raw,'fresh current reviewed Selection replay fixture: '+path);
   }else if(path===officialAssetsFixture){
