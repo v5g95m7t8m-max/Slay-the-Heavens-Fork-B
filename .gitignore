@@ -1,38 +1,11 @@
 # Local / temp
-.artifacts/
-.dream-loop/
+.backlog-ui.log
 *.log
-*.log.*
 node_modules/
 tools/vendor/
 build/
 /playtest/
-*.gil
-coverage/
-.nyc_output/
 __pycache__/
-*.py[cod]
-.venv/
-venv/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-*.tmp
-*.swp
-*.swo
-*~
-
-# Local configuration and credentials
-.env
-.env.*
-!.env.example
-!.env.sample
-!.env.template
-.envrc.local
-*.pem
-*.key
-*.p12
-*.pfx
 
 # OS
 .DS_Store
@@ -41,3 +14,57 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/settings.json
+
+.dream-loop/
+
+# Local artifacts and platform exports
+.artifacts/
+*.log.*
+*.gil
+*.gip
+*.gia
+# Existing project-geometry inputs reviewed in docs/legal/assets.json
+!/art/spikes/card-editor/card.gia
+!/art/spikes/card-editor/text-height-compat/card.gia
+*.save
+*.save.*
+!/experiments/art-tech-lab/seed.save.json
+*.snapshot.tmp
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+/ci-impact.json
+/test-results/
+/playwright-report/
+/coverage/
+.coverage
+htmlcov/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.envrc
+*.local.json
+*.local.toml
+*.local.yaml
+*.local.yml
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Tool caches and virtual environments
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.npm/
