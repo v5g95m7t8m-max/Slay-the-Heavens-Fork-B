@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {runLua} from '../scripts/test-lua.mjs';
 import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {readFileSync,writeFileSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
@@ -21,7 +22,12 @@ test('independent source interpretation retains the full source catalog and fixe
  assert.equal(result.status,0,result.stderr);
  const vector=JSON.parse(result.stdout);
  assert.equal(vector.sourceCommit,'319009d5df0a82d9fb0f23cc22322286c6a87ec0');
- assert.equal(vector.catalogLfSha256,'bc7fd8c34ff0f85689ff9dee391b69a44d3b6c42860c85cc2ad9668c640126ae');
+ assert.equal(vector.catalogLfSha256,'885091634415c830636361950213738c24e062c591b29b227c479ece625cef36');
+ // #951 changes only these source keys. Keep the original catalog identity as a separate assertion.
+ const sourceCatalog=readFileSync('data/catalogs/sts1-relic-queues.json','utf8').replaceAll('\r\n','\n')
+  .replaceAll('"Tactical Badge"','"Gambling Chip"').replaceAll('"ArenaCollar"','"SlaversCollar"');
+ const originalCatalogSha=createHash('sha256').update(sourceCatalog).digest('hex');
+ assert.equal(originalCatalogSha,'bc7fd8c34ff0f85689ff9dee391b69a44d3b6c42860c85cc2ad9668c640126ae');
  assert.equal(vector.independentRandomLfSha256,'7c0c70dd7dbed02bc0107e5ec0efcdb7892bf14cdb61a5ddc3a127eaeb50c0a8');
  assert.deepEqual(vector.initialRng,{words:['d332029783617f60','2ca76ce675709681'],counter:5});
  assert.deepEqual(vector.afterEliteRng,{words:['b45492bcb6dec9cc','ebc969f27c5c6a98'],counter:7});

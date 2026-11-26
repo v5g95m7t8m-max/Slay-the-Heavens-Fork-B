@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {restoreExactFixtureHunks} from './exact-fixture-hunks.mjs';
 import {exactSourceMatches} from './source-fingerprint.mjs';
 import {uiEntranceOwns} from './ui-entrance-source.mjs';
+import {beforeNodeNoticeSource} from './reward-current-source.mjs';
 
 // Replay the exact active fixture and copier predecessors without replacing prior receipts.
 const receipts=Object.freeze({
@@ -131,11 +132,26 @@ function decodedSelectionSource(raw){
 }
 
 const copierPath='tests/helpers/copy-integration-source-closure.mjs';
+const nodeNoticeCopier=Object.freeze({
+ current:{"sha256":"8c234674a484ac9aba9e10eae21bdb0ce43372636a20b13e84d28c6a2f266bd4","gitBlob":"46291e76636a7543686e62c0d893e02fc099c4a6"},
+ previous:receipts[copierPath].current,
+ hunks:[
+  {
+   "at": 374,
+   "before": " 'tests/helpers/reward-current-source.mjs':'3ef0c1268abbd8758655d4898b3d62edba8c877eab76fff2ad7e5406e4613dfd',",
+   "after": " 'tests/helpers/reward-current-source.mjs':'3b67c5b2cce6c6ab8c76610da98d3ceb3c96e6ccfb8f0c3b58754ac7ea9ff641',"
+  },
+  {
+   "at": 383,
+   "before": "  const source=join(sourceRoot,path),content=integrationClosureBytes(path,readFileSync(source));assert.equal(hash(content),sha,'fresh helper copy identity: '+path);",
+   "after": "  const source=join(sourceRoot,path),raw=readFileSync(source),content=integrationClosureBytes(path,raw);\n  if(path==='tests/helpers/reward-current-source.mjs'&&!raw.equals(content))\n   assert(raw.equals(Buffer.from(content.toString('utf8').replaceAll('\\n','\\r\\n'))),'fresh helper copy identity: '+path);\n  assert.equal(hash(content),sha,'fresh helper copy identity: '+path);"
+  }
+ ]
+});
 export const selectionCopierReceipt=Object.freeze({path:copierPath,
- afterSha256:receipts[copierPath].current.sha256,afterBlob:receipts[copierPath].current.gitBlob});
+ afterSha256:nodeNoticeCopier.current.sha256,afterBlob:nodeNoticeCopier.current.gitBlob});
 
-export function beforeSelectionReceiptSource(path,source){
- const binding=receipt(path);
+function beforeReceipt(path,source,binding){
  if(!binding||!uniformSelectionSource(source)||!exactSourceMatches(source,binding.current))return source;
  const prior=restoreExactFixtureHunks({path,beforeSha256:binding.previous.sha256,
   afterSha256:binding.current.sha256,hunks:binding.hunks},path,source);
@@ -143,9 +159,14 @@ export function beforeSelectionReceiptSource(path,source){
  return source.includes('\r\n')?prior.replaceAll('\r\n','\n').replaceAll('\n','\r\n'):prior;
 }
 
+export function beforeSelectionReceiptSource(path,source){
+ if(path===copierPath)source=beforeReceipt(path,source,nodeNoticeCopier);
+ return beforeReceipt(path,source,receipt(path));
+}
+
 export function checkedSelectionReceiptRead(read){
  const checked=(path,encoding)=>{
-  const raw=read(path,encoding),binding=receipt(path);
+  const raw=read(path,encoding),binding=path===copierPath?nodeNoticeCopier:receipt(path);
   if(binding){
    const source=decodedSelectionSource(raw);
    assert(uniformSelectionSource(source)&&exactSourceMatches(source,binding.current),
@@ -160,8 +181,10 @@ export function checkedSelectionReceiptRead(read){
 export function checkedSelectionEntranceRead(read){
  return (path,encoding)=>{
   const raw=read(path,encoding);
-  if(uiEntranceOwns(path))
-   assert(uniformSelectionSource(decodedSelectionSource(raw)),'uniform current Selection entrance source: '+path);
-  return raw;
+  if(!uiEntranceOwns(path))return raw;
+  const source=decodedSelectionSource(raw);
+  assert(uniformSelectionSource(source),'uniform current Selection entrance source: '+path);
+  const prior=beforeNodeNoticeSource(path,source);
+  return prior===source?raw:Buffer.isBuffer(raw)?Buffer.from(prior):prior;
  };
 }

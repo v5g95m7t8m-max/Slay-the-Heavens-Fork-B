@@ -8,6 +8,8 @@ import {runLua} from '../scripts/test-lua.mjs';
 
 const fixture='tests/lua/dynamic_monster_input_bindings.lua';
 const detail='abyss_battle_detail_bindings';
+const intentExit='on(host.cursor.CursorExit,function(event) cancel(false,false,event) end)';
+const guardedIntentExit=`if not current() then return end\n            ${intentExit}`;
 function moduleSource(name) {
   return readFileSync(`src/lua/${name}.lua`,'utf8').replaceAll('\r\n','\n');
 }
@@ -41,18 +43,16 @@ test('old actor pointers cannot target the same ID in a replacement battle', t =
 test('partial-bind injection requires intent cleanup to precede native registration', t => {
   const source=moduleSource(detail);
   const cleanup='if cleanups then cleanups[#cleanups+1]={control=control,cancel=cancel} end';
-  const nextListener='if not current() then return end\n            on(host.cursor.CursorExit,cancel)';
   assert.equal(source.split(cleanup).length,2);
-  assert.equal(source.split(nextListener).length,2);
-  assert.ok(source.indexOf(cleanup)<source.indexOf(nextListener));
-  const mutation=source.replace(cleanup,'').replace(nextListener,`${cleanup}\n            ${nextListener}`);
+  assert.equal(source.split(guardedIntentExit).length,2);
+  assert.ok(source.indexOf(cleanup)<source.indexOf(guardedIntentExit));
+  const mutation=source.replace(cleanup,'').replace(guardedIntentExit,`${cleanup}\n            ${guardedIntentExit}`);
   assertMutationFailure(t,detail,mutation,/partial intent Enter was not cleaned after native registration failed/);
 });
 
 test('reentrant retirement regression rejects continuation after intent cursor registration', t => {
   const source=moduleSource(detail);
-  const fence='if not current() then return end\n            on(host.cursor.CursorExit,cancel)';
-  assert.equal(source.split(fence).length,2);
-  assertMutationFailure(t,detail,source.replace(fence,'on(host.cursor.CursorExit,cancel)'),
+  assert.equal(source.split(guardedIntentExit).length,2);
+  assertMutationFailure(t,detail,source.replace(guardedIntentExit,intentExit),
     /registration continued after retirement at 6/);
 });

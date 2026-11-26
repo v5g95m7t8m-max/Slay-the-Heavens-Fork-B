@@ -80,6 +80,25 @@ const cardFlightPredecessor={
   }
  ]
 };
+const nodeNoticePredecessor = {
+ "path": "src/lua/abyss_node_ui.lua",
+ "beforeSha256": "a402c6e2b10697ff285be9d6de2d0b68a2982b160c89131c91451e5fd6fa1cb2",
+ "afterSha256": "72755f5190b5d98d40e668bcf033cc0ee3f2056e2494a94a7a147e60cd1d1cf1",
+ "beforeBlob": "50a84af13948a2625d3c4913eaf2c3e6bf67bc5b",
+ "afterBlob": "f8b2b473121054b5c2207a608d926a9528476d16",
+ "hunks": [
+  {
+   "at": 45,
+   "before": "function M.new(root, run, map, presentation, clickEvent, onChange, options)",
+   "after": "local function refreshMerchant(ctx, node, active)\n    if node and node.type == \"shop\" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then\n        ctx.self.merchantNode, ctx.self.merchantRun = node.id, ctx.self.run\n        ctx.merchant:enter(ctx.self.run)\n    end\n    ctx.merchant:setVisible(merchantVisible(ctx, node, active))\nend\n\nfunction M.new(root, run, map, presentation, clickEvent, onChange, options)"
+  },
+  {
+   "at": 199,
+   "before": "        if node and node.type == \"shop\" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then\n            ctx.self.merchantNode, ctx.self.merchantRun = node.id, ctx.self.run\n            ctx.merchant:enter(ctx.self.run)\n        end\n        ctx.merchant:setVisible(merchantVisible(ctx, node, active))",
+   "after": "        refreshMerchant(ctx, node, active)"
+  }
+ ]
+};
 const eventsPath='src/lua/abyss_node_ui_events.lua';
 const eventsOwner=Object.freeze({sha256:'a9b646cb40b5cdd288ddbcf75b4ac4e7dc12537a2002b0ba0774681521d50b61',gitBlob:'8fc53f516f083aeb4c7a5e05ed626b595114fef7'});
 let receipts;
@@ -107,6 +126,15 @@ function exactJoinedRewardOwner(raw,binding){
  if(!exactSourceMatches(raw,binding))return false;
  const lf=raw.replaceAll('\r\n','\n');
  return raw===lf||raw===lf.replaceAll('\n','\r\n');
+}
+// Also used by the #924 entrance replay, which authenticates this exact prior view.
+export function beforeNodeNoticeSource(owner,raw){
+ const proof=nodeNoticePredecessor;
+ if(owner!==proof.path)return raw;
+ assert(exactJoinedRewardOwner(raw,{sha256:proof.afterSha256,gitBlob:proof.afterBlob}),'combined linked owner identity: '+owner);
+ const prior=restoreExactFixtureHunks(proof,owner,raw);
+ assert(exactJoinedRewardOwner(prior,{sha256:proof.beforeSha256,gitBlob:proof.beforeBlob}),'exact node notice replay predecessor: '+owner);
+ return raw.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
 }
 function joinedRewardPredecessor(owner,raw){
  assert(exactJoinedRewardOwner(raw,joinedRewardOwners[owner]),'combined linked owner identity: '+owner);
@@ -145,7 +173,8 @@ export function currentRewardReplay(path,source,read){
     return undefined;
    }
    const raw=freshOwner(read,owner);
-   const live=joined&&Object.hasOwn(joinedRewardOwners,owner)?joinedRewardPredecessor(owner,raw):raw;
+   let live=joined&&Object.hasOwn(joinedRewardOwners,owner)?joinedRewardPredecessor(owner,raw):raw;
+   if(joined)live=beforeNodeNoticeSource(owner,live);
    if(owner===eventsPath)assert(exactSourceMatches(live,eventsOwner),'combined linked owner identity: '+owner);
    if(!Object.hasOwn(files,owner))return live;
    const row=files[owner];

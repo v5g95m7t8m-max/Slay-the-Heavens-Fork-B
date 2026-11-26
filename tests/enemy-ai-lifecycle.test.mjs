@@ -11,6 +11,21 @@ import {discoverSources,measureSources} from '../scripts/lua-quality-metrics.mjs
 const file='src/lua/abyss_enemy_ai.lua';
 const read=p=>readFileSync(p,'utf8').replaceAll('\r\n','\n');
 const frozen=read('tests/fixtures/enemy-ai-lifecycle-before.lua');
+const frozenSha='3bfec14ef91be048c5fce7d807955c0c24beda4b98da27b91b1aff12a1ff5bf2';
+function replayFrozen(){
+  assert.equal(createHash('sha256').update(frozen).digest('hex'),frozenSha,'exact frozen Enemy AI fixture');
+  // #951 renamed the two module keys and their policy IDs. The live harness
+  // uses those IDs for both VMs, so project those exact tokens for this replay.
+  const names={abyss_blue_slaver_ai:'abyss_blue_guard_ai',abyss_red_slaver_ai:'abyss_red_guard_ai',
+    blue_slaver:'blue_guard',red_slaver:'red_guard'};
+  const namesSeen={};
+  const projected=frozen.replace(/\b(?:abyss_)?(?:blue|red)_slaver(?:_ai)?\b/g,key=>{
+    namesSeen[key]=(namesSeen[key]??0)+1;
+    return names[key];
+  });
+  assert.deepEqual(namesSeen,{abyss_blue_slaver_ai:1,abyss_red_slaver_ai:1,blue_slaver:3,red_slaver:4});
+  return replay(projected);
+}
 const names=['M.initialize','M.advance','initializeScriptedPolicy','initializeAct1Policy',
   'initializeOpeningPolicy','advanceShield','advanceCharge','advanceSleepCycle','advanceAct1Policy','advanceFixedPolicy'];
 function replay(source){
@@ -25,7 +40,7 @@ test('Enemy AI full frozen source remains authenticated to develop d8a57cae',()=
   assert.equal(createHash('sha256').update(frozen).digest('hex'),'3bfec14ef91be048c5fce7d807955c0c24beda4b98da27b91b1aff12a1ff5bf2');
 });
 test('independent old/new VMs preserve policy precedence, all reads, writes, RNG, returns and errors',()=>{
-  const before=replay(frozen),after=replay(read(file));
+  const before=replayFrozen(),after=replay(read(file));
   for(const r of [before,after]){assert.equal(r.status,0,r.stdout+r.stderr);assert.match(r.stdout,/ENEMY_LIFECYCLE_PASS 79/);}
   assert.equal(after.stdout,before.stdout);
 });
@@ -53,7 +68,7 @@ for(const [name,from,to]of [
   ['queue owner death','enemy.hp > 0 or (enemy.ai and queuedRoll[enemy.ai.kind])','enemy.hp > 0'],
 ])test(`Enemy behavioral differential rejects mutation: ${name}`,()=>{
   const source=read(file);assert.equal(source.split(from).length,2);
-  const before=replay(frozen),after=replay(source.replace(from,to));
+  const before=replayFrozen(),after=replay(source.replace(from,to));
   assert.equal(before.status,0,before.stdout+before.stderr);
   if(after.status!==0)assert.match(after.stdout+after.stderr,/\[ENEMY_LIFECYCLE\]/);
   else assert.notEqual(after.stdout,before.stdout,'behavior mutant survived');

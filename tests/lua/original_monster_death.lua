@@ -104,7 +104,10 @@ for _,life in ipairs({1.8,1.0})do
  local box=control({name='creature',children={{name='portrait'},{name='impact',visible=false},{name='shield'},{name='floating'},{name='hpGhost'}}})
  local state={dying={enemy={age=0,alpha=1,lifetime=life}},effects={},poses={},escaping={}}
  local unit={hp=0,id='enemy',definitionId='raven_adept'}
- local ctx={state=state,actor=function()return unit,box end,platform={color=function(r,g,b,a)return{r=r,g=g,b=b,a=a}end}}
+ -- Direct painter probes have no battle placement. Supply the same identity
+ -- projection that Feedback.new uses when no stage ground pose is installed.
+ local ctx={state=state,actor=function()return unit,box end,poseGroundShadow=function(_,_,_,y)return y end,
+  platform={color=function(r,g,b,a)return{r=r,g=g,b=b,a=a}end}}
  Painter.paint(ctx,'enemy',0,{})
  local portrait=box:GetChild('portrait')
  local rgb={portrait.imageColor.r,portrait.imageColor.g,portrait.imageColor.b}

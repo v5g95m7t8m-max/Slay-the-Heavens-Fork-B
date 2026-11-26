@@ -37,12 +37,27 @@ for(const [fixture,marker,count]of [
 
 const vectors=JSON.parse(readFileSync('tests/fixtures/class-common-relic-queue-vectors.json','utf8'));
 test('class-common natural source inputs match the independent RNG and Java shuffle oracle',()=>{
- const sha=path=>createHash('sha256').update(readFileSync(path,'utf8').replaceAll('\r\n','\n')).digest('hex');
- assert.equal(sha(vectors.generator),vectors.generatorSha256);
- assert.equal(sha(vectors.luaFixture),vectors.luaSha256);
- for(const [path,hash]of Object.entries(vectors.inputs))assert.equal(sha(path),hash);
- const catalogs=JSON.parse(readFileSync('data/catalogs/sts1-class-relic-queues.json','utf8'));
- for(const sample of vectors.cases)for(const [i,tier]of tiers.entries())assert.deepEqual(sample.queues[tier],javaShuffle(catalogs[sample.character].queues[tier],sample.rawLongHex[i]));
+ const readLf=path=>readFileSync(path,'utf8').replaceAll('\r\n','\n');
+ const sha=source=>createHash('sha256').update(source).digest('hex');
+ const catalogPath='data/catalogs/sts1-class-relic-queues.json';
+ const currentSource=new Map([['Gambling Chip','Tactical Badge'],['SlaversCollar','ArenaCollar']]);
+ const catalogText=readLf(catalogPath);
+ assert.equal(sha(catalogText),'60bfe3ac6381f8a3fbb6040ff99aaa1892d8de5fa4db309a99e376eb8bf7cb99');
+ // Preserve the original oracle bytes and translate only the two #951 identities.
+ let sourceCatalog=catalogText;
+ for(const [original,current]of currentSource){
+  sourceCatalog=sourceCatalog.replaceAll(JSON.stringify(current),JSON.stringify(original));
+ }
+ assert.equal(sha(readLf(vectors.generator)),vectors.generatorSha256);
+ assert.equal(sha(readLf(vectors.luaFixture)),vectors.luaSha256);
+ for(const [path,hash]of Object.entries(vectors.inputs)){
+  assert.equal(sha(path===catalogPath?sourceCatalog:readLf(path)),hash,path);
+ }
+ const catalogs=JSON.parse(catalogText);
+ for(const sample of vectors.cases)for(const [i,tier]of tiers.entries()){
+  const expected=sample.queues[tier].map(id=>currentSource.get(id)??id);
+  assert.deepEqual(javaShuffle(catalogs[sample.character].queues[tier],sample.rawLongHex[i]),expected);
+ }
 });
 test('formal class-common source channels preserve original full queues, entropy and unavailable guards',()=>{
  buildLuaData();const result=runLua('tests/lua/class_common_relic_channels.lua');

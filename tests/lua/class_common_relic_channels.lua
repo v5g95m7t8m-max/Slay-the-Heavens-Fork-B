@@ -3,6 +3,13 @@ local R,C,A,N,Map=require('abyss_run'),require('abyss_combat'),require('abyss_ac
 local Rewards,Pool,S,Shop=require('abyss_relic_rewards'),require('abyss_relic_pool'),require('abyss_sts_random'),require('abyss_shop')
 local D=require('abyss_data')
 local vectors=dofile('tests/fixtures/class-common-relic-queue-vectors.lua')
+-- #951 renames two source keys at their existing positions in the original vectors.
+local currentSource={['Gambling Chip']='Tactical Badge',SlaversCollar='ArenaCollar'}
+for _,case in ipairs(vectors)do
+ for _,queue in pairs(case.queues)do
+  for index,id in ipairs(queue)do queue[index]=currentSource[id]or id end
+ end
+end
 local count,failed=0,0
 local function eq(a,b,label)assert(a==b,(label or 'value')..': '..tostring(a)..' ~= '..tostring(b))end
 local function same(a,b)

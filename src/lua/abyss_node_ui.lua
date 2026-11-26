@@ -43,6 +43,14 @@ local function merchantVisible(ctx, node, active)
     return true
 end
 
+local function refreshMerchant(ctx, node, active)
+    if node and node.type == "shop" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then
+        ctx.self.merchantNode, ctx.self.merchantRun = node.id, ctx.self.run
+        ctx.merchant:enter(ctx.self.run)
+    end
+    ctx.merchant:setVisible(merchantVisible(ctx, node, active))
+end
+
 function M.new(root, run, map, presentation, clickEvent, onChange, options)
     local ctx = {root=root,run=run,map=map,presentation=presentation,clickEvent=clickEvent,onChange=onChange,options=options}
     ctx.options = ctx.options or {}
@@ -189,11 +197,7 @@ function M.new(root, run, map, presentation, clickEvent, onChange, options)
 
     function ctx.refreshNodeNotice(node,active,hint,screen)
         -- The merchant speaks in his own dialogue box; the notice keeps only shop facts.
-        if node and node.type == "shop" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then
-            ctx.self.merchantNode, ctx.self.merchantRun = node.id, ctx.self.run
-            ctx.merchant:enter(ctx.self.run)
-        end
-        ctx.merchant:setVisible(merchantVisible(ctx, node, active))
+        refreshMerchant(ctx, node, active)
         local message=ctx.self.notice ~= "" and ctx.self.notice or hint or ""
         local notice=ctx.child("notice")
         if screen == "pickerView" and not ctx.enhancedForge(node) and not MatchUI.isBoard(node.event) then

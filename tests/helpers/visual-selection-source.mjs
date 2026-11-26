@@ -53,6 +53,7 @@ const rewardOwners=new Set([
  'src/lua/abyss_battle_ui.lua',
  'src/lua/abyss_game_ui.lua',
  'src/lua/abyss_game_ui_view.lua',
+ 'src/lua/abyss_node_ui.lua',
 ]);
 
 function beforeVisualFixture(proof,path,source){
