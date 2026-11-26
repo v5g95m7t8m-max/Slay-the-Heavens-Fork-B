@@ -19,6 +19,54 @@ test('accepts six formal paired tiers from the exact release and published build
   assert.deepEqual(verifyResourceReport(reportFixture(), head, tree, published, receipt), {});
 });
 
+test('requires the Act II workload in both paired arms and the supported recovery', () => {
+  for (const arm of ['candidate', 'baseline', 'recovery']) {
+    const report = reportFixture();
+    const sample = arm === 'recovery' ? report.extreme.recovery.sample : report.results.stress[arm].samples[0];
+    delete sample.act2;
+    assert.throws(() => verifyResourceReport(report, head, tree, published, receipt), /Missing Act II workload/);
+  }
+  const missingPhase = reportFixture();
+  const act2 = missingPhase.results.stress.candidate.samples[0].act2;
+  act2.rows = act2.rows.filter(row => row.phase !== 'act2-overlapping-effects');
+  assert.throws(() => verifyResourceReport(missingPhase, head, tree, published, receipt), /missing\/reordered runtime phase/);
+});
+
+test('rejects weaker Act II proof, reuse and hidden regressions', () => {
+  const wrongArm = reportFixture();
+  wrongArm.results.stress.candidate.samples[0].act2.runtime = wrongArm.baseline.runtime;
+  assert.throws(() => verifyResourceReport(wrongArm, head, tree, published, receipt), /did not execute its exact GIL/);
+  const differentCaps = reportFixture();
+  differentCaps.results.baseline.candidate.samples[0].act2.resources.cpuMax = 'max 200000';
+  assert.throws(() => verifyResourceReport(differentCaps, head, tree, published, receipt), /Act II and core measured cgroup limits differ/);
+  const reusedId = reportFixture();
+  const sample = reusedId.results.stress.candidate.samples[0];
+  sample.act2.executionId = sample.executionId;
+  assert.throws(() => verifyResourceReport(reusedId, head, tree, published, receipt), /execution is missing or duplicated/);
+  const missingScene = reportFixture();
+  delete missingScene.extreme.recovery.sample.act2.scenario.sceneSlots;
+  assert.throws(() => verifyResourceReport(missingScene, head, tree, published, receipt), /Missing measured Act II scene/);
+  const cleared = reportFixture();
+  for (const pair of cleared.results.stress.candidate.samples) pair.act2.rows[5].elapsedMs *= 2;
+  assert.throws(() => verifyResourceReport(cleared, head, tree, published, receipt), /signals differ from samples/);
+});
+
+test('requires the approved V3 scene for the candidate and recovery, and still accepts the published shared scene', () => {
+  for (const sceneSlots of [0, 1, 248, 250]) {
+    for (const arm of ['candidate', 'recovery']) {
+      const report = reportFixture();
+      const sample = arm === 'recovery' ? report.extreme.recovery.sample : report.results.stress.candidate.samples[0];
+      sample.act2.scenario.sceneSlots = sceneSlots;
+      assert.throws(() => verifyResourceReport(report, head, tree, published, receipt), /scene differs from approved slot count/);
+    }
+  }
+  const modernBaseline = reportFixture();
+  for (const tier of Object.values(modernBaseline.results)) {
+    for (const sample of tier.baseline.samples) sample.act2.scenario.sceneSlots = 249;
+  }
+  assert.deepEqual(verifyResourceReport(modernBaseline, head, tree, published, receipt), {});
+});
+
 test('rejects the wrong published source, release tree, missing tier, or changed art profile', () => {
   assert.throws(() => verifyResourceReport(reportFixture(), head, tree, {...published, commit:tree}, receipt), /published build source/);
   assert.throws(() => verifyResourceReport(reportFixture(), head, tree, {...published, commit:head}, receipt), /distinct previously published/);

@@ -18,4 +18,21 @@ assert(counts.properties.text==2 and counts.properties.alive==nil,'property attr
 assert(c:GetChild('mapGroup3')=='mapGroup3' and c:GetChild('title')=='title')
 assert(type(c:GetChildren())=='table')
 assert(counts.methods.GetChild==2 and counts.methods.GetChildren==1 and counts.mapGroupLookups==1)
+local function setImage(self,source,id)
+ assert(source=='static')
+ self.imageId=id
+end
+local imageControl={__index=function()return nil end}
+local slot=setmetatable({name='paintSlot1',kind='image',SetImage=setImage},imageControl)
+local other=setmetatable({name='portrait',kind='image',SetImage=setImage},imageControl)
+observe(slot,counts,true,{kind='image',name=slot.name,image=100002})
+observe(other,counts,true,{kind='image',name=other.name,image=100002})
+assert(slot.imageId==100002 and counts.properties.imageId==nil and counts.chapterImages==nil)
+slot:SetImage('static',100004)
+other:SetImage('static',100003)
+assert(slot.imageId==100004 and counts.methods.SetImage==2 and counts.chapterImages==1,'scene setter was lost or counted twice')
+slot:SetFillHorizontal('right',.5)
+assert(not pcall(slot.SetFillHorizontal,slot,'left',.5))
+slot:SetFillUnused()
+assert(slot.fill==nil)
 print('RUNTIME_OBSERVER_PASS')

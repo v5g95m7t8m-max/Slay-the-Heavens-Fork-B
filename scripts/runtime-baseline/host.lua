@@ -20,8 +20,8 @@ local function mark(label)
 end
 local observe=dofile('scripts/runtime-baseline/observer.lua')
 local verifyTurn=dofile('scripts/runtime-baseline/turn.lua')
-ABYSS_HOST_CONTROL=function(control)observe(control,counts,BASELINE_GENERATED~=nil)end
-mark('begin')
+ABYSS_HOST_CONTROL=function(control,spec)observe(control,counts,BASELINE_GENERATED~=nil,spec)end
+mark(BASELINE_ACT2 and 'act2-begin' or 'begin')
 local Snapshot=require('abyss_snapshot');local capture=Snapshot.capture
 Snapshot.capture=function(...)counts.snapshots=counts.snapshots+1;return capture(...)end
 local F=assert(load(BASELINE_FIXTURE,'@tests/lua/support/game_ui_fixture.lua'))()

@@ -31,8 +31,8 @@ const projections = {
   },
   'tests/release-performance-artifacts.test.mjs': source => withoutSuffix(source, 'uses approved local GIL bytes from the same archive authority'),
   'tests/helpers/fork-preflight-source.mjs': source => source.replace(
-    'const source=beforeCurrentReplayFixes(path,beforeDevelopBackflow(path,live));',
-    'const source=beforeDevelopBackflow(path,live);'),
+    'const source=beforeCurrentReplayFixes(path,beforeFormalAct2ReleaseTest(path,beforeDevelopBackflow(path,live)));',
+    'const source=beforeFormalAct2ReleaseTest(path,beforeDevelopBackflow(path,live));'),
 };
 
 // Match the complete live fixture before reconstructing its preserved predecessor.
@@ -40,7 +40,7 @@ const identities = {
   "tests/gil-candidate-preflight.test.mjs": [["8a3af8197ecb7dc8fdacfae7284405d012ced51f3fb49c217b78bbb4004280d9", "51a2b6623d8d3eb50abef594c2539f78359fddd5"], ["7ec29cdbeaf1572fa9713d37fdc17003e4f7843479c5af5ebe3c3c8787b93068", "0f74d35afa204fee627512fa3d1f37f830ec7063"]],
   "tests/gil-candidate.test.mjs": [["a1df938f4ff37f5235db9ce697b75ea41dde06b3c25f85f608af7f854eed284a", "67eb3131bb146e83795f5751a70c20bed9bfd03c"], ["e8a08db32ea8a237575f428566093ab18cc60fd0d0ce4acb0b5e2d7e30b364de", "471b3677151b3c77a5b9961bdde8deb83b2c5c8a"]],
   "tests/release-performance-artifacts.test.mjs": [["051ee887e87aa6dec24a46fafe8b28802b46d7631f665daa31fc262f9e84646c", "6e004d6e77e246dc789f48f1d28f2407f8b88dab"], ["c1d0d51314ab0dffac68236a3f722a4a4cdb8a0ebbfc292d1ca36cd0b2b2a941", "cab79b16d18ab2adba143a938f51c0ab125a3943"]],
-  "tests/helpers/fork-preflight-source.mjs": [["02e25450ff347dce2d6007fff39d0060102a241006c1319a309185e3e862ae68", "6583c89650fcc4da241e12246b16b94a5d5b9048"], ["fb283b841785f84487b66b43692145b8e04048bfb1983a625a37698dd6da0608", "44aa8b0c94f3daa759f22bdc8b7dbedfa631fb75"]],
+  "tests/helpers/fork-preflight-source.mjs": [["a4bdcd55380b3f2fd11888547bbf10a9a271069d8e38478f124f183fed21e4b4", "28a2564ecb8dfef549eb55d928ec85067b9d15fb"], ["36a820058cf55401fcc685f251805e554e974e38e13910c62c2f3771f03227d5", "fe75a4be8b98a1c355e1d2d2f4f613c155f23ca3"]],
 };
 
 export function beforeLocalGilFixture(path, source) {

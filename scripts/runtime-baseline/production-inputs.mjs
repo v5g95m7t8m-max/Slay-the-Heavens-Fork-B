@@ -5,6 +5,11 @@ import {pathToFileURL} from 'node:url';
 
 export const productionPhases = ['begin', 'cold-start', 'selection-open', 'neow-open', 'start-map', 'first-fight', 'ten-card-hand', 'consecutive-play',
   'deck-cold-open', 'deck-close', 'deck-warm-open', 'pause-resume', 'exit', 'reenter'];
+export const act2ProductionPhases = ['act2-begin', 'act2-terminal-setup', 'act2-transition', 'act2-three-enemies',
+  'act2-full-hand', 'act2-overlapping-effects', 'act2-enemy-turn', 'act2-exit'];
+// Visible Act II rows in the approved V3 chapter scene. Changes to the
+// formal scenery update this workload contract with the reviewed layout.
+export const formalAct2SceneSlots = 249;
 
 // Build with each worktree's own production generators and source files.
 export async function prepareProductionInputs(directory) {

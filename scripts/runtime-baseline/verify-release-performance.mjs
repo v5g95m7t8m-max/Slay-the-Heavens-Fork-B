@@ -7,7 +7,7 @@ import {pathToFileURL} from 'node:url';
 import {validateSample} from '../benchmark-runtime-path.mjs';
 import {compareSamples, formalImageId, guardExtremeCgroup, matchingResourceCaps, parseResources, profiles, productionHeapMiB,
   productionReportKind, productionWorkload, resourceImage, workloadIdentity} from './resource-receipt.mjs';
-import {productionPhases} from './production-inputs.mjs';
+import {act2ProductionPhases, formalAct2SceneSlots, productionPhases} from './production-inputs.mjs';
 import {resolvePublishedBaseline} from './published-baseline.mjs';
 import {gilModuleInventoryHash, gilRuntimeKind} from './gil-inputs.mjs';
 import {encoderSha256, toolCommit} from '../gil-candidate-preflight.mjs';
@@ -38,8 +38,8 @@ export function frozenReleaseVersion(receipt, checkoutPackage, currentPackage) {
   return version;
 }
 
-function verifySample(sample, profile, executions, runtime, artFeatures) {
-  validateSample(sample, productionPhases);
+function verifySample(sample, profile, executions, runtime, artFeatures, phases = productionPhases) {
+  validateSample(sample, phases);
   assert.deepEqual(sample.runtime, runtime, 'Sample did not execute its exact GIL readback');
   assert.deepEqual(sample.artFeatures, artFeatures, 'GIL and measured art flags differ');
   assert(Number.isFinite(sample.wallMs) && sample.wallMs > 0, 'Missing sample wall time');
@@ -56,6 +56,19 @@ function verifySample(sample, profile, executions, runtime, artFeatures) {
   ].map(([key, value]) => `RESOURCE ${key} ${value}`).join('\n'), profile);
 }
 
+function verifyCompleteSample(sample, profile, executions, runtime, artFeatures, requireChapterScene = false) {
+  verifySample(sample, profile, executions, runtime, artFeatures);
+  assert(sample.act2, 'Missing Act II workload in formal Host sample');
+  verifySample(sample.act2, profile, executions, runtime, artFeatures, act2ProductionPhases);
+  assert(matchingResourceCaps([sample], [sample.act2]), 'Act II and core measured cgroup limits differ');
+  const {sceneSlots, openingTurnFrames, attackTurnFrames} = sample.act2.scenario ?? {};
+  assert(Number.isSafeInteger(sceneSlots) && sceneSlots >= 0 &&
+    [openingTurnFrames, attackTurnFrames].every(frames => Number.isInteger(frames) && frames > 0 && frames <= 360),
+  'Missing measured Act II scene and turn evidence');
+  if (requireChapterScene) assert.equal(sceneSlots, formalAct2SceneSlots,
+    'Formal candidate Act II scene differs from approved slot count');
+}
+
 function verifyExtreme(extreme, candidate, executions, artFeatures) {
   assert(extreme?.status === 'PASS' && extreme.probe && extreme.recovery, 'Independent extreme failure and recovery proof required');
   assert.deepEqual(extreme.candidate, candidate, 'Extreme probe and formal source/configuration differ');
@@ -70,7 +83,7 @@ function verifyExtreme(extreme, candidate, executions, artFeatures) {
     assert.deepEqual(lines, ['RESOURCE ' + key + ' ' + value], 'Extreme raw cgroup readback differs');
   }
   assert(Date.parse(extreme.recovery.recordedAt) >= Date.parse(state.FinishedAt), 'Recovery must follow the observed extreme failure');
-  verifySample(extreme.recovery.sample, profiles.stress, executions, candidate.runtime, artFeatures);
+  verifyCompleteSample(extreme.recovery.sample, profiles.stress, executions, candidate.runtime, artFeatures, true);
 }
 
 function verifyRuntime(runtime, gilSha256, sourceCommit) {
@@ -136,10 +149,16 @@ export function verifyResourceReport(report, sourceCommit, sourceTree, published
     const after = result.candidate.samples;
     assert.equal(before.length, report.repetitions, 'Incomplete reference samples: ' + name);
     assert.equal(after.length, report.repetitions, 'Incomplete candidate samples: ' + name);
-    for (const sample of before) verifySample(sample, profile, executions, report.baseline.runtime, artFeatures);
-    for (const sample of after) verifySample(sample, profile, executions, report.candidate.runtime, artFeatures);
+    for (const sample of before) verifyCompleteSample(sample, profile, executions, report.baseline.runtime, artFeatures);
+    for (const sample of after) verifyCompleteSample(sample, profile, executions, report.candidate.runtime, artFeatures, true);
     assert(matchingResourceCaps(before, after), 'Measured cgroup limits differ: ' + name);
-    const observed = compareSamples(before, after, report.alertPercent);
+    const beforeAct2 = before.map(sample => sample.act2);
+    const afterAct2 = after.map(sample => sample.act2);
+    assert(matchingResourceCaps(beforeAct2, afterAct2), 'Measured Act II cgroup limits differ: ' + name);
+    const observed = [
+      ...compareSamples(before, after, report.alertPercent),
+      ...compareSamples(beforeAct2, afterAct2, report.alertPercent),
+    ];
     assert.deepEqual(result.signals, observed, 'Source evidence signals differ from samples: ' + name);
     if (observed.length) signals[name] = observed;
   }

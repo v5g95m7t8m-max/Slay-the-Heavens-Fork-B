@@ -72,8 +72,8 @@ local function ready()
     return script.updating and not host.disabled and not host.starting and not host.pageReveal:covered()
         and not host.battleUI.busy and not (host.prologue and host.prologue:covering())
 end
-local function settle()
-    for frame=0,240 do
+local function settle(frameLimit)
+    for frame=0,frameLimit or 240 do
         if ready() then return frame end
         OnUpdate(1/60)
     end
@@ -107,12 +107,21 @@ assert(coldDecoded==0,'FORMAL_EAGER_MONSTERS '..coldDecoded..'/'..total)
 -- Five groups plus the independent background lookup. The old binder did
 -- another lookup for each map node scanned and reached hundreds.
 assert(coldLookups<=6,'FORMAL_MAP_LOOKUPS '..coldLookups)
-mark('cold-start')
+if not BASELINE_ACT2 then mark('cold-start') end
 
 local function click(panel,button)
     local accepted=F.click(stage,panel,button)
     assert(accepted,'native input rejected: '..panel..'/'..button)
     return settle()
+end
+local function tap(box,touchId,awaitPresentation)
+    local hit=assert(box.click and box or box:GetChild('hit'))
+    assert(hit.raycastTarget,'native combat or card control cannot accept input')
+    local event={touchId=touchId,GetUIPos=function()return 780+(box.x or 0),360+(box.y or 0) end}
+    if hit.listeners.down then hit.listeners.down(event) end
+    if hit.listeners.up then hit.listeners.up(event) end
+    hit.click(event)
+    if awaitPresentation~=false then settle() end
 end
 local retiredSelection={deckTitle=true,deckSummary=true,deckRule=true,deckOpen=true,deckView=true}
 local function assertSelectionDetails(node)
@@ -133,6 +142,169 @@ local function enterMap(measureEntry)
     for _,option in ipairs({1,2,1}) do click('nodePanel','eventView/option'..option) end
     assert(host.run.phase=='map' and host.mapUI.navigationEnabled)
 end
+local function chapterScene(panel)
+    local scene=panel:GetChild('chapterBattleScene')
+    local dataPath=package.searchpath('abyss_chapter_battle_scene_data',package.path)
+    if BASELINE_ACT2_EXPECTED_SLOTS then
+        assert(scene and dataPath,'formal candidate Act II requires its chapter scene and paint data')
+    end
+    assert((scene~=nil)==(dataPath~=nil),'Act II scene and its packaged paint data disagree')
+    -- The published v2.1.1 arm has a shared background instead of a chapter pool.
+    assert(not package.loaded.abyss_chapter_battle_scene_data,'Act II assets loaded before battle')
+    return scene
+end
+
+local function sceneWrites()
+    return counts.chapterImages or 0
+end
+
+local function assertAct2Scene(scene)
+    if not scene then return 0 end
+    local chapter=assert(package.loaded.abyss_chapter_battle_scene_data,'Act II art did not load')
+    local rows=assert(chapter.rows[2])
+    local visible=0
+    for first=1,chapter.slotCount,chapter.batchSize do
+        -- Inspect the Host fixture state without including audit-only lookups
+        -- in the newly painted scene's native operation counts.
+        local batch=assert(scene.children['paintBatch'..(1+math.floor((first-1)/chapter.batchSize))])
+        for index=first,math.min(chapter.slotCount,first+chapter.batchSize-1) do
+            local row=rows[index]
+            local control=assert(batch.children['paintSlot'..index],'missing imported Act II paint slot '..index)
+            assert(control.visible==(row~=false and row~=nil),'Act II slot visibility disagrees with the packaged scene')
+            if row then
+                assert(control.imageId==row[1] and control.x==row[2] and control.y==row[3] and
+                    control.sizeDeltaX==row[4] and control.sizeDeltaY==row[5] and
+                    control.pivot[1]==row[6] and control.pivot[2]==row[7] and
+                    control.localScaleX==row[8] and control.localScaleY==row[9] and control.rotation[3]==row[10],
+                    'Act II paint geometry differs from the packaged scene')
+                local ink=control.imageColor
+                assert(control.enableMask==(row[11]==1) and ink.r==row[12] and ink.g==row[13] and ink.b==row[14] and
+                    ink.a==row[15],'Act II paint properties differ from the packaged scene')
+                visible=visible+1
+            end
+        end
+    end
+    assert(scene.visible and visible>0 and sceneWrites()==visible,'Act II did not paint one complete scene')
+    if BASELINE_ACT2_EXPECTED_SLOTS then
+        assert(visible==BASELINE_ACT2_EXPECTED_SLOTS,'formal candidate Act II scene differs from approved slot count')
+    end
+    return visible
+end
+
+local function enterAct2()
+    local Map=require('abyss_map')
+    local Acts=require('abyss_acts')
+    local run,map=host.run,host.map
+    -- Use the existing controlled Act I terminal room. Continue and combat entry
+    -- below are real UI actions, with the real campaign and encounter queues.
+    local available=Map.available(map)
+    while #available>0 do
+        assert(Map.choose(map,available[1].id))
+        available=Map.available(map)
+    end
+    run.floor,run.phase=Acts.get(1).last,'node'
+    run.nodeFlow={id=map.currentNodeId,floor=run.floor,type='treasure',roomKind='boss_treasure',
+        mapSeed=map.seed,mapSignature=map.sourceSignature,complete=false,reward={relics={}}}
+    assert(F.Nodes.claimBossTreasure(run,0))
+    host:refresh();settle()
+    assert(run.phase=='act_transition','controlled terminal room did not reach native Continue')
+    mark('act2-terminal-setup')
+    click('nodePanel','confirm')
+    assert(host.run==run and host.map==map and run.act==2 and run.phase=='map','Act II transition lost the run')
+    mark('act2-transition')
+    return run,map
+end
+
+local function playCleave(battle,panel)
+    local handIndex
+    for i,card in ipairs(battle.hand) do if card.cardId=='cleave' then handIndex=i;break end end
+    local card=assert(battle.hand[assert(handIndex,'Cleave not drawn')])
+    assert(F.Combat.canPlay(battle,card.uid,nil),'controlled Cleave was not playable')
+    local prior={battle.enemies[1].hp,battle.enemies[2].hp,battle.enemies[3].hp}
+    tap(panel:GetChild('card'..handIndex),41)
+    assert(host.battleUI.selected==card.uid,'Cleave was not picked by native input')
+    tap(panel:GetChild('playArea'),42,false)
+    local feedback=host.battleUI.feedback
+    assert(host.battleUI.busy and feedback.busy,'Cleave did not enter feedback')
+    local peak=0
+    for _=1,240 do
+        if not host.battleUI.busy then break end
+        OnUpdate(1/60)
+        local active=0
+        for _,enemy in ipairs(battle.enemies) do
+            if feedback.effects[enemy.id] then active=active+1 end
+        end
+        peak=math.max(peak,active)
+    end
+    assert(ready() and host.run.combat==battle and #battle.hand==9,'Cleave playback did not settle in the same fight')
+    for i,enemy in ipairs(battle.enemies) do
+        assert(enemy.hp>0 and enemy.hp<prior[i],'Cleave did not hit all three living opponents')
+    end
+    assert(peak==3,'Cleave did not produce three overlapping target effects')
+end
+
+local function act2Workload()
+    enterMap()
+    local act2Panel=stage:GetChild('battlePanel')
+    local act2Scene=chapterScene(act2Panel)
+    local run,map=enterAct2()
+    assert(sceneWrites()==0,'Act II scene painted before combat')
+
+    -- Start a legal three-enemy formation. The controlled fixture advances the
+    -- seeded encounter queue, rather than replacing actors or monster art.
+    local encounter='3 Raven Adepts'
+    for _=1,7 do table.remove(run.encounters.normal,1) end
+    assert(run.encounters.normal[1]==encounter,'seed 42 is missing the Act II formation')
+    local Run=require('abyss_run')
+    assert(Run.obtainCard(run,'cleave'))
+    local node=assert(F.Nodes.available(run,map)[1])
+    local nodeSlot
+    for i,id in pairs(host.mapUI.slots) do if id==node.id then nodeSlot=i;break end end
+    click('mapPanel','node'..assert(nodeSlot))
+    local act2Battle=assert(run.combat)
+    assert(run.encounterSource==encounter and #act2Battle.enemies==3,'expected a legal Act II three-enemy encounter')
+    local act2Surfaces=require('abyss_monster_surfaces').get(act2Panel)
+    for _,enemy in ipairs(act2Battle.enemies) do
+        local actor=assert(act2Surfaces:find(enemy.id))
+        assert(actor:GetChild('monsterArt').visible and not actor:GetChild('portrait').visible,'Act II actor rendered a fallback')
+    end
+    local sceneSlots=assertAct2Scene(act2Scene)
+    mark('act2-three-enemies')
+
+    F.Combat.draw(act2Battle,10-#act2Battle.hand)
+    assert(#act2Battle.hand==10,'Act II never reached a full hand')
+    host.battleUI:render()
+    for _=1,180 do OnUpdate(1/60) end
+    assert(ready() and sceneWrites()==sceneSlots,'steady Act II repainted the scene pool')
+    mark('act2-full-hand')
+
+    playCleave(act2Battle,act2Panel)
+    assert(sceneWrites()==sceneSlots,'Act II effects repainted the scene pool')
+    mark('act2-overlapping-effects')
+
+    local turn,health=act2Battle.turn,act2Battle.player.hp
+    tap(act2Panel:GetChild('endTurn'),43,false)
+    local openingFrames=settle(360)
+    assert(run.combat==act2Battle and act2Battle.turn==turn+1,'Act II opening enemy turn did not commit')
+    -- Three sequential enemy attacks include the full existing intent and hit animations.
+    tap(act2Panel:GetChild('endTurn'),44,false)
+    local attackFrames=settle(360)
+    assert(run.combat==act2Battle and act2Battle.turn==turn+2 and act2Battle.player.hp<health,
+        'Act II enemy turn did not commit damage in the same encounter')
+    assert(sceneWrites()==sceneSlots,'Act II enemy turn repainted the scene pool')
+    mark('act2-enemy-turn')
+    destroy(script.object)
+    OnDestroy()
+    assert(not script.updating,'Act II exit left the scheduler active')
+    mark('act2-exit')
+
+    if BASELINE_GIL then BASELINE_ART_FEATURES(require('abyss_art_features').flags) end
+    print('PRODUCTION act2Enemies=3 act2Hand=10 act2OverlappingEffects=3 act2SceneSlots='..sceneSlots
+        ..' act2OpeningTurnFrames='..openingFrames..' act2AttackTurnFrames='..attackFrames)
+    print('ACT2_PRODUCTION_HOST_PASS seed=42')
+end
+
+if BASELINE_ACT2 then return act2Workload() end
 enterMap(true)
 assert(decoded(art)==0,'monster drawings were decoded before the first fight')
 local starter={table.unpack(host.run.deck)}
@@ -165,15 +337,6 @@ mark('ten-card-hand')
 battle.energy=10
 local enemy=battle.enemies[1]
 enemy.hp,enemy.maxHp=300,300
-local function tap(box,touchId)
-    local hit=assert(box.click and box or box:GetChild('hit'))
-    assert(hit.raycastTarget,'native combat or card control cannot accept input')
-    local event={touchId=touchId,GetUIPos=function()return 780+(box.x or 0),360+(box.y or 0) end}
-    if hit.listeners.down then hit.listeners.down(event) end
-    if hit.listeners.up then hit.listeners.up(event) end
-    hit.click(event)
-    settle()
-end
 local battlePanel=stage:GetChild('battlePanel')
 for play=1,3 do
     local playable

@@ -26,6 +26,19 @@ if(generated){
  lua.lua_pushstring(L,to_luastring(generated.replaceAll('\\','/')));
  lua.lua_setglobal(L,to_luastring('BASELINE_GENERATED'));
 }
+const sceneMode=process.argv.at(-1);
+// The published arm mounts the shared worker over its older read-only checkout.
+// Candidate expectations come from the formal controller without new imports.
+const expectedScene=/^--act2-candidate=([1-9]\d{0,5})$/.exec(sceneMode);
+if(sceneMode.startsWith('--act2-candidate')&&!expectedScene)throw Error('invalid approved Act II scene slot count');
+if(generated&&(sceneMode==='--act2'||expectedScene)){
+ lua.lua_pushboolean(L,true);
+ lua.lua_setglobal(L,to_luastring('BASELINE_ACT2'));
+ if(expectedScene){
+  lua.lua_pushinteger(L,Number(expectedScene[1]));
+  lua.lua_setglobal(L,to_luastring('BASELINE_ACT2_EXPECTED_SLOTS'));
+ }
+}
 const rows=[];let previous=performance.now(),before=[0,0,0,0,0];
 let beforeMethods={},beforeProperties={};
 function histogram(state,index){
@@ -49,7 +62,7 @@ lua.lua_setglobal(L,to_luastring('BASELINE_MARK'));
 const fixture=readFileSync('tests/lua/support/game_ui_fixture.lua','utf8');
 const needle='return NativeContract.control(self,spec)';
 if(fixture.split(needle).length!==2)throw Error('Host instrumentation anchor changed');
-lua.lua_pushstring(L,to_luastring(fixture.replace(needle, 'local control=NativeContract.control(self,spec); ABYSS_HOST_CONTROL(control); return control')));
+lua.lua_pushstring(L,to_luastring(fixture.replace(needle, 'local control=NativeContract.control(self,spec); ABYSS_HOST_CONTROL(control,spec); return control')));
 lua.lua_setglobal(L,to_luastring('BASELINE_FIXTURE'));
 const code=readFileSync(new URL('./host.lua',import.meta.url),'utf8');
 if(lauxlib.luaL_dostring(L,to_luastring(code))!==lua.LUA_OK)throw Error(to_jsstring(lua.lua_tostring(L,-1)));

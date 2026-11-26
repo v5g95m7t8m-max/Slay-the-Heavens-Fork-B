@@ -9,8 +9,14 @@ local function context(counts,lookups)
  if modes[lookups] then return modes[lookups] end
  local standard={}
  local function wrap(key,value,mapLookupFields)
+  local sceneImage=lookups and key=='SetImage'
   return function(...)
    counts.nativeCalls=counts.nativeCalls+1;counts.methods[key]=(counts.methods[key] or 0)+1
+   if sceneImage then
+    local control=...
+    local state=type(control)=='table' and rawget(control,observerState)
+    if state and state.chapterSlot then counts.chapterImages=(counts.chapterImages or 0)+1 end
+   end
    if mapLookupFields and mapLookupFields.name=='mapPanel' then
     local name=select(2,...)
     if type(name)=='string' and name:match('^mapGroup%d+$') then counts.mapGroupLookups=(counts.mapGroupLookups or 0)+1 end
@@ -55,11 +61,24 @@ local function context(counts,lookups)
 end
 
 -- Keep each control's values private while sharing the observation machinery.
-return function(control,counts,lookups)
+local function clearFill(control) control.fill=nil end
+local function setFill(control,side,amount)
+ assert(side=='right' and amount==.5,'invalid chapter scene fill')
+ control.fill={side,amount}
+end
+
+return function(control,counts,lookups,spec)
  counts.methods=counts.methods or {};counts.properties=counts.properties or {}
  local original=getmetatable(control);local fields={}
  for k,v in pairs(control)do fields[k]=v end
+ -- Imported chapter slots expose their static image getter and mask methods
+ -- from construction. Provide them before counting runtime calls and writes.
+ local chapterSlot=lookups and spec and spec.kind=='image' and spec.name:match('^paintSlot%d+$')~=nil
+ if chapterSlot then
+  fields.imageId=assert(spec.image)
+  fields.SetFillUnused,fields.SetFillHorizontal=clearFill,setFill
+ end
  for k in pairs(fields)do rawset(control,k,nil)end
- rawset(control,observerState,{fields=fields,original=original})
+ rawset(control,observerState,{fields=fields,original=original,chapterSlot=chapterSlot or nil})
  setmetatable(control,context(counts,lookups==true))
 end

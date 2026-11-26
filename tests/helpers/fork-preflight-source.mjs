@@ -594,6 +594,24 @@ function exactCheckoutSource(source,binding){
  const lf=normalize(source);
  return source===lf||source===lf.replaceAll('\n','\r\n');
 }
+const formalAct2ReleaseTest='tests/release-performance.test.mjs';
+const formalAct2ReleaseTestBefore=[currentReleaseTests[formalAct2ReleaseTest],'1d63817e885fd314045193f48e2bd9aa16760009'];
+const formalAct2ReleaseTestCurrent=['0fef6761800e815ef402e807163b8da69731dcb342f1e0b6aef72ae639ff1791',
+ '97d582db5f715a20a804b3a91b83154defbd2b9d'];
+function beforeFormalAct2ReleaseTest(path,source){
+ if(path!==formalAct2ReleaseTest||exactCheckoutSource(source,formalAct2ReleaseTestBefore))return source;
+ assert(exactCheckoutSource(source,formalAct2ReleaseTestCurrent),'fresh added inventory source: '+path);
+ const current=normalize(source);
+ const start="test('requires the Act II workload in both paired arms and the supported recovery'";
+ const end="test('rejects the wrong published source, release tree, missing tier, or changed art profile'";
+ assert.equal(current.split(start).length,2,'exact Act II test insertion start');
+ assert.equal(current.split(end).length,2,'exact Act II test insertion end');
+ const opening=current.indexOf(start),closing=current.indexOf(end);
+ assert(closing>opening,'ordered Act II test insertion');
+ const prior=current.slice(0,opening)+current.slice(closing);
+ assert(exactCheckoutSource(prior,formalAct2ReleaseTestBefore),'exact Act II performance test predecessor');
+ return source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
 function beforeActorAlphaBuildInput(path,source){
  if(!Object.hasOwn(actorAlphaBuildInputs,path))return source;
  const {current,before,undo}=actorAlphaBuildInputs[path];
@@ -680,7 +698,7 @@ export function beforeReleaseAdditionalInventory(paths,kind,read=readFileSync){
   assert.equal(count,1,'single added Release test: '+path);
   const live=read(path,'utf8');
   if(kind==='lua'&&exactCurrentReleaseLuaFixture(path,live))continue;
-  const source=beforeCurrentReplayFixes(path,beforeDevelopBackflow(path,live));
+  const source=beforeCurrentReplayFixes(path,beforeFormalAct2ReleaseTest(path,beforeDevelopBackflow(path,live)));
   assert(typeof source==='string'&&!source.includes('\r\r\n')&&hash(normalize(source))===sha,'fresh added inventory source: '+path);
  }
  return paths.filter(path=>!Object.hasOwn(newerTests[kind],path));
@@ -704,6 +722,13 @@ export function assertCurrentJsInventory(paths,preceding,read=readFileSync){
  // successor paths can be omitted from the older replay inventory.
  for(const path of Object.keys(currentReleaseTests))
   assert.equal(paths.filter(candidate=>candidate===path).length,1,'complete current raw discovery inventory: '+path);
+ const readCurrent=read;
+ read=(path,...args)=>{
+  const source=readCurrent(path,...args);
+  if(path===formalAct2ReleaseTest)
+   assert(exactCheckoutSource(source,formalAct2ReleaseTestCurrent),'fresh current Release performance test source: '+path);
+  return source;
+ };
  paths=beforeInputRetirementTestInventory(paths,'js',read,{required:true});
  paths=beforeRefinedReleaseJsInventory(beforeShopEntryInventory(paths,'js',read),[...preceding,coopLabTest],read,true);
  assertCoopJsInventory(paths,preceding,read);

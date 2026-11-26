@@ -10,7 +10,7 @@ import { counters, phases, validateSample } from '../benchmark-runtime-path.mjs'
 import { compareSamples, formalImageId, guardExtremeCgroup, lockfileIdentity, matchingResourceCaps, parseResources, profiles,
   productionHeapMiB, productionReportKind, productionWorkload, resourceImage as image, resourceResultStatus, selectResourceReference, summarize,
   unsupportedFormalProfile, workload, workloadIdentity } from './resource-receipt.mjs';
-import { productionPhases } from './production-inputs.mjs';
+import { act2ProductionPhases, formalAct2SceneSlots, productionPhases } from './production-inputs.mjs';
 import { gilModuleInventoryHash, gilRuntimeKind } from './gil-inputs.mjs';
 import { lfsArguments, lfsEnvironment } from '../ci-reviewed-lfs.mjs';
 
@@ -120,7 +120,7 @@ function containerFlags(root, profile, production) {
   return args;
 }
 
-function measure(root, profile, production, harnessRoot) {
+function measure(root, profile, production, harnessRoot, act2 = false) {
   const name = `slay-resource-suite-${randomUUID()}`;
   const args = ['run', '--rm', '--name', name, ...containerFlags(root, profile, production)];
   // A/B arms use the same harness and fixtures while loading each arm's own game sources.
@@ -130,7 +130,10 @@ function measure(root, profile, production, harnessRoot) {
     }
   }
   const workerArgs = productionWorkerArguments(root, production);
-  const successMarker = production ? 'PRODUCTION_HOST_PASS seed=42' : 'RUNTIME_BASELINE_PASS seed=1 idleFrames=300';
+  const requireChapterScene = act2 && root === harnessRoot;
+  if (act2) workerArgs.push(requireChapterScene ? '--act2-candidate=' + formalAct2SceneSlots : '--act2');
+  const successMarker = act2 ? 'ACT2_PRODUCTION_HOST_PASS seed=42'
+    : production ? 'PRODUCTION_HOST_PASS seed=42' : 'RUNTIME_BASELINE_PASS seed=1 idleFrames=300';
   const start = performance.now();
   try {
     const output = run('docker', [...args, image, 'sh', '-c', receipt, 'resource-worker', ...workerArgs], root);
@@ -138,16 +141,35 @@ function measure(root, profile, production, harnessRoot) {
     assert(output.split('\n').includes(successMarker), 'Host did not complete the fixed workload');
     const samples = output.split('\n').filter(line => line.startsWith('RUNTIME_BASELINE_JSON '));
     assert.equal(samples.length, 1, 'expected exactly one Host measurement');
-    const sample = validateSample(JSON.parse(samples[0].slice('RUNTIME_BASELINE_JSON '.length)), production ? productionPhases : phases);
+    const samplePhases = act2 ? act2ProductionPhases : production ? productionPhases : phases;
+    const sample = validateSample(JSON.parse(samples[0].slice('RUNTIME_BASELINE_JSON '.length)), samplePhases);
     if (production?.runtime) assert.deepEqual(sample.runtime, production.runtime, 'Measured Host did not load its exact GIL readback');
     assert(Number.isSafeInteger(sample.maxRssKiB) && sample.maxRssKiB > 0, 'invalid process maxRSS');
     const executionId = /^RESOURCE_EXECUTION_ID ([a-f0-9]{12})$/m.exec(output)?.[1];
     assert(executionId, 'missing Docker execution identity');
+    if (act2) {
+      const [, sceneSlots, openingTurnFrames, attackTurnFrames] =
+        /^PRODUCTION act2Enemies=3 act2Hand=10 act2OverlappingEffects=3 act2SceneSlots=(\d+) act2OpeningTurnFrames=(\d+) act2AttackTurnFrames=(\d+)$/m.exec(output) ?? [];
+      assert(sceneSlots !== undefined, 'Missing measured Act II scene and turn evidence');
+      if (requireChapterScene) assert.equal(Number(sceneSlots), formalAct2SceneSlots,
+        'Formal candidate Act II scene differs from approved slot count');
+      sample.scenario = {sceneSlots:Number(sceneSlots), openingTurnFrames:Number(openingTurnFrames), attackTurnFrames:Number(attackTurnFrames)};
+    }
     return { ...sample, executionId, wallMs, resources: parseResources(output, profile) };
   } catch (error) {
     spawnSync('docker', ['rm', '-f', name], { timeout: 10_000, stdio: 'ignore' });
     return { error: error.message };
   }
+}
+
+function measureArm(root, profile, production, harnessRoot) {
+  const sample = measure(root, profile, production, harnessRoot);
+  if (sample.error || !production?.runtime) return sample;
+  // Fresh VMs keep the fixed heap limit and each workload's resource receipt.
+  const act2 = measure(root, profile, production, harnessRoot, true);
+  const error = act2.error ? 'Act II: ' + act2.error
+    : !matchingResourceCaps([sample], [act2]) ? 'Act II and core measured cgroup limits differ' : null;
+  return {...sample, act2, ...(error && {error})};
 }
 
 function measureExtreme(root, production, candidate) {
@@ -171,8 +193,9 @@ function measureExtreme(root, production, candidate) {
   } finally {
     spawnSync('docker', ['rm', '-f', name], {timeout: 10_000, stdio: 'ignore'});
   }
-  const recovery = measure(root, profiles.stress, production, root);
-  return {status: recovery.error || recovery.executionId === probe.executionId ? 'FAIL' : 'PASS', candidate, probe,
+  const recovery = measureArm(root, profiles.stress, production, root);
+  const reused = [recovery.executionId, recovery.act2?.executionId].includes(probe.executionId);
+  return {status: recovery.error || reused ? 'FAIL' : 'PASS', candidate, probe,
     recovery: {recordedAt: new Date().toISOString(), sample: recovery}};
 }
 
@@ -252,7 +275,7 @@ function suite(values) {
       if (i % 2) pair.reverse();
       pairOrder.push(pair.map(([, , label]) => label));
       for (const [path, samples, label, production] of pair) {
-        const record = measure(path, profile, production, candidatePath);
+        const record = measureArm(path, profile, production, candidatePath);
         samples.push(record);
         console.log(`${key} ${label} ${i + 1}/${repetitions}: ${record.error ?? 'workload passed'}`);
       }
@@ -260,12 +283,17 @@ function suite(values) {
     const candidateResult = summarizeSamples(after, repetitions, samplePhases);
     const baselineResult = baseline ? summarizeSamples(before, repetitions, samplePhases) : null;
     const bothPassed = baselineResult?.pass && candidateResult.pass;
-    const paired = bothPassed && matchingResourceCaps(before, after);
+    const beforeAct2 = values.release ? before.map(sample => sample.act2) : null;
+    const afterAct2 = values.release ? after.map(sample => sample.act2) : null;
+    const paired = bothPassed && matchingResourceCaps(before, after) &&
+      (!values.release || matchingResourceCaps(beforeAct2, afterAct2));
+    const signals = paired ? compareSamples(before, after, alertPercent) : [];
+    if (paired && values.release) signals.push(...compareSamples(beforeAct2, afterAct2, alertPercent));
     results[key] = {
       profile, pairOrder, candidate: candidateResult, baseline: baselineResult,
       comparisonStatus: paired ? 'PAIRED' : 'UNPAIRED',
       ...(bothPassed && !paired && {comparisonReason: 'Measured cgroup limits differ'}),
-      signals: paired ? compareSamples(before, after, alertPercent) : [],
+      signals,
     };
   }
   const extreme = values.extreme ? measureExtreme(candidatePath, candidateProduction, candidate) : null;
