@@ -1,11 +1,38 @@
 # Local / temp
-.backlog-ui.log
+.artifacts/
+.dream-loop/
 *.log
+*.log.*
 node_modules/
 tools/vendor/
 build/
 /playtest/
+*.gil
+coverage/
+.nyc_output/
 __pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.tmp
+*.swp
+*.swo
+*~
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.envrc.local
+*.pem
+*.key
+*.p12
+*.pfx
 
 # OS
 .DS_Store
@@ -14,5 +41,3 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/settings.json
-
-.dream-loop/
