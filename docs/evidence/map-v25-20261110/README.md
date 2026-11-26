@@ -6,7 +6,7 @@ TASK-103.1。独立 feat/map-v25 从 develop ab65ed3b 建立，本地集成 #582
 
 ## 实际画面与结果
 
-最终画面见 map.png、map-selected.png；来自当前源码生成的真实 GameUI/SDK 场景，经已安装 Simulator Pixi 和 Chrome 绘制，无 DOM 仿画。最终输入/源码身份、原始回放和浏览器样本见 summary.json 与 raw/。源生成存档不是 GIL 读回；SDK 本地模板索引绑定与 seed42 为显式测试配置。
+最终画面见 map.png、map-selected.png；来自当前源码生成的真实 GameUI/SDK 场景，经已安装 Simulator Pixi 和 Chrome 绘制，无 DOM 仿画。最终输入/源码身份、原始回放和浏览器样本见 summary.json 与 raw/。原始游戏存档是再生产物。使用下述生成入口在本地重建，需要保存原件时使用获授权的私有存储。SDK 本地模板索引绑定与 seed42 为显式测试配置。
 
 - 正式选角、恩赐、地图原生点击进入真实战斗，20轮菜单→地图预览→返回；战斗对象、HP、金币、能量、手牌和当前节点不变，暖态17357控件稳定，根销毁后0，无运行时错误。
 - 浏览器真实按压/点选由第0层进入第1层，连续5次重复点选不再推进，最终日志与页面 errors 为空。专项 MapUI 另覆盖第二幕生成、20次隐藏恢复和20次滚动往返。

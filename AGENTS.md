@@ -4,6 +4,8 @@
 
 ## 开始与交付
 
+- 本公开 Fork 的工作范围、产物存储与回流要求见 [仓库职责](docs/REPOSITORY_HYGIENE.md)。
+
 - 每次会话先运行 `backlog instructions overview`；创建、执行、收口前分别读对应的 `backlog instructions task-creation`、`backlog instructions task-execution`、`backlog instructions task-finalization`。任务与里程碑只用 Backlog CLI 修改，先查重；负责人沿用 Furinya，任务正文用简洁中文，技术证据放对应附件。 内部单人多agent事项只进Backlog；GitHub Issues保留给外部协作和公开反馈，既有内部Issue迁入后关闭并保留来源链接。
 - **自主领取前**按[任务执行](docs/TASK_EXECUTION.md)检查 Backlog、依赖、明确审批和开放 PR，再运行 `npm run task:pick -- TASK-编号`；HOLD 处理具体原因，ALLOW 后仍须核对认领/文件所有权并用 Backlog CLI 认领。无 Sprint 日期或阶段顺序门禁，不重复既有任务和 PR。
 - **产品优先、工程按需**：M7已归档，只在M8/M9实际功能、稳定性、容量或CI门禁受阻且有证据时实施最小架构修复；质量棘轮照常拦截新增债务，不为清零旧CC/SCC/Fan-out自主开工。按[工程移交](docs/backlog-details/M7-PRODUCT-FIRST-HANDOFF-20261113.md)追踪未验AC。
