@@ -168,8 +168,29 @@
       "codePath": "scripts/character-selection-composition.mjs",
       "targetVersion": "v2.0.0",
       "state": "details",
-      "revision": "sts1-open-copy-20261119",
+      "revision": "release-sts1-20261122",
       "status": "APPROVED",
+      "backlogTask": "TASK-103.3",
+      "reference": {
+        "path": "docs/design/reference-assets/v2.0.0/sts1-character-backing-20261122.md",
+        "sha256": "222fd819f90183b377e1d1fd51b849f48c622b1380b4bee9d6b4125d158026c7"
+      },
+      "supersedes": [
+        "sts1-open-copy-20261119"
+      ],
+      "codePaths": [
+        "scripts/character-ui-layout.mjs",
+        "scripts/v25-character-layout.mjs"
+      ],
+      "source": "https://interfaceingame.com/screenshots/slay-the-spire-choose-your-character/",
+      "note": "回流 v2.0.0 左栏设计约束。正式选角保留生命、金币、介绍和初始遗物，省去初始牌组摘要与预览。"
+    },
+    {
+      "codePath": "scripts/character-selection-composition.mjs",
+      "targetVersion": "v2.0.0",
+      "state": "details",
+      "revision": "sts1-open-copy-20261119",
+      "status": "SUPERSEDED",
       "backlogTask": "TASK-103.3",
       "reference": {
         "path": "docs/design/reference-assets/v2.0.0/character-selection-open-copy.md",
@@ -179,7 +200,7 @@
         "2026-11-19",
         "reference-ui-lab"
       ],
-      "note": "Owner 更正选角参考为初代实物。左侧信息直接排在原生背景上，使用文字描边。",
+      "note": "早期左栏设计记录，含历史初始牌组摘要描述。现行构图见 Release 实机参考。",
       "codePaths": [
         "scripts/character-ui-layout.mjs",
         "scripts/v25-character-layout.mjs",
@@ -227,8 +248,28 @@
       "codePath": "scripts/character-selection-composition.mjs",
       "targetVersion": "v2.0.0",
       "state": "characterPanel",
+      "revision": "release-sts1-20261122",
+      "status": "APPROVED",
+      "backlogTask": "TASK-103.3",
+      "reference": {
+        "path": "docs/design/reference-assets/v2.0.0/sts1-character-backing-20261122.md",
+        "sha256": "222fd819f90183b377e1d1fd51b849f48c622b1380b4bee9d6b4125d158026c7"
+      },
+      "supersedes": [
+        "develop"
+      ],
+      "codePaths": [
+        "scripts/noncombat-v25-layout.mjs"
+      ],
+      "source": "https://interfaceingame.com/screenshots/slay-the-spire-choose-your-character/",
+      "note": "回流两条发布线共用的正式选角构图与信息范围。develop 加载回退仍使用现有风景底图，Release 近黑底板另按该分支登记。"
+    },
+    {
+      "codePath": "scripts/character-selection-composition.mjs",
+      "targetVersion": "v2.0.0",
+      "state": "characterPanel",
       "revision": "develop",
-      "status": "CURRENT_IMPLEMENTATION",
+      "status": "SUPERSEDED",
       "backlogTask": "TASK-103.3",
       "reference": {
         "path": "docs/evidence/v2-ui-20261119/p1/runtime-selection.png",
@@ -237,7 +278,7 @@
       "supersedes": [
         "local-board-20261119"
       ],
-      "note": "正式背景创建器的 1600 个原生图元，原有返回与出发按钮、直接排列的左侧信息和原生岩脉残晶图标。已移除预览牌组入口。 1280×720 离线投影，官方候选待验。"
+      "note": "2026-11-19 正式选角的 1280×720 历史离线投影，保留用于追溯当时的原生背景与左栏。"
     },
     {
       "codePath": "scripts/character-selection-composition.mjs",
@@ -343,7 +384,9 @@
       "revision": "develop",
       "status": "CURRENT_IMPLEMENTATION",
       "backlogTask": "TASK-107",
-      "retiredCodePaths": ["scripts/controls-guide-layout.mjs"],
+      "retiredCodePaths": [
+        "scripts/controls-guide-layout.mjs"
+      ],
       "reference": {
         "path": "docs/evidence/v2-ui-20261119/p1/runtime-exit-confirm.png",
         "sha256": "d3f7411bda8185e2fb09700475861899d607f5d7711e49b12514970e25028a1a"
@@ -616,7 +659,9 @@
     },
     {
       "codePath": "scripts/sts-reward-row-layout.mjs",
-      "codePaths": ["scripts/v25-node-layout.mjs"],
+      "codePaths": [
+        "scripts/v25-node-layout.mjs"
+      ],
       "targetVersion": "v2.0.0",
       "state": "rewardList",
       "revision": "develop",
@@ -746,6 +791,81 @@
       "supersedes": [],
       "note": "商店与选角按固定源码实施分层入场。保留项目素材与最终排布，107271 纹理和设备效果待验。",
       "source": "https://github.com/aeubanks/sts/tree/319009d5df0a82d9fb0f23cc22322286c6a87ec0"
+    },
+    {
+      "codePath": "scripts/character-selection-composition.mjs",
+      "targetVersion": "v2.2.0",
+      "state": "details",
+      "revision": "release-sts1-20261122",
+      "status": "APPROVED",
+      "backlogTask": "TASK-115.10",
+      "reference": {
+        "path": "docs/design/reference-assets/v2.0.0/sts1-character-backing-20261122.md",
+        "sha256": "222fd819f90183b377e1d1fd51b849f48c622b1380b4bee9d6b4125d158026c7"
+      },
+      "supersedes": [
+        "sts1-open-copy-20261119"
+      ],
+      "codePaths": [
+        "scripts/character-ui-layout.mjs",
+        "scripts/v25-character-layout.mjs"
+      ],
+      "source": "https://interfaceingame.com/screenshots/slay-the-spire-choose-your-character/",
+      "note": "沿用正式选角左栏。保留生命、金币、介绍和初始遗物，已退役初始牌组摘要与预览。"
+    },
+    {
+      "codePath": "scripts/character-selection-composition.mjs",
+      "targetVersion": "v2.2.0",
+      "state": "details",
+      "revision": "sts1-open-copy-20261119",
+      "status": "SUPERSEDED",
+      "backlogTask": "TASK-115.10",
+      "reference": {
+        "path": "docs/design/reference-assets/v2.0.0/character-selection-open-copy.md",
+        "sha256": "ef1f2fd2d655c54356aae6d67b6ba3c6584690f976145047f6edb0b83ca1ce6e"
+      },
+      "supersedes": [],
+      "note": "仅用于追溯，当前版本使用 release-sts1-20261122。",
+      "codePaths": [
+        "scripts/character-ui-layout.mjs",
+        "scripts/v25-character-layout.mjs",
+        "scripts/noncombat-v25-layout.mjs"
+      ],
+      "source": "https://interfaceingame.com/screenshots/slay-the-spire-choose-your-character/"
+    },
+    {
+      "codePath": "scripts/character-selection-composition.mjs",
+      "targetVersion": "v2.2.0",
+      "state": "characterPanel",
+      "revision": "release-sts1-20261122",
+      "status": "APPROVED",
+      "backlogTask": "TASK-115.10",
+      "reference": {
+        "path": "docs/design/reference-assets/v2.0.0/sts1-character-backing-20261122.md",
+        "sha256": "222fd819f90183b377e1d1fd51b849f48c622b1380b4bee9d6b4125d158026c7"
+      },
+      "supersedes": [
+        "develop"
+      ],
+      "codePaths": [
+        "scripts/noncombat-v25-layout.mjs"
+      ],
+      "source": "https://interfaceingame.com/screenshots/slay-the-spire-choose-your-character/",
+      "note": "沿用正式选角构图和现有风景回退。Simulator 与官方设备按本版完整候选验收。"
+    },
+    {
+      "codePath": "scripts/character-selection-composition.mjs",
+      "targetVersion": "v2.2.0",
+      "state": "characterPanel",
+      "revision": "develop",
+      "status": "SUPERSEDED",
+      "backlogTask": "TASK-115.10",
+      "reference": {
+        "path": "docs/evidence/v2-ui-20261119/p1/runtime-selection.png",
+        "sha256": "accb6e67e7e465125a319a30e48fabe195c43aa2c60c7b9a90f484218b4bf61d"
+      },
+      "supersedes": [],
+      "note": "仅用于追溯，当前版本使用 release-sts1-20261122。"
     }
   ]
 }

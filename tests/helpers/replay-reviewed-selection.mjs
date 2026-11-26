@@ -8,8 +8,10 @@ import {sourceEpoch} from './closeout-source-epoch.mjs';
 import {integratedCiProof,assertIntegratedCurrent} from './integrated-ci-source.mjs';
 import {beforeCurrentProductionSource,beforeCharacterPreparationSource} from './character-preparation-source.mjs';
 import {exactReviewedBuildInput} from './rebased-release-source.mjs';
-import {beforeReviewedBuildInput} from './fork-preflight-source.mjs';
+import {beforeReviewedBuildInput,chapterEvidenceCurrentRead} from './fork-preflight-source.mjs';
 import {reviewedSelectionRead} from './reviewed-selection-current-source.mjs';
+import {uiEntranceOwns} from './ui-entrance-source.mjs';
+import {checkedSelectionEntranceRead} from './ui-selection-current-source.mjs';
 import {stsStylePriorRuntime} from './sts-style-prior-runtime.mjs';
 import {beforeDeckPagesSuiteSource,readRetiredController,retiredControllerPath} from './input-retirement-source.mjs';
 import {readReviewedOfficialAssetInput,reviewedOfficialAssetInputPaths} from './reviewed-official-asset-inputs.mjs';
@@ -26,11 +28,14 @@ export function replayReviewedSelection(script='tests/sts-character-reference.te
  const expected=reviewedContracts[script],root=process.cwd();
  assertIntegratedCurrent();
  const readOwner=reviewedSelectionRead();
+ // Entrance authentication consumes live owners. The archived build still uses Selection's reviewed inputs.
+ const readEntrance=chapterEvidenceCurrentRead(checkedSelectionEntranceRead(readFileSync));
+ const readProductionOwner=(path,encoding='utf8')=>uiEntranceOwns(path)?readEntrance(path,encoding):readOwner(path,encoding);
  const retiredInput=readRetiredController(readOwner);
  assert(retiredInput.restored,'only the exact pointer successor can restore the retired input owner');
  for(const [path,row]of Object.entries(sourceEpoch.proof.current)){
-  const source=path===retiredControllerPath?beforeCharacterPreparationSource(path,retiredInput.source,readOwner)
-   :beforeCurrentProductionSource(path,readOwner(path),readOwner);
+  const source=path===retiredControllerPath?beforeCharacterPreparationSource(path,retiredInput.source,readProductionOwner)
+   :beforeCurrentProductionSource(path,readProductionOwner(path),readProductionOwner);
   assert.equal(hash(norm(source)),row.sha256,'fresh current production owner: '+path);
  }
  assert.equal(integratedCiProof.sources.release,'900527d931df941eed642a9667ccde92f76b73db');
@@ -43,7 +48,7 @@ export function replayReviewedSelection(script='tests/sts-character-reference.te
   for(const path of paths){
    assert(!isAbsolute(path)&&!path.split('/').includes('..'));const target=join(directory,path);mkdirSync(dirname(target),{recursive:true});
    const input=useArchivedOfficialInputs?readReviewedOfficialAssetInput(path):undefined;
-   const predecessor=input??exactReviewedBuildInput(path,readOwner,{beforeReviewedInput:beforeReviewedBuildInput});
+   const predecessor=input??exactReviewedBuildInput(path,readProductionOwner,{beforeReviewedInput:beforeReviewedBuildInput});
    if(predecessor===undefined)copyFileSync(path,target);
    else writeFileSync(target,predecessor);
   }

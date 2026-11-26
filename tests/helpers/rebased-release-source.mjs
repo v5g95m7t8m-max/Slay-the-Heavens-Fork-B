@@ -7,6 +7,7 @@ import {exactSourceMatches as matches} from './source-fingerprint.mjs';
 import {battlePeripheryPredecessor,beforeBattlePeriphery} from './battle-periphery-source.mjs';
 import {beforeChapterBattleScene,beforeResponsiveHand,chapterBattleSceneReader} from './chapter-battle-scene-source.mjs';
 import {authenticateInputRetirement,beforeInputRetirement} from './input-retirement-source.mjs';
+import {beforeOfficialCharacterBackflow} from './current-replay-fix-sources.mjs';
 const hash=(s,algorithm='sha256')=>createHash(algorithm).update(s).digest('hex');
 const archive=readFileSync(new URL('./rebased-release-source.json.gz',import.meta.url));
 assert.equal(hash(archive),'9ae910d679bdc8386063c58043a43e496ee34b7c6f22fc1a27cbaeca7b27222d','exact reconciled source archive');
@@ -47,8 +48,13 @@ const nativeButtonRepair=Object.freeze({
   ],
  },
 });
+const officialCompositionPath='scripts/character-selection-composition.mjs';
+export const beforeOfficialComposition=(path,source)=>path===officialCompositionPath?beforeOfficialCharacterBackflow(path,source):source;
+export function assertCurrentOfficialComposition(path,source){
+ if(path===officialCompositionPath)assert(beforeOfficialComposition(path,source)!==source,'fresh current production owner: '+path);
+}
 function nativeButtonPredecessor(path,source){
- source=beforeInputRetirement(path,source);
+ source=beforeInputRetirement(path,beforeOfficialComposition(path,source));
  const row=Object.hasOwn(nativeButtonRepair,path)?nativeButtonRepair[path]:null;
  if(!row||typeof source!=='string'||source.includes('\r\r\n'))return source;
  const current=source.replaceAll('\r\n','\n');
@@ -97,6 +103,7 @@ export function authorizeRebasedRelease(samples,read,sources=production){
   const handProjected=beforeResponsiveHand(path,source)!==source;
   const chapterProjected=chapter!==source,peripheryProjected=periphery!==chapter;
   const retiredInput=beforeInputRetirement(path,periphery)!==periphery,repaired=current!==periphery;
+  const officialComposition=beforeOfficialComposition(path,periphery)!==periphery;
   const sameRevision=bytes=>{
    const chapterBefore=beforeChapterBattleScene(path,bytes);
    const peripheryBefore=beforeBattlePeriphery(path,chapterBefore);
@@ -104,6 +111,7 @@ export function authorizeRebasedRelease(samples,read,sources=production){
    return (beforeResponsiveHand(path,bytes)!==bytes)===handProjected
     &&(chapterBefore!==bytes)===chapterProjected
     &&(peripheryBefore!==chapterBefore)===peripheryProjected
+    &&(beforeOfficialComposition(path,peripheryBefore)!==peripheryBefore)===officialComposition
     &&(beforeInputRetirement(path,peripheryBefore)!==peripheryBefore)===retiredInput
     &&(before!==peripheryBefore)===repaired&&matches(before,after);
   };

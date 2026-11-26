@@ -24,21 +24,24 @@ export function styleCharacterFlag(button,key,theme){
  }
 }
 export function characterSelectionComposition(panel,theme){
- const modal=child(panel,'deckView');modal.visible=false;modal.children=[];
+ panel.children=panel.children.filter(n=>n.name!=='deckView');
  for(const name of ['v25HeadingEmblem','v25HeadingDivider','v25HeadingRule'])child(panel,name).visible=false;
  const title=child(panel,'title');
  Object.assign(title,frame(400,470,480,60));title.text.content='选择你的角色';
  Object.assign(title.text,{fontSize:30,minFontSize:30,align:'centre'});title.visible=true;
  const details=child(panel,'details');
+ const story=child(details,'v25Story');
+ story.text.content=story.text.content.replace(/。(?=\S)/,'。\n');
  const specs={name:[[115,216,505,60],48,'#E8C75C'],stats:[[145,280,145,30],18,'#F36C65'],gold:[[328,280,160,30],18,'#DFC552'],
-  v25Story:[[115,326,475,48],17,'#F3EFDA'],relic:[[162,379,430,30],20,'#E7CA5A'],relicText:[[162,403,440,35],17,'#F3EFDA']};
+  v25Story:[[115,316,475,theme.layout.nativeText.lineHeight*2],17,'#F3EFDA'],
+  relic:[[162,405,430,30],20,'#E7CA5A'],relicText:[[162,429,440,35],17,'#F3EFDA']};
  for(const [name,[box,font,colour]]of Object.entries(specs))placeText(child(details,name),box,font,colour);
  details.children=details.children.filter(n=>!['deckOpen','deckTitle','deckSummary','deckRule'].includes(n.name));
  for(const name of ['relicTag','portraitFrame','floorShadow','officialSelectionFigure']){const n=child(details,name);if(n)n.visible=false;}
  Object.assign(child(details,'v25HealthIcon'),frame(115,286,23,21));
  const bag=child(details,'v25GoldIcon');Object.assign(bag,frame(295,284,25,28));
  const relic=child(details,'v25RelicIcon');
- Object.assign(relic,frame(115,383,36,44),{visible:true});
+ Object.assign(relic,frame(115,409,36,44),{visible:true});
  const relicArt=theme.lowCostArt.relic;
  const relicScale=40/relicArt.canvas;
  relic.children=relicArt.assets.burning_blood.shapes.map(({x,y,w,h,image,colour,rotation},index)=>({

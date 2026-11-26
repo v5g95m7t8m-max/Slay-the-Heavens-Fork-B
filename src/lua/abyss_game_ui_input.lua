@@ -324,7 +324,7 @@ function M.installCharacters(self,characterPanel,clickEvent,bindCommand)
     bindCommand(characterPanel:GetChild("cancel"),"character_cancel",function() return self:closeCharacters() end)
     bindCommand(characterPanel:GetChild('confirm'),'character_confirm',function()return self:confirmCharacter()end,
         function()return self.characterSelection:canConfirm() and not self.characterSelection.deckOpen end)
-    local starterDeck=characterPanel:GetChild('details'):GetChild('deckOpen')
+    local starterDeck=Theme.presentationProfile~='official-assets-first' and characterPanel:GetChild('details'):GetChild('deckOpen')
     if starterDeck then
         bindCommand(starterDeck,'character_deck',function()
             return self:openStarterDeck()

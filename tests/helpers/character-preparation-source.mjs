@@ -4,7 +4,7 @@ import {assertCurrentDevelopUiSource,readRetiredController,retiredControllerPath
 import {assertDevelopBackflowCurrent,authenticateDevelopBackflow,developBackflowOwns} from './develop-release-backflow-source.mjs';
 import {beforeSlimeSplitReceipt,slimeSplitSourcePaths} from './slime-split-source.mjs';
 import {beforeStsSelectionFade,beforeAuthenticatedStsSelectionFade} from './sts-selection-fade-source.mjs';
-import {authorizeRebasedDevelop,beforeRebasedCi,rebasedDevelopOwns} from './rebased-release-source.mjs';
+import {assertCurrentOfficialComposition,authorizeRebasedDevelop,beforeOfficialComposition,beforeRebasedCi,rebasedDevelopOwns} from './rebased-release-source.mjs';
 import {chapterBattleSceneReader} from './chapter-battle-scene-source.mjs';
 import {authorizeCardFeedbackOwners,beforeCardFeedbackOwner,cardFeedbackOwnerPaths} from './card-feedback-owner-source.mjs';
 import {authorizeSts1MapSource,beforeSts1MapSource,sts1MapSourcePaths} from './sts1-map-source.mjs';
@@ -145,6 +145,7 @@ const currentContinuationOwners = new Set([
 export function beforeCurrentProductionSource(path, source, read = readRaw) {
   ({source,read}=chapterBattleSceneReader(path,source,read));
   ({source,read}=battlePeripheryPredecessor(path,source,read));
+  assertCurrentOfficialComposition(path,source);
   assertCurrentUiEntrance(path,source);
   const entranceInput=source;
   ({source,read}=entrancePredecessor(path,source,read));
@@ -153,7 +154,9 @@ export function beforeCurrentProductionSource(path, source, read = readRaw) {
   if(path!=='src/lua/abyss_game_ui_view.lua'||source===entranceInput)
     assertCurrentDevelopUiSource(path,source,read);
   if(developBackflowOwns(path)){
-    assertDevelopBackflowCurrent(path,source);
+    // The earlier Develop contract predates the approved selection composition.
+    // Replay still receives the raw source so it can check the live revision.
+    assertDevelopBackflowCurrent(path,beforeOfficialComposition(path,source));
     return beforeCharacterPreparationSource(path,source,read);
   }
   if(rebasedDevelopOwns(path)){

@@ -76,7 +76,7 @@ assert(not host.run and created==0 and host.characterSelection.deckOpen and host
 local deck=host.deckUI;local deckPanel=root:GetChild('deckPanel')
 assert(deck.browserShell and not deck.pileView and not deck.pileKind and not deck.choiceToken and not deck.battle)
 assert(deck.run.readOnlyPreview and #deck.cards==info.deckSize and deckPanel:GetChild('pileGrid').visible)
-assert(not panel.visible and not panel:GetChild('deckView').visible and #panel:GetChild('deckView'):GetChildren()==0)
+assert(not panel.visible and not panel:GetChild('deckView'))
 assert(host.pointerBlocked(),'preparation must keep preview input covered')
 assert(not host:openStarterDeck(),'covered/reentrant opening must fail')
 for i=1,4 do host:update(1/60);host:refresh()end

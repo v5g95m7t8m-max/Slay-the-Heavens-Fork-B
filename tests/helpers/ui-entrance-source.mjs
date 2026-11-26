@@ -4,9 +4,10 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
-import {exactSourceMatches as matches} from './source-fingerprint.mjs';
+import {exactSourceMatches as matches,sourceConfigLayoutMatches} from './source-fingerprint.mjs';
 import {restoreExactFixtureHunks} from './exact-fixture-hunks.mjs';
-import {beforeCurrentReplayFixes} from './current-replay-fix-sources.mjs';
+import {beforeCurrentReplayFixes,beforeOfficialCharacterBackflow} from './current-replay-fix-sources.mjs';
+import {beforeApprovedUiEntrance,matchesApprovedUiEntranceOwner} from './ui-entrance-approved-sources.mjs';
 
 const archive=readFileSync(new URL('../fixtures/ui-entrance-source.json.gz',import.meta.url));
 assert.equal(createHash('sha256').update(archive).digest('hex'),
@@ -15,21 +16,28 @@ const {base,reviewedSource,files,witnesses}=JSON.parse(gunzipSync(archive));
 assert.equal(base,'301b854cd8a0bb689c3250f5b05b56bd47409780');
 assert.equal(reviewedSource,'50b61b8fa243a39c189bf138a14702d73b39a903');
 const owners=Object.keys(files);
+export const uiEntranceOwns=path=>Object.hasOwn(files,path);
 export const addedEntranceModules=Object.freeze(owners.filter(path=>files[path].before===null));
 const readLive=path=>readFileSync(path,'utf8');
 const binding=path=>Object.hasOwn(files,path)?files[path]:undefined;
-const currentInput=(path,source)=>['src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua',
+const requiredCurrentOwners=[
+ 'src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua',
+ 'src/lua/abyss_character_select_view.lua','src/lua/abyss_game_ui_input.lua',
+];
+const replaySources=[...requiredCurrentOwners,
  'tests/lua/shop_entry.lua','tests/helpers/combined-epoch/source-epoch-runtime.mjs',
  'tests/integration-source-epoch.test.mjs','tests/session-menu-navigation.test.mjs','tests/tiny-house-pending-ui.cases.mjs',
  'tests/helpers/develop-release-backflow-source.mjs','tests/sts-style-source-epoch.test.mjs',
  'tests/watcher-actor-boundary.test.mjs','tests/defect-actor-boundary.test.mjs',
  'tests/competition-roster-config-composition.test.mjs','tests/silent-final-source-epoch.test.mjs',
- 'tests/defect-integration-source.test.mjs','tests/defect-final-source-epoch.test.mjs'].includes(path)
- ?beforeCurrentReplayFixes(path,source):source;
+ 'tests/defect-integration-source.test.mjs','tests/defect-final-source-epoch.test.mjs',
+];
+const currentInput=(path,source)=>replaySources.includes(path)
+ ?beforeCurrentReplayFixes(path,source):beforeApprovedUiEntrance(path,source);
 function currentMatches(path,source,expected){
+ if(!matchesApprovedUiEntranceOwner(path,source))return false;
  const normalized=currentInput(path,source);
- if(['src/lua/abyss_node_ui_faces.lua','src/lua/abyss_game_ui.lua','src/lua/abyss_game_ui_run.lua','src/lua/abyss_game_ui_view.lua'].includes(path)
-  &&normalized===source)return false;
+ if(requiredCurrentOwners.includes(path)&&normalized===source)return false;
  return matches(normalized,expected);
 }
 const predecessors=new Map();
@@ -54,7 +62,7 @@ export function beforeUiEntrance(path,source){
 }
 
 export function beforeUiEntranceWitness(path,source){
- return project(path,source,Object.hasOwn(witnesses,path)?witnesses[path]:undefined);
+ return project(path,beforeOfficialCharacterBackflow(path,source),Object.hasOwn(witnesses,path)?witnesses[path]:undefined);
 }
 
 export function authenticateUiEntrance(read){
@@ -88,15 +96,12 @@ export function assertCurrentUiEntrance(path,source){
 
 export function entrancePredecessor(path,source,read=readLive,{allowConfigLayout=false}={}){
  const input=source;
- if(allowConfigLayout&&path==='config/architecture.json'&&typeof source==='string'
-  &&!matches(source,files[path].after)){
+ if(allowConfigLayout&&path==='config/architecture.json'&&!currentMatches(path,source,files[path].after)){
   // Only the caller's JSON layout may vary. Tokens retain key order, duplicate
   // keys and string spelling; every linked owner still requires exact bytes.
-  let valid=true;try{JSON.parse(source);}catch{valid=false;}
-  const tokens=source.replace(/"(?:\\.|[^"\\])*"|[ \t\r\n]+/g,token=>token.startsWith('"')?token:'');
-  if(valid&&createHash('sha256').update(tokens).digest('hex')==='1491505818bb5df2d41ed3db63d5463c24b71837516b09844655854b7f89682b'){
+  if(sourceConfigLayoutMatches(source,'3924ed90aa88922ca9fc97df398cb67b7cf61892933901213ef911fc3b6f3e52')){
    source=read(path);
-   assert(matches(source,files[path].after),'combined linked owner identity: '+path+' during entrance validation');
+   assert(currentMatches(path,source,files[path].after),'combined linked owner identity: '+path+' during entrance validation');
   }
  }
  const predecessor=beforeUiEntrance(path,source);

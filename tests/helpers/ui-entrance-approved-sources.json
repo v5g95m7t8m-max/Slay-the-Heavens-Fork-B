@@ -1,0 +1,219 @@
+{
+  "historical": "02dcb2466b2c90308f9a9e42896c2c5af3ed288c",
+  "base": "44d1fd3148e7bbf472adc8110fceb06eeb0f041a",
+  "owners": [
+    {
+      "path": "config/architecture.json",
+      "beforeSha256": "9a6cb4088d014aab4238d0772a47c147c503b40e00b80e55328bab20c6c58edd",
+      "afterSha256": "7149b7878a8258a6de4b23d95742dc3c4e31d38bf558f80a35efe51aac401e00",
+      "hunks": [
+        {
+          "at": 0,
+          "before": "{\n  \"layers\": {\n    \"abyss_page_reveal\": \"ui\",\n    \"abyss_lowcost_art\": \"ui\",",
+          "after": "{\n  \"layers\": {\n    \"abyss_checkpoint_identities\": \"core\",\n    \"abyss_page_reveal\": \"ui\",\n    \"abyss_lowcost_art\": \"ui\","
+        },
+        {
+          "at": 37,
+          "before": "    \"abyss_vampires_event\": \"core\",\n    \"abyss_forgotten_altar_event\": \"core\",\n    \"abyss_drug_dealer_event\": \"core\",\n    \"abyss_cursed_tome_event\": \"core\",\n    \"abyss_event_combat_enemies\": \"core\",",
+          "after": "    \"abyss_vampires_event\": \"core\",\n    \"abyss_forgotten_altar_event\": \"core\",\n    \"abyss_augmenter_event\": \"core\",\n    \"abyss_cursed_tome_event\": \"core\",\n    \"abyss_event_combat_enemies\": \"core\","
+        },
+        {
+          "at": 183,
+          "before": "    \"abyss_battle_unit_view\": \"ui\",\n    \"abyss_bgm\": \"ui\",\n    \"abyss_blue_slaver_ai\": \"core\",\n    \"abyss_card_actions\": \"core\",\n    \"abyss_card_capability\": \"core\",\n    \"abyss_card_display\": \"ui\",\n    \"abyss_card_input\": \"ui\",\n    \"abyss_card_pool\": \"core\",",
+          "after": "    \"abyss_battle_unit_view\": \"ui\",\n    \"abyss_bgm\": \"ui\",\n    \"abyss_blue_guard_ai\": \"core\",\n    \"abyss_card_actions\": \"core\",\n    \"abyss_card_capability\": \"core\",\n    \"abyss_card_display\": \"ui\",\n    \"abyss_card_keywords\": \"ui\",\n    \"abyss_card_input\": \"ui\",\n    \"abyss_card_pool\": \"core\","
+        },
+        {
+          "at": 243,
+          "before": "    \"abyss_random\": \"core\",\n    \"abyss_randomxs128\": \"core\",\n    \"abyss_red_slaver_ai\": \"core\",\n    \"abyss_relic_hooks\": \"core\",\n    \"abyss_relic_pool\": \"core\",\n    \"abyss_room_encounters\": \"core\",\n    \"abyss_run\": \"core\",\n    \"abyss_run_seed\": \"core\",\n    \"abyss_sentry_ai\": \"core\",",
+          "after": "    \"abyss_random\": \"core\",\n    \"abyss_randomxs128\": \"core\",\n    \"abyss_red_guard_ai\": \"core\",\n    \"abyss_relic_hooks\": \"core\",\n    \"abyss_relic_pool\": \"core\",\n    \"abyss_room_encounters\": \"core\",\n    \"abyss_run\": \"core\",\n    \"abyss_run_hud\": \"ui\",\n    \"abyss_run_seed\": \"core\",\n    \"abyss_sentry_ai\": \"core\","
+        },
+        {
+          "at": 657,
+          "before": "      \"from\": \"abyss_combat_effect_dispatch\",\n      \"to\": \"abyss_relic_family_combat\",\n      \"reason\": \"Only resolving Toolbox or Gambling Chip actions invokes fixed family choice execution after the dispatcher loads.\"\n    },\n    {",
+          "after": "      \"from\": \"abyss_combat_effect_dispatch\",\n      \"to\": \"abyss_relic_family_combat\",\n      \"reason\": \"Only resolving Toolbox or Tactical Badge actions invokes fixed family choice execution after the dispatcher loads.\"\n    },\n    {"
+        },
+        {
+          "at": 732,
+          "before": "      \"from\": \"abyss_relic_family_combat\",\n      \"to\": \"abyss_discard\",\n      \"reason\": \"Only a committed Gambling Chip selection dispatches initialized per-card discard actions after pending-choice clearing and draw admission.\"\n    },\n    {",
+          "after": "      \"from\": \"abyss_relic_family_combat\",\n      \"to\": \"abyss_discard\",\n      \"reason\": \"Only a committed Tactical Badge selection dispatches initialized per-card discard actions after pending-choice clearing and draw admission.\"\n    },\n    {"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_game_ui.lua",
+      "beforeSha256": "26e13ce816c467f096a57b9226806f7b2bc6fdf87606d35031ad691225747b7e",
+      "afterSha256": "ca6aa00df7180d5406bd503a546bbb84397588578cd47d3d3fae1afd2e576e52",
+      "hunks": [
+        {
+          "at": 103,
+          "before": "    self.battleUI = BattleUI.new(child(\"battlePanel\"), data, presentation, clickEvent,\n        platform, { embedded = true, onChange = changed, inputCovered=battleEntryCovered,\n            onPile=function(kind)return self:openDeck(kind)end })\n    self.mapUI = MapUI.new(child(\"mapPanel\"), nil, Navigation.requestNodeEntry(self,platform,changed),\n        clickEvent, { embedded = true, color = platform.color, imageSource = platform.imageSource,",
+          "after": "    self.battleUI = BattleUI.new(child(\"battlePanel\"), data, presentation, clickEvent,\n        platform, { embedded = true, onChange = changed, inputCovered=battleEntryCovered,\n            onPile=function(kind)return self:openDeck(kind)end,\n            onCardFocus=function(read)return self:openDeck(nil,read)end })\n    self.mapUI = MapUI.new(child(\"mapPanel\"), nil, Navigation.requestNodeEntry(self,platform,changed),\n        clickEvent, { embedded = true, color = platform.color, imageSource = platform.imageSource,"
+        },
+        {
+          "at": 138,
+          "before": "    local inCombat = Overlays.inCombat(self)\n    local canManagePotions = Overlays.canManagePotions(inputCovered,self)\n    local resourceHint = Overlays.resourceHint(self,canManagePotions,inCombat)\n    self.relicUI=require('abyss_relic_view_ui').new(child('relicPanel'),child('relicBar'),clickEvent,platform,\n        function(run,id)return self.nodeUI:describeRelic(run,id)end,function()return self:closeDeck()end,",
+          "after": "    local inCombat = Overlays.inCombat(self)\n    local canManagePotions = Overlays.canManagePotions(inputCovered,self)\n    local resourceHint = Overlays.resourceHint(self,canManagePotions)\n    self.relicUI=require('abyss_relic_view_ui').new(child('relicPanel'),child('relicBar'),clickEvent,platform,\n        function(run,id)return self.nodeUI:describeRelic(run,id)end,function()return self:closeDeck()end,"
+        },
+        {
+          "at": 154,
+          "before": "    end\n    if prologuePanel then prologuePanel:SetVisible(false) end\n\n    self.openExit = Overlays.openExit(self,owner)\n    self.openMenu = Overlays.openMenu(self,owner)",
+          "after": "    end\n    if prologuePanel then prologuePanel:SetVisible(false) end\n    self.openExit = Overlays.openExit(self,owner)\n    self.openMenu = Overlays.openMenu(self,owner)"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_game_ui_lifecycle.lua",
+      "beforeSha256": "070e7d013396f1ff004f51b6d3afd9ffa5096fdd9294177d5203c1a904bb585f",
+      "afterSha256": "c1050629b7304861746cc5f4492003ad753600e3f4955caebf73137e28f8ba72",
+      "hunks": [
+        {
+          "at": 30,
+          "before": "\nfunction M.resize(self,owner)\n    return function(_, width, height)\n            owner.exitGeneration = owner.exitGeneration + 1\n            owner.menuGeneration = owner.menuGeneration + 1\n            if self.choiceUI then self.choiceUI:resize() end\n            if self.pageReveal then self.pageReveal:resize(width,height) end\n            if self.prologue then self.prologue:resize(width,height) end\n            local closed=self.potionUI:close()\n            self.battleUI:resize(width, height)",
+          "after": "\nfunction M.resize(self,owner)\n    return function(_, width, height, viewport)\n            owner.exitGeneration = owner.exitGeneration + 1\n            owner.menuGeneration = owner.menuGeneration + 1\n            if self.choiceUI then self.choiceUI:resize() end\n            if self.pageReveal then self.pageReveal:resize(width,height,viewport) end\n            if self.prologue then self.prologue:resize(width,height,viewport) end\n            local closed=self.potionUI:close()\n            self.battleUI:resize(width, height)"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_game_ui_run.lua",
+      "beforeSha256": "29aa9c5455e55dfe1a69ff5afed7550ecd4ec6f9adc3f14521b5d81ebd79f142",
+      "afterSha256": "0ff553eb0e5772a884e9a98a56ad0b65519aaafe1a1a34fc22d4cc00d3c02379",
+      "hunks": [
+        {
+          "at": 44,
+          "before": "            end\n            self.characterOpen=false;self.characterSelection:clear()\n            selectionChanged();return true\n        end",
+          "after": "            end\n            self.characterOpen=false;self.characterSelection:clear()\n            self.battleUI.reuseRetiredProjection=true\n            selectionChanged();return true\n        end"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_game_ui_view.lua",
+      "beforeSha256": "847d1a8c5d91a7c4f62556c9023aeb3ff5d9a3aad1d58af1ac54ca27c2ecfb7d",
+      "afterSha256": "e01ca4da8d838b9ea38ef7663a097785e208c97fbac3f1d1df103c618d09957d",
+      "hunks": [
+        {
+          "at": 14,
+          "before": "local Input=require('abyss_game_ui_input')\nlocal PageReveal=require('abyss_page_reveal')\nlocal M = {}\nlocal function building(status)",
+          "after": "local Input=require('abyss_game_ui_input')\nlocal PageReveal=require('abyss_page_reveal')\nlocal RunHud=require('abyss_run_hud')\nlocal M = {}\nlocal function building(status)"
+        },
+        {
+          "at": 111,
+          "before": "end\n\nfunction M.closeStaleDeck(self)\n    return function(run,inMenu)",
+          "after": "end\n\nlocal function staleCardFocus(self)\n    local read=self.deckUI.focusRead\n    return read and not self.battleUI:cardHelpReady(read,true)\nend\nlocal function stalePile(deck,run)\n    return deck.pileKind and (run.phase~='combat' or run.combat~=deck.battle)\nend\nfunction M.closeStaleDeck(self)\n    return function(run,inMenu)"
+        },
+        {
+          "at": 126,
+          "before": "                return\n            end\n            if self.deckUI.visible and (inMenu or run and run.phase=='ending_proceed' or self.battleUI.busy or self.deckUI.run ~= run\n            or self.deckUI.pileKind and (run.phase~='combat' or run.combat~=self.deckUI.battle))then self.deckUI:close()end\n        end\nend",
+          "after": "                return\n            end\n            if staleCardFocus(self) then self.deckUI:close();return end\n            if self.deckUI.visible and (inMenu or run and run.phase=='ending_proceed' or self.battleUI.busy or self.deckUI.run ~= run\n            or stalePile(self.deckUI,run))then self.deckUI:close()end\n        end\nend"
+        },
+        {
+          "at": 255,
+          "before": "            if run then\n                local resources = child(\"mapPanel\"):GetChild(\"resources\")\n                resources:GetChild(\"hp\").text = number(run.hp) .. \"/\" .. number(run.maxHp)\n                resources:GetChild(\"gold\").text = number(run.gold)\n            end\n        end",
+          "after": "            if run then\n                local resources = child(\"mapPanel\"):GetChild(\"resources\")\n                local hp,gold=RunHud.resourceText(run)\n                resources:GetChild(\"hp\").text=hp\n                resources:GetChild(\"gold\").text=gold\n            end\n        end"
+        },
+        {
+          "at": 463,
+          "before": "        if not overlay then return end\n        for _,part in ipairs(variant:GetChildren())do part:SetVisible(part==overlay)end\n    end\n    local function battleUtilities()",
+          "after": "        if not overlay then return end\n        for _,part in ipairs(variant:GetChildren())do part:SetVisible(part==overlay)end\n        return overlay\n    end\n    local function battleUtilities()"
+        },
+        {
+          "at": 474,
+          "before": "                local variant=hit:GetChild(name)\n                variant:SetLocalScale((variant.localScaleX or 1)*values[3],(variant.localScaleY or 1)*values[3],1)\n                utilityFace(variant)\n            end\n        end",
+          "after": "                local variant=hit:GetChild(name)\n                variant:SetLocalScale((variant.localScaleX or 1)*values[3],(variant.localScaleY or 1)*values[3],1)\n                local face=utilityFace(variant)\n                if values==hud.deck and face then variant:SetSizeDelta(face.sizeDeltaX,face.sizeDeltaY)end\n            end\n        end"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_node_ui.lua",
+      "beforeSha256": "49585cd927a1b92c501de623104c7795c58f753cf9cbbe05079106c36d091b71",
+      "afterSha256": "a402c6e2b10697ff285be9d6de2d0b68a2982b160c89131c91451e5fd6fa1cb2",
+      "hunks": [
+        {
+          "at": 12,
+          "before": "local RelicView=require('abyss_relic_view_ui')\nlocal MatchUI=require('abyss_match_event_ui')\nlocal number = require(\"abyss_numbers\").integer\nlocal C = Theme.color\nlocal kinds = { camp = \"营地\", shop = \"商店\", event = \"未知事件\", treasure = \"宝箱\",ending_proceed='真结局' }",
+          "after": "local RelicView=require('abyss_relic_view_ui')\nlocal MatchUI=require('abyss_match_event_ui')\nlocal RunHud=require('abyss_run_hud')\nlocal C = Theme.color\nlocal kinds = { camp = \"营地\", shop = \"商店\", event = \"未知事件\", treasure = \"宝箱\",ending_proceed='真结局' }"
+        },
+        {
+          "at": 110,
+          "before": "        end\n        ctx.child(\"title\").text = nodeHeaderTitle(node, ctx.self.run.floor)\n        ctx.child(\"hp\").text = number(ctx.self.run.hp) .. \"/\" .. number(ctx.self.run.maxHp)\n        ctx.child(\"gold\").text = number(ctx.self.run.gold)\n        ctx.child(\"deck\").text = tostring(#ctx.self.run.deck)\n        -- TASK-4.7: the shared top-bar disc row and 遗物 N button carry this now.",
+          "after": "        end\n        ctx.child(\"title\").text = nodeHeaderTitle(node, ctx.self.run.floor)\n        local hp,gold=RunHud.resourceText(ctx.self.run)\n        ctx.child(\"hp\").text=hp\n        ctx.child(\"gold\").text=gold\n        ctx.child(\"deck\").text = tostring(#ctx.self.run.deck)\n        -- TASK-4.7: the shared top-bar disc row and 遗物 N button carry this now."
+        },
+        {
+          "at": 187,
+          "before": "    end\n\n    function ctx.refreshNodeNotice(node,active,hint)\n        -- The merchant speaks in his own dialogue box; the notice keeps only shop facts.\n        if node and node.type == \"shop\" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then",
+          "after": "    end\n\n    function ctx.refreshNodeNotice(node,active,hint,screen)\n        -- The merchant speaks in his own dialogue box; the notice keeps only shop facts.\n        if node and node.type == \"shop\" and (ctx.self.merchantNode ~= node.id or ctx.self.merchantRun ~= ctx.self.run) then"
+        },
+        {
+          "at": 194,
+          "before": "        end\n        ctx.merchant:setVisible(merchantVisible(ctx, node, active))\n        local message=ctx.self.notice ~= \"\" and ctx.self.notice or hint\n        if repeatedEventNotice(ctx,node,message)then message=''end\n        ctx.child(\"notice\").text = message\n        ctx.ink(ctx.child(\"notice\"), ctx.self.failed and ctx.self.notice ~= \"\" and C.danger or C.text)\n\n    end",
+          "after": "        end\n        ctx.merchant:setVisible(merchantVisible(ctx, node, active))\n        local message=ctx.self.notice ~= \"\" and ctx.self.notice or hint or \"\"\n        local notice=ctx.child(\"notice\")\n        if screen == \"pickerView\" and not ctx.enhancedForge(node) and not MatchUI.isBoard(node.event) then\n            -- Keep prompts and errors in the same coordinate space as the paged cards.\n            notice.text = \"\"\n            notice = ctx.child(\"pickerView\"):GetChild(\"empty\")\n            ctx.show(notice, message ~= \"\")\n            notice.text = message\n            ctx.ink(notice, ctx.self.failed and C.danger or C.text)\n            return\n        end\n        if repeatedEventNotice(ctx,node,message)then message=''end\n        notice.text = message\n        ctx.ink(notice, ctx.self.failed and ctx.self.notice ~= \"\" and C.danger or C.text)\n\n    end"
+        },
+        {
+          "at": 305,
+          "before": "        ctx.renderTopBar(node)\n        local screen,hint,recallSource,treasureSource=ctx.renderNodePage(view,node,result,active)\n        ctx.refreshNodeNotice(node,active,hint)\n        local back, confirm = ctx.child(\"back\"), ctx.child(\"confirm\")\n        local backLabel,confirmLabel,confirmOk,confirmFn,skipRestReward,recallObserve",
+          "after": "        ctx.renderTopBar(node)\n        local screen,hint,recallSource,treasureSource=ctx.renderNodePage(view,node,result,active)\n        ctx.refreshNodeNotice(node,active,hint,screen)\n        local back, confirm = ctx.child(\"back\"), ctx.child(\"confirm\")\n        local backLabel,confirmLabel,confirmOk,confirmFn,skipRestReward,recallObserve"
+        },
+        {
+          "at": 311,
+          "before": "        ctx.bindFooter(back,confirm,backLabel,confirmLabel,confirmOk,skipRestReward)\n        ctx.bindTreasureBack(back,node,active)\n        ctx.action(\"confirm\", confirmOk, confirmFn, screen == \"pickerView\" and \"请先在上方选择一张卡牌\" or nil, nil, recallObserve)\n        ctx.bindStagedEventActions(node);ctx.clearUnusedNativeArt(previousArt)\n        self.failed = false",
+          "after": "        ctx.bindFooter(back,confirm,backLabel,confirmLabel,confirmOk,skipRestReward)\n        ctx.bindTreasureBack(back,node,active)\n        ctx.action(\"confirm\", confirmOk, confirmFn, screen == \"pickerView\" and \"请先选择一张卡牌\" or nil, nil, recallObserve)\n        ctx.bindStagedEventActions(node);ctx.clearUnusedNativeArt(previousArt)\n        self.failed = false"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_node_ui_input.lua",
+      "beforeSha256": "6bfbf826bae9c4b18755beda5660446da0d14ac2c76fc38b4478ad0f9a9018c1",
+      "afterSha256": "57595d1bca4fb33eed373d36b51219cb6f5ca42f9dbfce2910e93f73323ae1f5",
+      "hunks": [
+        {
+          "at": 0,
+          "before": "local Theme = require(\"abyss_theme\")\nlocal Pointer = require('abyss_pointer_input')\nlocal layout = Theme.layout.nativeNode\nlocal SHOP_PAGE, RELIC_PAGE, PICK_PAGE = #layout.shop.columns, #layout.shop.relics.columns, #layout.picker.columns",
+          "after": "local Theme = require(\"abyss_theme\")\nlocal Pointer = require('abyss_pointer_input')\nlocal Viewport = require('abyss_viewport')\nlocal layout = Theme.layout.nativeNode\nlocal SHOP_PAGE, RELIC_PAGE, PICK_PAGE = #layout.shop.columns, #layout.shop.relics.columns, #layout.picker.columns"
+        },
+        {
+          "at": 65,
+          "before": "        if not event or type(event.GetUIPos) ~= \"function\" then return end\n        local x, y = event:GetUIPos()\n        if type(x) ~= \"number\" or type(y) ~= \"number\" or x ~= x or y ~= y\n            or math.abs(x) == math.huge or math.abs(y) == math.huge then return end\n        local width, height = ctx.self.canvasWidth or Theme.canvas.base[1], ctx.self.canvasHeight or Theme.canvas.base[2]\n        local k = math.min(width / Theme.canvas.base[1], height / Theme.canvas.base[2])\n        return x / k, y / k\n    end\n",
+          "after": "        if not event or type(event.GetUIPos) ~= \"function\" then return end\n        local x, y = event:GetUIPos()\n        local width, height = ctx.self.canvasWidth or Theme.canvas.base[1], ctx.self.canvasHeight or Theme.canvas.base[2]\n        local sx, sy = Viewport.toStage(x, y, width, height)\n        if sx and sy then return sx, sy end\n    end\n"
+        }
+      ]
+    },
+    {
+      "path": "src/lua/abyss_page_reveal.lua",
+      "beforeSha256": "703a295922e14f9b786dfb647b53e25c3fb0ec82155d917511c617fb305bc243",
+      "afterSha256": "f873cf5a3a89b3344e3e79ac969858175372c202393a04d5daed66257c561f59",
+      "hunks": [
+        {
+          "at": 206,
+          "before": "    local function paintBlocker(frame)\n        local limited=gate.intent and gate.intent.deckPaged and gate.localFrame and gate.state~='failed'\n        local blockerFrame=limited and frame or frames.size or frames.full\n        local ticket=gate.epoch\n        local blocker=cover:GetChild('blocker')",
+          "after": "    local function paintBlocker(frame)\n        local limited=gate.intent and gate.intent.deckPaged and gate.localFrame and gate.state~='failed'\n        local blockerFrame=limited and frame or frames.input or frames.full\n        local ticket=gate.epoch\n        local blocker=cover:GetChild('blocker')"
+        },
+        {
+          "at": 233,
+          "before": "        paintedFrame=frame;return true\n    end\n    function gate.resize(_,width,height)\n        if not frames then return end\n        local scale=math.min(width/frames.full[3],height/frames.full[4])\n        -- Extend the veil and input hit over the letterboxing of the scaled stage.\n        frames.size={0,0,width/scale,height/scale}\n        paintFrame()\n    end",
+          "after": "        paintedFrame=frame;return true\n    end\n    function gate.resize(_,width,height,viewport)\n        if not frames then return end\n        viewport=viewport or require('abyss_viewport').measure(width,height)\n        frames.size,frames.input=viewport.visual,viewport.input\n        paintFrame()\n    end"
+        }
+      ]
+    },
+    {
+      "path": "tests/noncombat-v25-layout.test.mjs",
+      "beforeSha256": "52a1a10dada404e7dc3101bde1404500af83360de70984755befff67f9a02bed",
+      "afterSha256": "bc1691dbb767b37e9b941418d6cb5f74189d4befd199e52f4a7a29d00fe65954",
+      "hunks": [
+        {
+          "at": 154,
+          "before": "  assert(all(panel).every(node=>node.focusable!==true&&node.isolateNavigation!==true),'retire authored navigation: '+name);\n  const prior=restorePriorMenuNavigation(panel,focusPaths);\n  assert.equal(createHash('sha256').update(JSON.stringify(prior)).digest('hex'),sha,\n   'preserve the complete integrated menu layout and remove only its navigation fields: '+name);\n }\n const script=`package.path=${luaString(directory.replaceAll('\\\\','/')+'/?.lua;src/lua/?.lua')}",
+          "after": "  assert(all(panel).every(node=>node.focusable!==true&&node.isolateNavigation!==true),'retire authored navigation: '+name);\n  const prior=restorePriorMenuNavigation(panel,focusPaths);\n  if(name==='menuPanel')for(const action of ['start','continueRun','titleQuit']){\n   // #963 applied the shipped v2.1.1 outline to these three title labels.\n   const label=child(child(prior,action),'label');\n   assert.equal(label.text.outlineOpacity,1,action+' retains the shipped title outline');\n   delete label.text.outlineOpacity;\n  }\n  assert.equal(createHash('sha256').update(JSON.stringify(prior)).digest('hex'),sha,\n   'preserve the complete reviewed menu outside the pinned navigation and label edits: '+name);\n }\n const script=`package.path=${luaString(directory.replaceAll('\\\\','/')+'/?.lua;src/lua/?.lua')}"
+        },
+        {
+          "at": 179,
+          "before": "\ntest('generated official character selection follows the approved details revision',()=>{\n const revisions=loadUiReferences().filter(row=>row.targetVersion==='v2.0.0'&&\n  row.codePath==='scripts/character-selection-composition.mjs'&&row.state==='details');\n assert.deepEqual(revisions.filter(row=>['APPROVED','CURRENT_IMPLEMENTATION'].includes(row.status))\n  .map(row=>[row.revision,row.status]),[['release-sts1-20261122','APPROVED']]);\n assert.equal(revisions.find(row=>row.revision==='sts1-open-copy-20261119')?.status,'SUPERSEDED');\n const output=join(directory,'refined-release');\n buildUI(output,undefined,{officialAssets:true,refinedReleaseMonsterArt:true,nativePageLifecycle:true,experimentalCharacters:false});",
+          "after": "\ntest('generated official character selection follows the approved details revision',()=>{\n const references=loadUiReferences();\n for(const version of ['v2.0.0','v2.2.0']){\n  const revisions=references.filter(row=>row.targetVersion===version&&\n   row.codePath==='scripts/character-selection-composition.mjs'&&row.state==='details');\n  assert.deepEqual(revisions.filter(row=>['APPROVED','CURRENT_IMPLEMENTATION'].includes(row.status))\n   .map(row=>[row.revision,row.status]),[['release-sts1-20261122','APPROVED']]);\n  assert.equal(revisions.find(row=>row.revision==='sts1-open-copy-20261119')?.status,'SUPERSEDED');\n }\n const output=join(directory,'refined-release');\n buildUI(output,undefined,{officialAssets:true,refinedReleaseMonsterArt:true,nativePageLifecycle:true,experimentalCharacters:false});"
+        },
+        {
+          "at": 321,
+          "before": "});\n",
+          "after": "});\n\ntest('selection replay rejects stale owners after approved develop changes',async()=>{\n const {beforeApprovedUiEntrance}=await import('./helpers/ui-entrance-approved-sources.mjs');\n const {authenticateUiEntrance,beforeUiEntrance}=await import('./helpers/ui-entrance-source.mjs');\n const read=path=>readFileSync(path,'utf8');\n authenticateUiEntrance(read);\n for(const path of ['config/architecture.json',...['game_ui','game_ui_lifecycle','game_ui_run','game_ui_view',\n  'node_ui','node_ui_input','page_reveal'].map(name=>`src/lua/abyss_${name}.lua`)]){\n  const current=read(path),prior=beforeApprovedUiEntrance(path,current);\n  assert.notEqual(current,prior,path);\n  assert.equal(beforeUiEntrance(path,current),beforeUiEntrance(path,prior));\n  for(const invalid of [prior,current+'\\n',current.slice(0,-1)+'!',null,Buffer.from(current)]){\n   assert.throws(()=>authenticateUiEntrance(owner=>owner===path?invalid:read(owner)),\n    {message:'combined linked owner identity: '+path+' during entrance validation'});\n  }\n  authenticateUiEntrance(owner=>owner===path?current.replaceAll('\\r\\n','\\n').replaceAll('\\n','\\r\\n'):read(owner));\n }\n});\n\ntest('approved selection composition retains the exact historical views and checks the live revision',async()=>{\n const {beforeOfficialCharacterBackflow}=await import('./helpers/current-replay-fix-sources.mjs');\n const {beforeCharacterPreparationSource,beforeCurrentProductionSource}=await import('./helpers/character-preparation-source.mjs');\n const {beforeRebasedCi,beforeRebasedRelease,beforeRebasedStsUi,\n  authorizeRebasedDevelop,authorizeRebasedRelease,authorizeRebasedStsUi}=await import('./helpers/rebased-release-source.mjs');\n const path='scripts/character-selection-composition.mjs';\n const read=owner=>readFileSync(owner,'utf8');\n const current=read(path),prior=beforeOfficialCharacterBackflow(path,current);\n const drift='!'+current.slice(1);\n const reader=source=>owner=>owner===path?source:read(owner);\n const missing=owner=>{if(owner===path)throw Error('fixture missing');return read(owner);};\n const foreign=/combined linked owner identity: scripts\\/character-selection-composition\\.mjs/;\n assert.notEqual(current,prior);\n for(const [project,authorize] of [[beforeRebasedCi,authorizeRebasedDevelop],\n  [beforeRebasedRelease,authorizeRebasedRelease],[beforeRebasedStsUi,authorizeRebasedStsUi]]){\n  const historic=project(path,prior);\n  assert.notEqual(historic,prior);\n  assert.equal(project(path,current),historic);\n  assert.equal(project(path,drift),drift);\n  const crlf=current.replaceAll('\\r\\n','\\n').replaceAll('\\n','\\r\\n');\n  assert.equal(project(path,crlf).replaceAll('\\r\\n','\\n'),historic.replaceAll('\\r\\n','\\n'));\n  authorize([[path,current]],read);\n  authorize([[path,prior]],reader(prior));\n  assert.throws(()=>authorize([[path,current],[path,prior]],read),/mixed live and predecessor sources/);\n  assert.throws(()=>authorize([[path,prior],[path,current]],reader(prior)),/mixed live and predecessor sources/);\n  assert.throws(()=>authorize([[path,prior]],read),foreign);\n  for(const invalid of [prior,drift,null,Buffer.from(current)]){\n   assert.throws(()=>authorize([[path,current]],reader(invalid)),foreign);\n  }\n  assert.throws(()=>authorize([[path,current]],missing),/combined linked owner missing/);\n }\n const prepared=beforeCharacterPreparationSource(path,prior,reader(prior));\n assert.equal(createHash('sha256').update(prepared.replaceAll('\\r\\n','\\n')).digest('hex'),\n  'c4d35a804a2f3febf216f1dd68cfed87dcac3728098ca9a182e9acaa008dd93f');\n assert.equal(beforeCurrentProductionSource(path,current,read),prepared);\n assert.throws(()=>beforeCurrentProductionSource(path,current,reader(prior)),foreign);\n for(const invalid of [prior,drift,null,Buffer.from(current)]){\n  assert.throws(()=>beforeCurrentProductionSource(path,invalid,read),/fresh current production owner/);\n }\n});\n"
+        }
+      ]
+    }
+  ]
+}

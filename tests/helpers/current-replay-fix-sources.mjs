@@ -1,7 +1,7 @@
-import {beforeLocalGilFixture} from './local-gil-fixture-source.mjs';
 // Exact predecessors for the current replay and test repairs. Current
 // discovery and test execution continue to use the files on disk.
 import {restoreExactFixtureHunks} from './exact-fixture-hunks.mjs';
+import {beforeApprovedUiEntrance} from './ui-entrance-approved-sources.mjs';
 
 const bindings = new Map([
  {
@@ -2365,11 +2365,148 @@ const bindings = new Map([
  }
 ].map(row=>[row.path,row]));
 
+// The official selection backflow projects only its reviewed full sources.
+const characterBackflowBindings = new Map([
+ {
+  "path": "scripts/character-selection-composition.mjs",
+  "beforeSha256": "ce9370cbc26811a295e9282164f23e40cdd349649d493537b2ede414bcd622fe",
+  "afterSha256": "ade82ac447a2180cd9e1cf218d4abb5a8b5b0a2492d53c83d8e964505a6c7f88",
+  "hunks": [
+   {
+    "at": 24,
+    "before": "}\nexport function characterSelectionComposition(panel,theme){\n const modal=child(panel,'deckView');modal.visible=false;modal.children=[];\n for(const name of ['v25HeadingEmblem','v25HeadingDivider','v25HeadingRule'])child(panel,name).visible=false;\n const title=child(panel,'title');",
+    "after": "}\nexport function characterSelectionComposition(panel,theme){\n panel.children=panel.children.filter(n=>n.name!=='deckView');\n for(const name of ['v25HeadingEmblem','v25HeadingDivider','v25HeadingRule'])child(panel,name).visible=false;\n const title=child(panel,'title');"
+   },
+   {
+    "at": 30,
+    "before": " Object.assign(title.text,{fontSize:30,minFontSize:30,align:'centre'});title.visible=true;\n const details=child(panel,'details');\n const specs={name:[[115,216,505,60],48,'#E8C75C'],stats:[[145,280,145,30],18,'#F36C65'],gold:[[328,280,160,30],18,'#DFC552'],\n  v25Story:[[115,326,475,48],17,'#F3EFDA'],relic:[[162,379,430,30],20,'#E7CA5A'],relicText:[[162,403,440,35],17,'#F3EFDA']};\n for(const [name,[box,font,colour]]of Object.entries(specs))placeText(child(details,name),box,font,colour);\n details.children=details.children.filter(n=>!['deckOpen','deckTitle','deckSummary','deckRule'].includes(n.name));",
+    "after": " Object.assign(title.text,{fontSize:30,minFontSize:30,align:'centre'});title.visible=true;\n const details=child(panel,'details');\n const story=child(details,'v25Story');\n story.text.content=story.text.content.replace(/。(?=\\S)/,'。\\n');\n const specs={name:[[115,216,505,60],48,'#E8C75C'],stats:[[145,280,145,30],18,'#F36C65'],gold:[[328,280,160,30],18,'#DFC552'],\n  v25Story:[[115,316,475,theme.layout.nativeText.lineHeight*2],17,'#F3EFDA'],\n  relic:[[162,405,430,30],20,'#E7CA5A'],relicText:[[162,429,440,35],17,'#F3EFDA']};\n for(const [name,[box,font,colour]]of Object.entries(specs))placeText(child(details,name),box,font,colour);\n details.children=details.children.filter(n=>!['deckOpen','deckTitle','deckSummary','deckRule'].includes(n.name));"
+   },
+   {
+    "at": 41,
+    "before": " const bag=child(details,'v25GoldIcon');Object.assign(bag,frame(295,284,25,28));\n const relic=child(details,'v25RelicIcon');\n Object.assign(relic,frame(115,383,36,44),{visible:true});\n const relicArt=theme.lowCostArt.relic;\n const relicScale=40/relicArt.canvas;",
+    "after": " const bag=child(details,'v25GoldIcon');Object.assign(bag,frame(295,284,25,28));\n const relic=child(details,'v25RelicIcon');\n Object.assign(relic,frame(115,409,36,44),{visible:true});\n const relicArt=theme.lowCostArt.relic;\n const relicScale=40/relicArt.canvas;"
+   }
+  ]
+ },
+ {
+  "path": "src/lua/abyss_character_select_view.lua",
+  "beforeSha256": "16cdd1223cd9ea74232351b5bdce9faa86eccba6256c12b892f3b1290aa12dc7",
+  "afterSha256": "000d76cbf4734a91d513c427b170e32bebf7b183867c5b7daf850770df54acaf",
+  "hunks": [
+   {
+    "at": 4,
+    "before": "local Motion=require('abyss_character_entrance')\nlocal M={}\n-- 选角只做一眼扫读（对标 STS 选角页）：牌组按 攻击→技能→能力→其它 排好直接列出，不提供筛选。\nlocal typeOrder={attack=1,skill=2,power=3,status=4,curse=5}\nlocal function sortedDeck(info)",
+    "after": "local Motion=require('abyss_character_entrance')\nlocal M={}\n-- The legacy layout lists cards in type order.\nlocal typeOrder={attack=1,skill=2,power=3,status=4,curse=5}\nlocal function sortedDeck(info)"
+   },
+   {
+    "at": 17,
+    "before": "    return cards\nend\n-- Selection owns the summary only; the shared deck browser owns all card faces.\nlocal function renderStarterDeck(details,info)\n    local parts={}",
+    "after": "    return cards\nend\n-- The legacy selection summary shares no card faces with the deck browser.\nlocal function renderStarterDeck(details,info)\n    local parts={}"
+   },
+   {
+    "at": 23,
+    "before": "    details:GetChild('deckTitle').text='初始牌组 · '..number(info.deckSize)..' 张'\n    details:GetChild('deckSummary').text=table.concat(parts,'  ')\nend\nlocal function selected(box,value)",
+    "after": "    details:GetChild('deckTitle').text='初始牌组 · '..number(info.deckSize)..' 张'\n    details:GetChild('deckSummary').text=table.concat(parts,'  ')\nend\nlocal function paintLegacyDeck(panel,details,info)\n    panel:GetChild('deckView'):SetVisible(false)\n    if info and details:GetChild('deckSummary') then renderStarterDeck(details,info) end\nend\nlocal function selected(box,value)"
+   },
+   {
+    "at": 103,
+    "before": "    details:GetChild('relic').text=#relics>0 and table.concat(relics,'、') or '无'\n    details:GetChild('relicText').text=table.concat(texts,' ')\n    if details:GetChild('deckSummary') then renderStarterDeck(details,info) end\nend\nlocal function paintFigure(details,state,platform,originalSts,info)",
+    "after": "    details:GetChild('relic').text=#relics>0 and table.concat(relics,'、') or '无'\n    details:GetChild('relicText').text=table.concat(texts,' ')\nend\nlocal function paintFigure(details,state,platform,originalSts,info)"
+   },
+   {
+    "at": 156,
+    "before": "    paintThemesAndElements(panel,state,platform,elementsOpen)\n    local details=panel:GetChild('details');details:SetVisible(info~=nil)\n    panel:GetChild('deckView'):SetVisible(false)\n    local roster=panel:GetChild('v25Roster')\n    if nativeV25 and roster then",
+    "after": "    paintThemesAndElements(panel,state,platform,elementsOpen)\n    local details=panel:GetChild('details');details:SetVisible(info~=nil)\n    local roster=panel:GetChild('v25Roster')\n    if nativeV25 and roster then"
+   },
+   {
+    "at": 162,
+    "before": "        roster:GetChild('selected'):GetChild('selection'):SetVisible(info~=nil)\n        panel:GetChild('traveler'):GetChild('selected'):SetVisible(false)\n    end\n    paintPublished(panel,details,state,platform,motion,info,originalSts,nativeV25)",
+    "after": "        roster:GetChild('selected'):GetChild('selection'):SetVisible(info~=nil)\n        panel:GetChild('traveler'):GetChild('selected'):SetVisible(false)\n    else\n        paintLegacyDeck(panel,details,info)\n    end\n    paintPublished(panel,details,state,platform,motion,info,originalSts,nativeV25)"
+   }
+  ]
+ },
+ {
+  "path": "src/lua/abyss_game_ui_input.lua",
+  "beforeSha256": "fa0495b933c783b40d559f356f746a6f4ae49771636e916f8959207594868636",
+  "afterSha256": "de281dad9178309bfb4c4119b7ed2e091c37449a1f65ff481394b6be15c1d18f",
+  "hunks": [
+   {
+    "at": 324,
+    "before": "    bindCommand(characterPanel:GetChild('confirm'),'character_confirm',function()return self:confirmCharacter()end,\n        function()return self.characterSelection:canConfirm() and not self.characterSelection.deckOpen end)\n    local starterDeck=characterPanel:GetChild('details'):GetChild('deckOpen')\n    if starterDeck then\n        bindCommand(starterDeck,'character_deck',function()",
+    "after": "    bindCommand(characterPanel:GetChild('confirm'),'character_confirm',function()return self:confirmCharacter()end,\n        function()return self.characterSelection:canConfirm() and not self.characterSelection.deckOpen end)\n    local starterDeck=Theme.presentationProfile~='official-assets-first' and characterPanel:GetChild('details'):GetChild('deckOpen')\n    if starterDeck then\n        bindCommand(starterDeck,'character_deck',function()"
+   }
+  ]
+ },
+ {
+  "path": "tests/noncombat-v25-layout.test.mjs",
+  "beforeSha256": "c2d275a928d9f168c28d5dea5c78d60e3b7a480447463723eabe2bcb4d34ca13",
+  "afterSha256": "52a1a10dada404e7dc3101bde1404500af83360de70984755befff67f9a02bed",
+  "hunks": [
+   {
+    "at": 17,
+    "before": "import {attachOfficialPortraits} from '../scripts/official-portraits.mjs';\nimport {applyOfficialNoncombatLayout} from '../scripts/noncombat-v25-layout.mjs';\nconst parts=n=>n?.controls??n?.children??[],child=(n,name)=>parts(n).find(c=>c.name===name);\nconst all=n=>[n,...parts(n).flatMap(all)];",
+    "after": "import {attachOfficialPortraits} from '../scripts/official-portraits.mjs';\nimport {applyOfficialNoncombatLayout} from '../scripts/noncombat-v25-layout.mjs';\nimport {loadUiReferences} from '../scripts/check-ui-references.mjs';\nimport {capacityProblems} from './helpers/ui-readability.mjs';\nconst parts=n=>n?.controls??n?.children??[],child=(n,name)=>parts(n).find(c=>c.name===name);\nconst all=n=>[n,...parts(n).flatMap(all)];"
+   },
+   {
+    "at": 25,
+    "before": " attachOfficialPortraits(layout,{selectionAvatar:true,battlePortrait:true});\n const stage=child(layout,'stage')??layout,menu=child(stage,'menuPanel'),panel=child(stage,'characterPanel');\n const start=child(child(menu,'start'),'hit'),confirm=child(child(panel,'confirm'),'hit'),modal=child(panel,'deckView');\n const resultLabel=structuredClone(child(child(menu,'start'),'label'));\n const oldBattle=JSON.stringify(child(stage,'battlePanel'));",
+    "after": " attachOfficialPortraits(layout,{selectionAvatar:true,battlePortrait:true});\n const stage=child(layout,'stage')??layout,menu=child(stage,'menuPanel'),panel=child(stage,'characterPanel');\n const start=child(child(menu,'start'),'hit'),confirm=child(child(panel,'confirm'),'hit');\n const resultLabel=structuredClone(child(child(menu,'start'),'label'));\n const oldBattle=JSON.stringify(child(stage,'battlePanel'));"
+   },
+   {
+    "at": 31,
+    "before": " assert.equal(child(child(menu,'start'),'hit'),start);\n assert.equal(child(child(panel,'confirm'),'hit'),confirm);\n assert.equal(parts(panel).at(-1),modal);\n assert.equal(modal.visible,false);assert.deepEqual(modal.children,[],'retire the duplicated selection deck; reuse the shared browser');\n assert.equal(JSON.stringify(child(stage,'battlePanel')),oldBattle);\n assert.equal(child(menu,'vista').visible,false);",
+    "after": " assert.equal(child(child(menu,'start'),'hit'),start);\n assert.equal(child(child(panel,'confirm'),'hit'),confirm);\n assert.equal(child(panel,'deckView'),undefined,'retire the duplicated selection deck; reuse the shared browser');\n assert.equal(JSON.stringify(child(stage,'battlePanel')),oldBattle);\n assert.equal(child(menu,'vista').visible,false);"
+   },
+   {
+    "at": 172,
+    "before": "const panel=child(child(layout,'stage'),'characterPanel');\n\ntest('official generated selection retires the legacy full-screen shade above its approved artwork',()=>{\n const background=child(panel,'lumineSelectionBackground'),shade=child(panel,'officialBackdropVeil');",
+    "after": "const panel=child(child(layout,'stage'),'characterPanel');\n\ntest('generated official character selection follows the approved details revision',()=>{\n const revisions=loadUiReferences().filter(row=>row.targetVersion==='v2.0.0'&&\n  row.codePath==='scripts/character-selection-composition.mjs'&&row.state==='details');\n assert.deepEqual(revisions.filter(row=>['APPROVED','CURRENT_IMPLEMENTATION'].includes(row.status))\n  .map(row=>[row.revision,row.status]),[['release-sts1-20261122','APPROVED']]);\n assert.equal(revisions.find(row=>row.revision==='sts1-open-copy-20261119')?.status,'SUPERSEDED');\n const output=join(directory,'refined-release');\n buildUI(output,undefined,{officialAssets:true,refinedReleaseMonsterArt:true,nativePageLifecycle:true,experimentalCharacters:false});\n const tree=JSON.parse(readFileSync(join(output,'game-ui.json'),'utf8'));\n const selection=child(child(tree,'stage'),'characterPanel');\n const details=child(selection,'details');\n const motion=child(details,'infoMotion'),infoLayers=motion?parts(motion):[details];\n assert(infoLayers.length>0);\n for(const info of infoLayers)for(const name of ['name','stats','gold','v25Story','relic','relicText']){\n  assert.equal(child(info,name)?.kind,'text',name);\n }\n const retired=new Set(['deckTitle','deckSummary','deckRule','deckOpen','deckView']);\n const found=all(selection).filter(node=>retired.has(node.name)||/初始牌组|查看牌组/.test(node.text?.content??''));\n assert.deepEqual(found.map(node=>node.name),[],'obsolete starter deck controls in the official selection tree');\n for(const info of infoLayers){\n  const story=child(info,'v25Story'),{content,fontSize,minFontSize}=story.text;\n  const problems=capacityProblems([{path:'characterPanel/details/v25Story',kind:story.kind,visible:true,\n   text:content,size:story.size,font:fontSize,minimum:minFontSize}],nativeTheme.layout.nativeText.lineHeight);\n  assert.deepEqual(problems,[],'reserve both native lines for the mobile synopsis');\n  assert(story.size[1]>=nativeTheme.layout.nativeText.lineHeight*2,'reserve two lines for longer synopses');\n  assert.equal(content,'使用岩元素护盾与结晶应对敌人。');\n  assert.equal(minFontSize,fontSize,'retain the authored text size');\n  const stats=child(info,'stats'),relic=child(info,'relic');\n  assert(story.position[1]+story.size[1]/2<stats.position[1]-stats.size[1]/2,'story clears health');\n  assert(story.position[1]-story.size[1]/2>relic.position[1]+relic.size[1]/2,'story clears the relic title');\n }\n});\n\ntest('official generated selection retires the legacy full-screen shade above its approved artwork',()=>{\n const background=child(panel,'lumineSelectionBackground'),shade=child(panel,'officialBackdropVeil');"
+   },
+   {
+    "at": 298,
+    "before": "});\n",
+    "after": "});\n\ntest('selection replay authenticates the current source for both changed owners',async()=>{\n const {beforeOfficialCharacterBackflow}=await import('./helpers/current-replay-fix-sources.mjs');\n const {assertCurrentUiEntrance,authenticateUiEntrance,beforeUiEntrance}=await import('./helpers/ui-entrance-source.mjs');\n const read=path=>readFileSync(path,'utf8');\n authenticateUiEntrance(read);\n for(const path of ['src/lua/abyss_character_select_view.lua','src/lua/abyss_game_ui_input.lua']){\n  const current=read(path),previous=beforeOfficialCharacterBackflow(path,current);\n  assert.notEqual(previous,current);\n  assert.equal(beforeUiEntrance(path,previous),beforeUiEntrance(path,current));\n  assert.throws(()=>assertCurrentUiEntrance(path,previous),/fresh current production owner/);\n  assert.throws(()=>authenticateUiEntrance(owner=>owner===path?previous:read(owner)),/combined linked owner identity/);\n }\n});\n"
+   }
+  ]
+ },
+ {
+  "path": "tests/official-assets.test.mjs",
+  "beforeSha256": "da4c8de1a7585309afcb548cc44efc0729880095ffbfef14c0e86e16ab8d74b3",
+  "afterSha256": "9c8f77cb1fee968f4115824559023e7d0cdb441c1ad2c778645e5fce0e8a3663",
+  "hunks": [
+   {
+    "at": 106,
+    "before": " const current=new Map([...paths(layout),...paths(template)]);\n const retiredDeckPrefix='/SlayTheAbyss/characterPanel/deckView/';\n const retiredStarterEntry=path=>/^\\/SlayTheAbyss\\/characterPanel\\/details\\/deck(?:Open|Title|Summary|Rule)(?:\\/|$)/.test(path);\n const retiredOverlay=path=>/^\\/SlayTheAbyss\\/(?:prologuePanel(?:\\/|$)|(?:exitPanel|runMenu)\\/(?:help|guide)(?:\\/|$)|potionPanel\\/)/.test(path);\n const retiredPickerChild=path=>/^\\/SlayTheAbyss\\/nodePanel\\/pickerView\\/card[4-6]\\//.test(path);\n const retiredChoice=path=>/^\\/SlayTheAbyss\\/choicePanel\\/card(?:[3-9]|10)(?:\\/|$)/.test(path);\n const retiredDeck=child(child(layout,'characterPanel'),'deckView');\n assert.equal(retiredDeck.visible,false);assert.deepEqual(retiredDeck.children,[],\n  'selection must use the shared deck browser instead of keeping twelve independent card slots');\n const merchant=new Map(paths(merchantControl(theme),'/SlayTheAbyss/nodePanel'));\n  for(const [path,node,before] of semantic){",
+    "after": " const current=new Map([...paths(layout),...paths(template)]);\n const retiredDeckPrefix='/SlayTheAbyss/characterPanel/deckView/';\n const retiredStarterEntry=path=>/^\\/SlayTheAbyss\\/characterPanel\\/(?:deckView$|details\\/deck(?:Open|Rule|Title|Summary)(?:\\/|$))/.test(path);\n const retiredOverlay=path=>/^\\/SlayTheAbyss\\/(?:prologuePanel(?:\\/|$)|(?:exitPanel|runMenu)\\/(?:help|guide)(?:\\/|$)|potionPanel\\/)/.test(path);\n const retiredPickerChild=path=>/^\\/SlayTheAbyss\\/nodePanel\\/pickerView\\/card[4-6]\\//.test(path);\n const retiredChoice=path=>/^\\/SlayTheAbyss\\/choicePanel\\/card(?:[3-9]|10)(?:\\/|$)/.test(path);\n assert.equal(child(child(layout,'characterPanel'),'deckView'),undefined);\n const merchant=new Map(paths(merchantControl(theme),'/SlayTheAbyss/nodePanel'));\n  for(const [path,node,before] of semantic){"
+   }
+  ]
+ },
+ {
+  "path": "tests/sts-character-browser.test.mjs",
+  "beforeSha256": "4a2e6165ce047aebea29fedcc4d8f3166916b634e9581e1a44de304b9c56a376",
+  "afterSha256": "53c2a8b2edda1414bde82131decf898ea04f89b8d5515706bfaaa7dd3565e7b3",
+  "hunks": [
+   {
+    "at": 76,
+    "before": "assert(deck.browserShell and not deck.pileView and not deck.pileKind and not deck.choiceToken and not deck.battle)\nassert(deck.run.readOnlyPreview and #deck.cards==info.deckSize and deckPanel:GetChild('pileGrid').visible)\nassert(not panel.visible and not panel:GetChild('deckView').visible and #panel:GetChild('deckView'):GetChildren()==0)\nassert(host.pointerBlocked(),'preparation must keep preview input covered')\nassert(not host:openStarterDeck(),'covered/reentrant opening must fail')",
+    "after": "assert(deck.browserShell and not deck.pileView and not deck.pileKind and not deck.choiceToken and not deck.battle)\nassert(deck.run.readOnlyPreview and #deck.cards==info.deckSize and deckPanel:GetChild('pileGrid').visible)\nassert(not panel.visible and not panel:GetChild('deckView'))\nassert(host.pointerBlocked(),'preparation must keep preview input covered')\nassert(not host:openStarterDeck(),'covered/reentrant opening must fail')"
+   }
+  ]
+ }
+].map(row=>[row.path,row]));
+
+export function beforeOfficialCharacterBackflow(path,source){
+ const backflow=characterBackflowBindings.get(path);
+ if(!backflow)return source;
+ const prior=restoreExactFixtureHunks(backflow,path,source);
+ return prior!==source&&source.includes('\r\n')?prior.replaceAll('\n','\r\n'):prior;
+}
+
 // Retain at most one verified byte-for-byte projection per declared path.
 const lastVerifiedProjection=new Map();
 export function beforeCurrentReplayFixes(path, source){
- const localGilPrior=beforeLocalGilFixture(path,source);
- if(localGilPrior!==source)return localGilPrior;
+ source=beforeOfficialCharacterBackflow(path,beforeApprovedUiEntrance(path,source));
  const binding=bindings.get(path);
  if(!binding)return source;
  const cached=lastVerifiedProjection.get(path);
