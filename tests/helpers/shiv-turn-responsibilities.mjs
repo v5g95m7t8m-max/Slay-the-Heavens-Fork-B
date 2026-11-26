@@ -12,6 +12,17 @@ export function beforeSource(){
  assert.equal(createHash('sha1').update(`blob ${Buffer.byteLength(source)}\0`).update(source).digest('hex'),'4cca114a88aae9a55cebe9019f7b075adcd8f304','complete baseline Git blob at d8a57cae2a867200ca8e588abc0d368e6cdb3799');
  return source;
 }
+const fixturePath='tests/helpers/shiv-turn-responsibilities.lua';
+function combatFixtureSource(){
+ const raw=readFileSync(fixturePath,'utf8'),source=raw.replaceAll('\r\n','\n');
+ assert(raw===source||raw===source.replaceAll('\n','\r\n'),'complete Shiv combat fixture line endings');
+ assert.equal(createHash('sha256').update(source).digest('hex'),'56610cdf349a2382ea0391ba350ab6b3e1860260756fdd309305015617ad0249','exact original Shiv combat fixture');
+ assert.equal(createHash('sha1').update(`blob ${Buffer.byteLength(source)}\0`).update(source).digest('hex'),'9c3bee256f57a1a75aed30bc053c337bd4276dc1','exact original Shiv combat fixture Git blob');
+ // #951 renamed the encounter enemy. Both sides still run the same frozen scenario.
+ const encounter="enemies={'cultist'}";
+ assert.equal(source.split(encounter).length,2,'one original Shiv combat encounter');
+ return source.replace(encounter,"enemies={'raven_adept'}");
+}
 // Exact allowlist: source coordinates alone may move, but no arbitrary Lua
 // engine error or unexpected diagnostic is treated as equivalent.
 export function errorLocations(source){
@@ -26,6 +37,8 @@ export function errorLocations(source){
  }));
 }
 export function turnVm(source,mode='direct'){
+ const fixture=mode==='direct'?`dofile(${luaString(fixturePath)})`
+  :`assert(load(${luaString(combatFixtureSource())},${luaString('@'+fixturePath)}))()`;
  const L=lauxlib.luaL_newstate();lualib.luaL_openlibs(L);const graphs=[],rawErrors=[];let instructions=0;
  lua.lua_sethook(L,()=>{instructions+=10000;if(instructions>20000000)lauxlib.luaL_error(L,to_luastring('bounded Shiv fixture instruction limit'));},lua.LUA_MASKCOUNT,10000);
  lua.lua_pushcfunction(L,L=>{rawErrors.push(to_jsstring(lauxlib.luaL_checkstring(L,1)));return 0;});lua.lua_setglobal(L,to_luastring('SHIV_RAW_ERROR'));
@@ -34,7 +47,7 @@ export function turnVm(source,mode='direct'){
  package.preload.abyss_shivs=assert(load(${luaString(source)},'@src/lua/abyss_shivs.lua'))
  SHIV_MODE=${luaString(mode)}
  SHIV_ERROR_LOCATIONS=${toLua(errorLocations(source))}
- dofile('tests/helpers/shiv-turn-responsibilities.lua')`;
+ ${fixture}`;
  const status=lauxlib.luaL_dostring(L,to_luastring(script));
  const error=status===lua.LUA_OK?null:to_jsstring(lua.lua_tostring(L,-1));lua.lua_close(L);
  return {status,error,graphs,rawErrors};

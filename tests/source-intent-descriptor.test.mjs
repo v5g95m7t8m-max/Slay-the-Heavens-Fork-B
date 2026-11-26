@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync,mkdtempSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {runLua} from '../scripts/test-lua.mjs';
+import {currentEnemyIntentCase} from './helpers/released-encounter-identities.mjs';
 import {toLua} from '../scripts/build-lua-data.mjs';
 
 test('source descriptors cover every pinned move without evaluating future effects or spending Artifact',()=>{
  const evidence=JSON.parse(readFileSync('docs/art/source-monster-intents.json','utf8'));
  const cases=[...evidence.act1.rows.map(row=>[row.enemyId,row.runtimeMoveId,row.variants[0].sourceIntent]),
-  ...evidence.act2.mappings.map(row=>[row.enemy_id,row.runtime_move_id,row.intent_enum])];
+  ...evidence.act2.mappings.map(row=>[row.enemy_id,row.runtime_move_id,row.intent_enum])].map(currentEnemyIntentCase);
  assert.equal(cases.length,130);assert.equal(new Set(cases.map(row=>row[0])).size,42);
  const directory=mkdtempSync('build/source-intent-descriptor-');
  try {
