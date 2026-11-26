@@ -7,6 +7,8 @@ import {assertCurrentJsInventory,assertCurrentLuaInventory,beforeShopEntryInvent
 import {checkedSelectionEntranceRead} from './helpers/ui-selection-current-source.mjs';
 import {beforeChapterBattleScene} from './helpers/chapter-battle-scene-source.mjs';
 import {beforeBattlePeriphery} from './helpers/battle-periphery-source.mjs';
+import {restoreExactFixtureHunks} from './helpers/exact-fixture-hunks.mjs';
+import {exactSourceMatches} from './helpers/source-fingerprint.mjs';
 import test from 'node:test';
 import {integratedRead,integratedCiProof,integratedPriorInventory,assertIntegratedCurrent} from './helpers/integrated-ci-source.mjs';
 import assert from 'node:assert/strict';
@@ -21,8 +23,46 @@ import {readFileSync,readdirSync} from 'node:fs';
 import {discoverJs,jsPlanningWeights,timings} from '../scripts/ci-shards.mjs';
 const hash=source=>createHash('sha256').update(source).digest('hex');
 const bind=source=>({source,sha256:hash(source)}),commit='c'.repeat(40);
-const readProduction=path=>readFileSync(path,'utf8');
-const readProductionHistory=path=>path===retiredControllerPath?readRetiredController(readProduction).source:readProduction(path);
+const deckBrowser='src/lua/abyss_deck_browser.lua';
+const deckBrowserCurrent={
+ sha256:'da4dad9b9b771649176887fa8accc36b02283736cec9e0362a04fa335c2e6c36',
+ gitBlob:'e385c9d626ca1a7858399d15d0c2c95c9cb83a97',
+};
+const deckBrowserBefore={
+ sha256:'ca0fe78afb9035b2b4ccfa0e2de86d21cb7789a6e28868033259cf89d4bd9d3e',
+ gitBlob:'c7d0f015aaea8ed5e797458c3b8cd06644c14c2b',
+};
+const deckBrowserReceipt={
+ path:deckBrowser,beforeSha256:deckBrowserBefore.sha256,afterSha256:deckBrowserCurrent.sha256,
+ hunks:[
+  {at:170,before:'local function prepare(pool,job)',after:[
+   'local function showHit(hit)',
+   '    if hit.visible~=true then',
+   "        assert(hit:SetVisible(true)~=false,'deck browser hit visibility rejected')",
+   '    end','end','','local function prepare(pool,job)',
+  ].join('\n')},
+  {at:218,before:"    assert(entry.hit:SetVisible(true)~=false,'deck browser hit visibility rejected')",after:'    showHit(entry.hit)'},
+ ],
+};
+
+function styleProductionReaders(read=readFileSync){
+ const readOwner=reviewedSelectionRead(read);
+ const readEntrance=chapterEvidenceCurrentRead(checkedSelectionEntranceRead(read));
+ const current=path=>uiEntranceOwns(path)?readEntrance(path,'utf8'):readOwner(path);
+ const legacy=path=>{
+  const source=current(path);
+  if(uiEntranceOwns(path))return beforeBattlePeriphery(path,beforeChapterBattleScene(path,source));
+  if(path!==deckBrowser)return source;
+  // The live visibility guard follows the original pointer-input receipt.
+  const lf=typeof source==='string'&&source.replaceAll('\r\n','\n');
+  assert(lf&&!lf.includes('\r')&&(source===lf||source===lf.replaceAll('\n','\r\n'))
+   &&exactSourceMatches(lf,deckBrowserCurrent),'fresh uniform Deck Browser owner: '+path);
+  const prior=restoreExactFixtureHunks(deckBrowserReceipt,path,lf);
+  assert(exactSourceMatches(prior,deckBrowserBefore),'exact Deck Browser pointer predecessor: '+path);
+  return source===lf?prior:prior.replaceAll('\n','\r\n');
+ };
+ return {current,legacy,readOwner};
+}
 function fixture(){
  const config='config/architecture.json',one='src/lua/one.lua',two='src/lua/two.lua',added='src/lua/abyss_page_reveal.lua';
  const current={[config]:bind('{}\n'),[one]:bind('return 1\n'),[two]:bind('return 2\n')};
@@ -114,29 +154,63 @@ test('incomplete inventories, invented predecessors and unowned additions cannot
 
 test('real style source retains the complete CI-repair and every older target while authenticating all current raw owners',async()=>{
  const {sourceEpoch,ciRepairSourceEpoch,releaseSourceEpoch,prePowerMembershipEpoch}=await import('./helpers/closeout-source-epoch.mjs');
- const p=sourceEpoch.proof,before=ciRepairSourceEpoch.proof,read=readProduction;
+ const p=sourceEpoch.proof,before=ciRepairSourceEpoch.proof;
+ const {current,legacy:read,readOwner}=styleProductionReaders();
  assert.equal(Object.keys(before.current).length,347); // config plus all 346 prior Lua modules.
  assert.equal(Object.keys(releaseSourceEpoch.proof.current).length,350); // Frozen release: page reveal, low-cost art, merchant pages.
  assert.equal(Object.keys(prePowerMembershipEpoch.proof.current).length,352); // Final menu adds navigation and navigation view.
  assert.deepEqual(Object.keys(p.current).sort(),[...Object.keys(prePowerMembershipEpoch.proof.current),'src/lua/abyss_power_membership.lua'].sort());
- const actual=['config/architecture.json',...readdirSync('src/lua').filter(n=>n.endsWith('.lua')).map(n=>'src/lua/'+n)].sort();
+ const config='config/architecture.json';
+ const actual=[config,...readdirSync('src/lua').filter(n=>n.endsWith('.lua')).map(n=>'src/lua/'+n)].sort();
  assert(Object.hasOwn(p.current,retiredControllerPath),'the archived controller must remain available to historical targets');
+ const retired=readRetiredController(readOwner);
+ assert.equal(retired.restored,true,'the live pointer authenticates an absent controller');
  const previous=Object.keys(p.current).filter(path=>path!==retiredControllerPath);
- assert.deepEqual([...previous,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort(),entranceInventory(actual,read));
- assertActorFocusInventory(actual.filter(path=>path!=='config/architecture.json'),read);
+ const aliases=new Map([
+  ['src/lua/abyss_blue_guard_ai.lua','src/lua/abyss_blue_slaver_ai.lua'],
+  ['src/lua/abyss_augmenter_event.lua','src/lua/abyss_drug_dealer_event.lua'],
+  ['src/lua/abyss_red_guard_ai.lua','src/lua/abyss_red_slaver_ai.lua'],
+ ]);
+ const additions=[
+  'src/lua/abyss_byrd_ground_trial.lua','src/lua/abyss_card_keywords.lua','src/lua/abyss_chapter_battle_scene.lua',
+  'src/lua/abyss_checkpoint_identities.lua','src/lua/abyss_run_hud.lua',
+ ];
+ const entrance=entranceInventory(actual,read);
+ for(const path of [...aliases.keys(),...additions])assert(entrance.includes(path),'live successor: '+path);
+ const legacyInventory=paths=>paths.filter(path=>!additions.includes(path)).map(path=>aliases.get(path)??path).sort();
+ assert.deepEqual(legacyInventory(entrance),[...previous,...stasisUpgradeAddedPaths,...actorFocusAdded,...deckPagesAdded,pointerInputPath].sort());
+ assertActorFocusInventory(legacyInventory(actual.filter(path=>path!==config)),read);
  for(const [path,row]of Object.entries(before.current))assert.deepEqual(p.targets.stsStylePrior.files[path],row,path+' complete prior');
  for(const [name,target]of Object.entries(before.targets))for(const [path,row]of Object.entries(target.files))assert.deepEqual(p.targets[name].files[path],row,name+'/'+path);
- for(const path of Object.keys(p.current))assert.equal(beforeCharacterPreparationSource(path,readProductionHistory(path)).replaceAll('\r\n','\n'),p.current[path].source,path+' exact historical input');
- const config='config/architecture.json',raw=read(config),prior=p.targets.stsStylePrior.files[config].source;
+ for(const [path,row]of Object.entries(p.current)){
+  const source=path===retiredControllerPath
+   ?beforeCharacterPreparationSource(path,retired.source,current)
+   :beforeCurrentProductionSource(path,current(path),current);
+  assert.equal(source.replaceAll('\r\n','\n'),row.source,path+' exact historical input');
+ }
+ const raw=read(config),prior=p.targets.stsStylePrior.files[config].source;
  assert.equal(sourceEpoch.preCombinedSource(config,raw,{target:'stsStylePrior',readSource:read}),prior);
  for(const owner of p.owners.filter(path=>!before.owners.includes(path))){
-  const foreign=readProductionHistory(owner)+'\n';
+  const foreign=(owner===retiredControllerPath?retired.source:read(owner))+'\n';
   // The retired controller has an absence witness. Removing its live replacement must still fail.
   const missing=owner===retiredControllerPath?pointerInputPath:owner;
   for(const [changed,value] of [[missing,null],[owner,foreign]]){
    assert.throws(()=>sourceEpoch.preCombinedSource(config,raw,{target:'stsStylePrior',readSource:path=>path===changed?value:read(path)}),/linked owner|pointer input/,changed);
   }
  }
+ const substitute=(changed,source)=>(path,encoding)=>path===changed?source:readFileSync(path,encoding);
+ for(const [active,old] of aliases){
+  const source=readFileSync(active,'utf8');
+  assert.throws(()=>reviewedSelectionRead(substitute(active,source+'\n'))(old),/fresh reviewed Selection production owner/,active);
+  assert.throws(()=>reviewedSelectionRead(substitute(old,source))(old),/legacy Selection owner must stay absent/,old);
+ }
+ const deck=readFileSync(deckBrowser,'utf8').replaceAll('\r\n','\n');
+ for(const foreign of [null,read(deckBrowser),deck.replace('\n','\r\n'),deck+'\n']){
+  const {legacy}=styleProductionReaders(substitute(deckBrowser,foreign));
+  assert.throws(()=>legacy(deckBrowser),/fresh uniform Deck Browser owner/);
+ }
+ const crlf=deck.replaceAll('\n','\r\n');
+ assert.equal(styleProductionReaders(substitute(deckBrowser,crlf)).legacy(deckBrowser),read(deckBrowser).replaceAll('\r\n','\n').replaceAll('\n','\r\n'));
 });
 
 test('real style CI admits only full inventory, complete source and freshly verified executable helpers',async()=>{
