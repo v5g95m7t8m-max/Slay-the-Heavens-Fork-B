@@ -380,7 +380,106 @@ function readOfficialCalibrationReceipt(path,digest,readCurrent){
  assert(matches(predecessor,prior),'exact official receipt predecessor: '+path);
  return predecessor;
 }
+// Current UI fixtures follow #925's generated compact reader. The archived
+// inventory still reads the authenticated exact older fixture, never runs it.
+const monsterReaderFixtures=Object.freeze({
+ "tests/lua/sentries_ui.lua": {
+  "before": {
+   "sha256": "ecb0ebeade9baea10b2a137c160fc115aec37b456e4ccfe06eccbadb77e94f28",
+   "gitBlob": "108cf93083cc16d4e323268ebe1e6ecb2e742b7b"
+  },
+  "after": {
+   "sha256": "80f1e80430f293085a4d49ded796e9bb1221e42ff8383dc11f4d1b068df6a3ce",
+   "gitBlob": "5e9a751044bf1091f400f82ac59f9d7b670ed71b"
+  },
+  "hunks": [
+   {
+    "at": 49,
+    "before": "expect(true)",
+    "after": "expect(true)\nlocal function dazedCount(battle)\n    local total=0\n    for _,pile in ipairs({battle.hand,battle.draw,battle.discard,battle.exhaust})do\n        for _,card in ipairs(pile)do if card.cardId=='dazed' then total=total+1 end end\n    end\n    return total\nend"
+   },
+   {
+    "at": 59,
+    "before": "    click(\"enemy1\");assert(inspectDetails(ui,stage):find(\"放入你的弃牌堆\",1,true))",
+    "after": "    click(\"enemy1\");assert(inspectDetails(ui,stage):find(\"这名敌人将要对你施加一种负面效果。\",1,true))"
+   },
+   {
+    "at": 62,
+    "before": "click(\"endTurn\");expect(false);assert(ui.run.combat.player.hp==71)\nclick(\"enemy2\");assert(inspectDetails(ui,stage):find(\"放入你的弃牌堆\",1,true))\nclick(\"endTurn\");expect(true);assert(ui.run.combat.player.hp==53)",
+    "after": "click(\"endTurn\");expect(false);assert(ui.run.combat.player.hp==71 and dazedCount(ui.run.combat)==4)\nclick(\"enemy2\");assert(inspectDetails(ui,stage):find(\"这名敌人将要对你施加一种负面效果。\",1,true))\nclick(\"endTurn\");expect(true);assert(ui.run.combat.player.hp==53 and dazedCount(ui.run.combat)==6)"
+   }
+  ]
+ },
+ "tests/lua/curl_up_ui.lua": {
+  "before": {
+   "sha256": "8d797ba35324a2efb6cb397f19bb70b9ad239dfb93f4561a6c91f8db3ff6b57e",
+   "gitBlob": "0dd733e19e753d8cd1f07ac603ebe8dfc4c457d4"
+  },
+  "after": {
+   "sha256": "b0fc365dece7673b12cc7f568e52f4556930ed652f59d1331676c501b555e0ef",
+   "gitBlob": "7352fd454d50346daa684dd52431c550d3ac28fc"
+  },
+  "hunks": [
+   {
+    "at": 6,
+    "before": "local function details(box)\n    local hit=box:GetChild('hit')\n    for _,kind in ipairs({'down','up','click'})do if hit.listeners and hit.listeners[kind]then hit.listeners[kind]({touchId=61})end end\n    local info,lines=panel:GetChild('statusInfo'),{}\n    assert(info.visible,'status details open')\n    for i=1,H.F.Theme.layout.statusInfo.rows do\n        local name=info:GetChild('name'..i)\n        if name.visible then lines[#lines+1]=name.text end\n    end\n    info:GetChild('hit').click();assert(not info.visible,'status details close')\n    return table.concat(lines,' | ')",
+    "after": "local inspect=dofile('tests/lua/support/status_detail_fixture.lua')\nlocal function details(key)\n    tap(key,61)\n    return inspect(ui,panel)"
+   },
+   {
+    "at": 11,
+    "before": "assert(details(first):find(definition.name..' '..string.format('%.0f',amount),1,true),'first Curl amount visible')\nassert(details(second):find(definition.name..' '..string.format('%.0f',other),1,true),'independent second Curl amount visible')",
+    "after": "assert(details(\"enemy1\"):find(definition.name..' '..string.format('%.0f',amount),1,true),'first Curl amount visible')\nassert(details(\"enemy2\"):find(definition.name..' '..string.format('%.0f',other),1,true),'independent second Curl amount visible')"
+   },
+   {
+    "at": 16,
+    "before": "info:GetChild('hit').click();assert(not info.visible,'close details before the next deliberate card input')",
+    "after": "inspect(ui,panel);assert(not info.visible,'close details before the next deliberate card input')"
+   },
+   {
+    "at": 19,
+    "before": "assert(not details(first):find(definition.name,1,true),'spent passive hidden')\nassert(details(second):find(definition.name..' '..string.format('%.0f',other),1,true),'other passive retained')",
+    "after": "assert(not details(\"enemy1\"):find(definition.name,1,true),'spent passive hidden')\nassert(details(\"enemy2\"):find(definition.name..' '..string.format('%.0f',other),1,true),'other passive retained')"
+   }
+  ]
+ },
+ "tests/lua/wizard_gremlin_ui.lua": {
+  "before": {
+   "sha256": "af0786c79d131af2c6f7a1558dfdfc4298413308fb507b263ffd2e97c249d6bd",
+   "gitBlob": "5bec51ffcdc89958459b3866f3e18eadcf163daf"
+  },
+  "after": {
+   "sha256": "b438898333566630d69cf6ac2060b368979f7acecaebadb982eb8a87aecbdd9d",
+   "gitBlob": "e29e5b8007ff38ee53b5f904a699584c769aad0d"
+  },
+  "hunks": [
+   {
+    "at": 57,
+    "before": "local box = F.actorControl(stage,'enemy1')",
+    "after": "local box = F.actorControl(stage,'enemy1')\nlocal inspect=dofile('tests/lua/support/status_detail_fixture.lua')"
+   },
+   {
+    "at": 65,
+    "before": "    assert(stage.children.statusInfo.visible and stage.children.statusInfo.children.text1.text:find(attack and \"25 点伤害\" or \"蓄能\",1,true), \"detail turn \" .. turn)\n    stage.children.statusInfo.children.hit.click()\n    assert(not stage.children.statusInfo.visible)",
+    "after": "    local copy=inspect(ui,stage)\n    assert(copy:find(attack and \"25 点伤害\" or \"这名敌人的意图不明（但不是攻击）。\",1,true), \"detail turn \" .. turn .. \": \" .. copy)"
+   }
+  ]
+ }
+});
+function readMonsterReaderFixture(path,digest,readCurrent){
+ if(!Object.hasOwn(monsterReaderFixtures,path))return;
+ const {before,after,hunks}=monsterReaderFixtures[path];
+ if(digest!==before.sha256)return;
+ const source=readCurrent(path,'utf8');
+ assert(matches(source,after),'current monster reader fixture changed: '+path);
+ const normalized=lf(source);
+ assert(source===normalized||source===normalized.replaceAll('\n','\r\n'),'mixed monster reader fixture line endings: '+path);
+ const prior=restoreExactFixtureHunks({path,beforeSha256:digest,afterSha256:after.sha256,hunks},path,source);
+ assert(matches(prior,before),'exact historical monster reader fixture: '+path);
+ return prior;
+}
 export function readCalibrationReceiptInput(path,digest,read,readCurrent=readFileSync){
+ const monster=readMonsterReaderFixture(path,digest,readCurrent);
+ if(monster!==undefined)return monster;
  // #391's Slimed UI fixture is an intermediate receipt, not the oldest Lua
  // inverse. Check the live fixture before restoring only the one #1060 hunk.
  if(path==='tests/lua/slimed_ui.lua'&&digest==='74c651bbeadec8224e4d7bbab98f947d5e9a9494f3d681b96e8648a07703f20b'){

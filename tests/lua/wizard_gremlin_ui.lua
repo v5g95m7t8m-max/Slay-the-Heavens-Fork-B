@@ -56,15 +56,15 @@ local function setup()
 end
 local ui, stage, click = setup()
 local box = F.actorControl(stage,'enemy1')
+local inspect=dofile('tests/lua/support/status_detail_fixture.lua')
 for turn=1,11 do
     local attack = turn == 3 or turn == 7 or turn == 11
     assert(box.children.intent.text == (attack and "25" or "") and not box.children.intentLabel.visible, "actual numeric face turn " .. turn)
     if not attack then assert(require('abyss_battle_intent_view').intentView(ui.run.combat,1).label=='蓄能','charge wording turn '..turn)end
     dofile('tests/lua/support/intent_face_assertion.lua')(box,require('abyss_battle_intent_view').intentView(ui.run.combat,1))
     click("enemy1")
-    assert(stage.children.statusInfo.visible and stage.children.statusInfo.children.text1.text:find(attack and "25 点伤害" or "蓄能",1,true), "detail turn " .. turn)
-    stage.children.statusInfo.children.hit.click()
-    assert(not stage.children.statusInfo.visible)
+    local copy=inspect(ui,stage)
+    assert(copy:find(attack and "25 点伤害" or "这名敌人的意图不明（但不是攻击）。",1,true), "detail turn " .. turn .. ": " .. copy)
     click("endTurn")
 end
 assert(ui.run.combat.player.hp == 5)

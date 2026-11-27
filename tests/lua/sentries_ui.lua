@@ -48,12 +48,19 @@ local function expect(outerBolt)
     end
 end
 expect(true)
+local function dazedCount(battle)
+    local total=0
+    for _,pile in ipairs({battle.hand,battle.draw,battle.discard,battle.exhaust})do
+        for _,card in ipairs(pile)do if card.cardId=='dazed' then total=total+1 end end
+    end
+    return total
+end
 local before=C.copy(ui.run.combat)
 for _=1,4 do
-    click("enemy1");assert(inspectDetails(ui,stage):find("放入你的弃牌堆",1,true))
+    click("enemy1");assert(inspectDetails(ui,stage):find("这名敌人将要对你施加一种负面效果。",1,true))
 end
 same(ui.run.combat,before)
-click("endTurn");expect(false);assert(ui.run.combat.player.hp==71)
-click("enemy2");assert(inspectDetails(ui,stage):find("放入你的弃牌堆",1,true))
-click("endTurn");expect(true);assert(ui.run.combat.player.hp==53)
+click("endTurn");expect(false);assert(ui.run.combat.player.hp==71 and dazedCount(ui.run.combat)==4)
+click("enemy2");assert(inspectDetails(ui,stage):find("这名敌人将要对你施加一种负面效果。",1,true))
+click("endTurn");expect(true);assert(ui.run.combat.player.hp==53 and dazedCount(ui.run.combat)==6)
 print("SENTRIES_GENERATED_UI_PASS compact/detail/icons/Artifact/readonly/two real rounds")
