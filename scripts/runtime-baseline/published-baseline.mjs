@@ -18,6 +18,16 @@ const legacy = {
   archive: '3f79269e90a8f2507f6782135563ecf573b357d7',
   directory: 'docs/evidence/v2.1.1-2026-11-25',
 };
+export const legacyGilArchive = Object.freeze({
+  kind: 'published-project-gil',
+  release: legacy.tag,
+  releaseId: legacy.releaseId,
+  archiveCommit: legacy.archive,
+  path: `${legacy.directory}/slay-the-heavens-v2.1.1-2026-11-25.gil`,
+  sourceCommit: '06c2577ecc6c07593c6bf8b6e79e158dac5b6195',
+  bytes: 23_780_838,
+  sha256: 'afe80c0783d0d4b6046c1f44cba3ef2b71cb8bb34fbc7404d939d12e0f5ff831',
+});
 
 function versionParts(version) {
   assert(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version), 'Engineering SemVer required');
@@ -81,6 +91,15 @@ async function legacyBaseline(request, release) {
     source: release.html_url, releaseId: legacy.releaseId};
 }
 
+export async function resolveLegacyPublishedBaseline(request = githubRequest) {
+  const release = await request(`${repo}/releases/${legacy.releaseId}`);
+  assert.equal(release?.id, legacy.releaseId, 'Published v2.1.1 Release ID changed');
+  const baseline = await legacyBaseline(request, release);
+  assert.equal(baseline.commit, legacyGilArchive.sourceCommit, 'Archived GIL build source changed');
+  assert.equal(baseline.gilSha256, legacyGilArchive.sha256, 'Archived GIL SHA-256 changed');
+  return baseline;
+}
+
 export async function resolvePublishedBaseline(candidateVersion, request = githubRequest) {
   versionParts(candidateVersion);
   const releases = await listReleases(request);
@@ -100,22 +119,22 @@ export async function resolvePublishedBaseline(candidateVersion, request = githu
     gilSha256: metadata.artifact.sha256, source: release.html_url, releaseId: release.id};
 }
 
-export async function downloadPublishedBaselineGil(published, output, request = githubRequest) {
+export async function downloadPublishedBaselineGil(published, output, request = githubRequest, { remote = 'origin' } = {}) {
   const {version, gilSha256, releaseId} = published;
   versionParts(version);
   assert(digest.test(gilSha256) && Number.isSafeInteger(releaseId) && releaseId > 0, 'Resolved published GIL identity required');
   if (version === legacy.version) {
     assert.equal(releaseId, legacy.releaseId, 'Unknown historical publication');
-    const file = `${legacy.directory}/slay-the-heavens-v2.1.1-2026-11-25.gil`;
+    const file = legacyGilArchive.path;
     const git = (...args) => execFileSync('git', args, {encoding:'utf8', timeout:120_000}).trim();
-    git('-c', 'credential.helper=', 'fetch', '--depth=1', '--no-tags', '--no-write-fetch-head', 'origin', legacy.archive);
+    git('-c', 'credential.helper=', 'fetch', '--depth=1', '--no-tags', '--no-write-fetch-head', remote, legacy.archive);
     const pointer = git('show', `${legacy.archive}:${file}`);
     assert.match(pointer, new RegExp('^version https://git-lfs[.]github[.]com/spec/v1\\noid sha256:' + gilSha256 + '\\nsize [1-9][0-9]*$'),
       'Archived GIL LFS pointer differs from the published digest');
     const size = Number(pointer.split('size ').at(-1));
     assert(size <= 64 * 1024 ** 2, 'Archived GIL exceeds the supported evidence size');
     git('-c', 'credential.helper=', '-c', 'lfs.transfer.maxretries=0', '-c', 'lfs.activitytimeout=30', 'lfs', 'fetch',
-      '--include=' + file, '--exclude=', 'origin', legacy.archive);
+      '--include=' + file, '--exclude=', remote, legacy.archive);
     const object = resolve(git('rev-parse', '--path-format=absolute', '--git-common-dir'), 'lfs/objects',
       gilSha256.slice(0, 2), gilSha256.slice(2, 4), gilSha256);
     const bytes = readFileSync(object);

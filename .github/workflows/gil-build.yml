@@ -1,0 +1,126 @@
+name: GIL build
+run-name: GIL build / ${{ github.ref_name }} / ${{ github.sha }}
+on:
+  push:
+    branches: [develop, 'ci/full/gil-build/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gil-build-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: >-
+      (github.repository_id == '1429751262' && github.ref == 'refs/heads/develop') ||
+      (github.repository_id == '1460133275' && startsWith(github.ref, 'refs/heads/ci/full/gil-build/'))
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      MILIASTRA_ALLOW_LIVE_WRITE: '0'
+      MILIASTRA_SAVE_ROOTS: '[]'
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PUBLISH_ARTIFACT: 'false'
+      SOURCE_SHA: ${{ github.sha }}
+      SOURCE_REF: ${{ github.ref_name }}
+    steps:
+      - name: Start download measurement
+        run: |
+          $received = (Get-NetAdapterStatistics | Measure-Object -Property ReceivedBytes -Sum).Sum
+          "GIL_START_RX=$([long]$received)" >> $env:GITHUB_ENV
+          git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: source
+          persist-credentials: false
+          sparse-checkout: |
+            .github/workflows
+            scripts
+            src/lua
+            data
+            config
+            tools
+            art/characters/traveler-geo/portraits
+            art/lowpoly-select
+            art/performance
+            experiments/lumine-native-fit/fit-hybrid-final
+      - uses: actions/setup-node@49933ae5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.18.0'
+      - name: Bind the build to the workflow checkout
+        id: candidate
+        run: node source/scripts/gil-candidate.mjs preflight
+      - name: Fetch and verify the published project GIL
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA256: ${{ steps.candidate.outputs.base_sha256 }}
+        run: node scripts/gil-candidate.mjs base
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: 8itlab/genshin-miliastra-mcp
+          ref: ${{ steps.candidate.outputs.tool_commit }}
+          path: miliastra-mcp
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.gitignore
+            /src/
+            /docs/PLATFORM_RULES.zh-CN.md
+            /*.json
+      - uses: actions/setup-node@49933ae5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+          cache-dependency-path: |
+            source/package-lock.json
+            miliastra-mcp/npm-shrinkwrap.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12.10'
+      - name: Install pinned build dependencies
+        run: |
+          node source/scripts/gil-candidate.mjs toolchain
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix miliastra-mcp ci --ignore-scripts --prefer-offline --no-audit --no-fund --fetch-retries=0 --fetch-timeout=30000 --replace-registry-host=always --registry=https://registry.npmjs.org
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix miliastra-mcp run build:core
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm --prefix source ci --ignore-scripts --prefer-offline --no-audit --no-fund --fetch-retries=0 --fetch-timeout=30000
+      - name: Restore source assets and verify clean checkout
+        env:
+          CI_LFS_TOKEN: ${{ github.token }}
+        run: node source/scripts/gil-candidate.mjs assets
+      - name: Build the complete game with native audio
+        working-directory: source
+        env:
+          WORK_KEY: ${{ steps.candidate.outputs.work_key }}
+          MILIASTRA_PYTHON: python
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $env:MILIASTRA_MCP_ROOT = (Resolve-Path ../miliastra-mcp).Path
+          $timer = [Diagnostics.Stopwatch]::StartNew()
+          npm run build:native -- "$env:RUNNER_TEMP/gil-base.gil" build/hosted-gil "--work-key=$env:WORK_KEY" *> "$env:RUNNER_TEMP/gil-native.log"
+          if ($LASTEXITCODE -ne 0) {
+            node scripts/gil-candidate.mjs diagnose
+            exit 1
+          }
+          $seconds = $timer.Elapsed.TotalSeconds.ToString('F1', [Globalization.CultureInfo]::InvariantCulture)
+          "GIL_BUILD_SECONDS=$seconds" >> $env:GITHUB_ENV
+          $received = (Get-NetAdapterStatistics | Measure-Object -Property ReceivedBytes -Sum).Sum
+          "GIL_RECEIVED_BYTES=$([long]$received - [long]$env:GIL_START_RX)" >> $env:GITHUB_ENV
+      - name: Audit the final GIL
+        working-directory: source
+        env:
+          BASE_SHA256: ${{ steps.candidate.outputs.base_sha256 }}
+          WORK_KEY: ${{ steps.candidate.outputs.work_key }}
+          REQUEST_ID: ${{ steps.candidate.outputs.request_id }}
+        run: |
+          $env:MILIASTRA_MCP_ROOT = (Resolve-Path ../miliastra-mcp).Path
+          node scripts/gil-candidate.mjs deliver
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gil-build-evidence-${{ github.sha }}
+          path: source/build/gil-artifact/manifest.json
+          if-no-files-found: error
+          retention-days: 14

@@ -1,17 +1,21 @@
 # 完整有声 GIL 按需构建
 
-主仓 **Actions → GIL candidate → Run workflow**。工作流运行分支选受保护的 `develop`。在 `source_ref` 填 `develop`、本次正式 `release/vX.Y.Z` 或 `hotfix/vX.Y.Z`，在 `source_sha` 填对应已验收的完整小写源码 SHA。后续构建、校验和归档由同一个工作流完成。
+主仓 `develop` 更新后自动运行 **GIL build**，也可在 Actions 手动运行。它在 Windows Hosted Runner 生成完整有声 GIL 并执行独立读回，不需要上传底图、配置保护环境或等待其他 CI。Fork B 的 `ci/full/gil-build/` 分支使用相同入口做验证。验证清单标明归档未批准，冻结源码 CI 证据留空。
+
+完成冻结验收后，从主仓 **Actions → GIL candidate → Run workflow** 执行经批准的构建与归档。工作流运行分支始终选受保护的 `develop`。在 `source_ref` 中填 `develop`、`release/vX.Y.Z` 或 `hotfix/vX.Y.Z`，在 `source_sha` 中填通过验收的完整小写源码 SHA。
 
 - `develop` 接受已合入且对应 Quality 和 Licenses push 均成功的提交，构建开发候选。
 - `release/vX.Y.Z` 与 `hotfix/vX.Y.Z` 接受冻结的当前分支 HEAD。先运行 `node scripts/release-ci.mjs freeze <分支> <HEAD>`，等待对应的 Hosted Quality Full 成功。用现有 **Licenses** 工作流在同一冻结分支手动运行默认审计并确认精确 HEAD、`inventory` 成功。工作流复核 Full 的实际 checkout 回执并在归档前重新读取冻结分支 HEAD。分支、源码版号、发布说明与批准记录均须对应本次工程版本。
 
-成功后从 **Artifacts** 下载。每个新构建会从 GitHub 重新下载归档并和上传前的 GIL、回执与清单核对 SHA-256。若同一控制源码和构建请求已有仍在保留期内的成功制品，运行摘要给出原下载入口。冻结候选的 Artifact 名含工程版本和完整源码 SHA。解压后在制品目录运行 `sha256sum -c SHA256SUMS`，或用 PowerShell `Get-FileHash candidate.gil -Algorithm SHA256` 核对清单。Artifact 保留 14 天。
+默认构建从[本项目已发布的 v2.1.1 GIL](https://github.com/FurinyaWorks/Slay-the-Heavens/releases/tag/v2.1.1) 自动取回运行时起点。工作流核对 Release 与固定的 Git LFS 归档、实际构建提交、包大小和 SHA-256。使用当前源码重建 Lua、原生 UI 和结算/BGM 图并独立审计。其余容器段保留旧包的原始字节，证据清单记录继承源与重建的段。默认构建使用 `offline-candidate` 选择构建期文案，用完整的精绘和原生音频预设编译，只上传 `gil-build-evidence-*` 的摘要清单。仓库公开，完整 GIL 归档需要分发批准。
 
-## 首次配置
+**GIL candidate** 归档使用批准的作品键，把同次构建产物上传到 **Artifacts**，再从 GitHub 下载并复算 GIL、回执与清单的 SHA-256。若已有同一请求且在保留期内的成功制品，运行摘要给出原下载入口。冻结候选的 Artifact 名含工程版本和完整源码 SHA。解压后运行 `sha256sum -c SHA256SUMS` 或使用 PowerShell `Get-FileHash candidate.gil -Algorithm SHA256`。Artifact 保留 14 天。
 
-GitHub 要求手动工作流先在默认分支注册。主仓首次安装沿用 [#917](https://github.com/FurinyaWorks/Slay-the-Heavens/pull/917) 的现有集成门禁。维护者在主仓 **Settings → Environments** 配置 `gil-candidate`，将部署分支限制为受保护的 `develop`。冻结分支源码由此工作流按独立的精确 SHA 检出。底图 Secret 仅传给从 `develop` 检出的控制步骤。
+## 公开归档配置
 
-- 环境 Secret `GIL_BASE_URL` 指向经批准、去除个人及测试数据的 Production 底图。使用 Runner 可访问的直连 HTTPS 下载，可用短期签名 URL。底图及下载凭据留在授权存储。
+维护者在主仓 **Settings → Environments** 配置 `gil-candidate`，将部署分支限制为受保护的 `develop`。冻结分支源码由控制步骤按精确 SHA 检出。默认构建在审批环境之外运行。
+
+- 使用默认公开归档时不配置 `GIL_BASE_URL`，批准记录中的底图 SHA-256 填 `afe80c0783d0d4b6046c1f44cba3ef2b71cb8bb34fbc7404d939d12e0f5ff831`。既有的自定义底图流程仍支持通过环境 Secret `GIL_BASE_URL` 下载经批准、去除个人及测试数据的 Production 底图。
 - 环境变量 `GIL_CANDIDATE_APPROVAL` 记录本次批准的分支、源码、底图原始字节 SHA-256、实际生产作品键、底图云端处理及最终包公开分发许可。由维护者审查底图、平台资源和音频授权后填写真值。每次换分支、源码或底图都更新批准记录。`reference` 填可追溯的审批编号。项目授权范围见 [LICENSE-SCOPE.md](../LICENSE-SCOPE.md)。
 
 ```json

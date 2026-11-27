@@ -5,10 +5,11 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { verifyDownloadedArtifact, verifyReceipts } from '../scripts/gil-candidate.mjs';
-import { api, approvedRequest, candidateTarget, encoderSha256, findArtifact, verifySource } from '../scripts/gil-candidate-preflight.mjs';
+import { verifyDownloadedArtifact, verifyPublishedRebase, verifyReceipts } from '../scripts/gil-candidate.mjs';
+import { api, approvedRequest, buildOnlyRequest, candidateTarget, encoderSha256, findArtifact, validationTarget, verifySource } from '../scripts/gil-candidate-preflight.mjs';
 import { fileRecord } from '../scripts/evidence-files.mjs';
 import { hostedCandidatePath, verifiedPayloadInputs } from '../scripts/hosted-gil-receipt.mjs';
+import { legacyGilArchive } from '../scripts/runtime-baseline/published-baseline.mjs';
 
 const sourceSha = '1'.repeat(40);
 const baseSha256 = '2'.repeat(64);
@@ -24,6 +25,7 @@ const hotfix = candidateTarget(branch, sourceSha);
 test('trusted develop owns protection, while audit receives the bound build context', () => {
   const workflow = readFileSync(new URL('../.github/workflows/gil-candidate.yml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
   assert.match(workflow, /^    if: github\.event_name == 'workflow_dispatch' && github\.repository_id == '1429751262' && github\.ref == 'refs\/heads\/develop'$/m);
+  assert.match(workflow, /^    environment: gil-candidate$/m);
   assert.match(workflow, /^          GIL_BASE_URL: \$\{\{ secrets\.GIL_BASE_URL \}\}$/m);
   assert.equal(workflow.match(/secrets\./g).length, 1);
   const sourceCheckout = workflow.slice(workflow.indexOf('          path: source\n'), workflow.indexOf('          path: miliastra-mcp\n'));
@@ -41,6 +43,48 @@ test('trusted develop owns protection, while audit receives the bound build cont
     LICENSES_RUN: 'steps.candidate.outputs.licenses_run',
   })) assert(audit.includes(`          ${name}: ${'${{'} ${expression} }}\n`), `audit requires ${name}`);
   assert.match(workflow, /upload-artifact@[a-f0-9]{40}[\s\S]+download-artifact@[a-f0-9]{40}[\s\S]+gil-candidate\.mjs readback/);
+});
+
+test('automatic build pushes are scoped to primary develop and the diagnostic branch in the known fork', () => {
+  const workflow = readFileSync(new URL('../.github/workflows/gil-build.yml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+  const fork = '1460133275';
+  const testRef = 'refs/heads/ci/full/gil-build/v2.2.0-closure-20261127';
+  assert.deepEqual(validationTarget('1429751262', 'refs/heads/develop', sourceSha), { branch: 'develop' });
+  assert.deepEqual(validationTarget(fork, testRef, sourceSha), { branch: testRef.slice(11) });
+  assert.throws(() => validationTarget(fork, 'refs/heads/develop', sourceSha), /assigned Fork B/);
+  assert.throws(() => validationTarget('1429751262', testRef, sourceSha), /assigned Fork B/);
+  assert.throws(() => validationTarget('3', testRef, sourceSha), /assigned Fork B/);
+  assert.match(workflow, /push:\n    branches: \[develop, 'ci\/full\/gil-build\/\*\*'\]/);
+  assert.match(workflow, /PUBLISH_ARTIFACT: 'false'/);
+  assert.match(workflow, /path: source\/build\/gil-artifact\/manifest\.json\n/);
+  assert.doesNotMatch(workflow, /secrets\.|environment:/);
+});
+
+test('unattended build selects the pinned public source and a local metadata key', () => {
+  const target = candidateTarget('release/v2.2.0', sourceSha);
+  const build = buildOnlyRequest(sourceSha, policy, target);
+  assert.equal(build.archive, false);
+  assert.equal(build.baseSha256, legacyGilArchive.sha256);
+  assert.equal(build.configuration.releaseCandidate, true);
+  assert.equal(build.configuration.workKey, 'offline-candidate');
+  assert.throws(() => request({ workKey: build.configuration.workKey }), /Approval must cover/);
+  assert.notEqual(build.id, request({ baseSha256: legacyGilArchive.sha256 }).id);
+});
+
+test('a published seed rebuild can only change UI and signals, graph, and Lua sections', () => {
+  const raw = (id, value) => ({ id, wire: 0, raw: Buffer.from([value]) });
+  const base = Buffer.alloc(24);
+  const final = Buffer.alloc(24, 0);
+  const input = [raw(4, 1), raw(9, 2), raw(10, 3), raw(50, 4)];
+  let output = [raw(4, 1), raw(9, 5), raw(10, 6), raw(50, 7)];
+  const wire = { container: bytes => bytes === base ? input : output, fields: rows => rows };
+  assert.deepEqual(verifyPublishedRebase(base, final, wire), [9, 10, 50]);
+  output[0] = raw(4, 8);
+  assert.throws(() => verifyPublishedRebase(base, final, wire), /scene data changed in section 4/);
+  output = [raw(9, 5), raw(4, 1), raw(10, 6), raw(50, 7)];
+  assert.throws(() => verifyPublishedRebase(base, final, wire), /section layout changed/);
+  final[4] = 1;
+  assert.throws(() => verifyPublishedRebase(base, final, wire), /container structure changed/);
 });
 
 function formalApi({ comparison = { status: 'ahead', merge_base_commit: { sha: sourceSha } },

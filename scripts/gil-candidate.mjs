@@ -4,9 +4,10 @@ import { createWriteStream, readFileSync, writeFileSync, appendFileSync, mkdirSy
 import { basename, join, relative, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { api, approvedRequest, artifactName, candidateTarget, digest, encoderSha256, findArtifact,
-  GateError, profile, repository, repositoryId, requireGate, sha, toolCommit, verifyFrozenQuality, verifySource } from './gil-candidate-preflight.mjs';
+import { api, approvedRequest, artifactName, buildOnlyRequest, candidateTarget, digest, encoderSha256, findArtifact,
+  GateError, profile, repository, repositoryId, requireGate, sha, toolCommit, validationTarget, verifyFrozenQuality, verifySource } from './gil-candidate-preflight.mjs';
 import { hostedGilReceipt } from './hosted-gil-receipt.mjs';
+import { downloadPublishedBaselineGil, legacyGilArchive, resolveLegacyPublishedBaseline } from './runtime-baseline/published-baseline.mjs';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const artifactFiles = ['candidate.gil', 'candidate.json', 'manifest.json'];
@@ -16,23 +17,30 @@ const json = path => JSON.parse(readFileSync(path, 'utf8'));
 const moduleAt = (root, path) => import(pathToFileURL(resolve(root, path)).href);
 
 async function preflight() {
-  const source = process.env.SOURCE_SHA;
-  requireGate(process.env.GITHUB_REF === 'refs/heads/develop' && process.env.GITHUB_REPOSITORY_ID === String(repositoryId),
+  const { GITHUB_SHA: controllerSha, GITHUB_REF: ref, GITHUB_REPOSITORY_ID: repoId,
+    SOURCE_SHA: source, SOURCE_REF: branch } = process.env;
+  const archive = process.env.PUBLISH_ARTIFACT !== 'false';
+  if (archive) requireGate(ref === 'refs/heads/develop' && repoId === String(repositoryId),
     'Run the GIL candidate workflow from the trusted default develop branch.');
-  const target = candidateTarget(process.env.SOURCE_REF, source);
-  const controllerSha = process.env.GITHUB_SHA;
+  const target = archive ? candidateTarget(branch, source) : validationTarget(repoId, ref, controllerSha);
+  requireGate(archive || (source === controllerSha && branch === target.branch), 'Validation source differs from the workflow checkout.');
   const controlRoot = fileURLToPath(new URL('..', import.meta.url));
   cleanHead(controlRoot, controllerSha, 'Controller');
-  const checks = await verifySource(source, api, target);
+  const checks = archive ? await verifySource(source, api, target) : null;
+  const workflow = archive ? 'gil-candidate.yml' : 'gil-build.yml';
   const policy = {
     controllerSha,
-    checkedFiles: [import.meta.url, new URL('../.github/workflows/gil-candidate.yml', import.meta.url)]
+    checkedFiles: [import.meta.url, new URL('./gil-candidate-preflight.mjs', import.meta.url),
+      new URL('./runtime-baseline/published-baseline.mjs', import.meta.url),
+      new URL(`../.github/workflows/${workflow}`, import.meta.url)]
       .map(url => hash(readFileSync(new URL(url)))),
     ...(target.version && { sourceChecks: checks }),
   };
-  const request = approvedRequest(process.env.GIL_CANDIDATE_APPROVAL, source, policy, target);
-  const existing = await findArtifact(api, request, process.env.GITHUB_RUN_ID);
-  const ciSummary = ['quality', 'licenses'].map(name => `[${name}](https://github.com/${repository}/actions/runs/${checks[name]})`);
+  const request = archive ? approvedRequest(process.env.GIL_CANDIDATE_APPROVAL, source, policy, target)
+    : buildOnlyRequest(source, policy, target);
+  const existing = archive && await findArtifact(api, request, process.env.GITHUB_RUN_ID);
+  const ciSummary = checks ? ['quality', 'licenses'].map(name => `[${name}](https://github.com/${repository}/actions/runs/${checks[name]})`)
+    : ['Build validation. Frozen source CI evidence is not attached.'];
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Source \`${target.branch}@${source}\` · ${ciSummary.join(' · ')}\n`);
   if (existing) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n[Download existing GIL candidate](${existing})\n`);
@@ -41,25 +49,52 @@ async function preflight() {
   appendFileSync(process.env.GITHUB_OUTPUT, [
     'build=true', `base_sha256=${request.baseSha256}`, `work_key=${request.configuration.workKey}`,
     `tool_commit=${toolCommit}`, `request_id=${request.id}`, `release_version=${target.version ?? ''}`,
-    `artifact_name=${artifactName(request)}`, `quality_run=${checks.quality}`, `licenses_run=${checks.licenses}`,
+    `artifact_name=${artifactName(request)}`, ...(checks ? [`quality_run=${checks.quality}`, `licenses_run=${checks.licenses}`] : []),
     ...(target.version ? [`quality_attempt=${checks.qualityAttempt}`, `quality_checkout_artifact=${checks.qualityCheckoutArtifact}`] : []),
   ].join('\n') + '\n');
 }
 
 async function downloadBase() {
-  requireGate(process.env.GIL_BASE_URL, 'Missing protected GIL_BASE_URL for the approved base GIL.');
+  const expectedSha = process.env.BASE_SHA256;
+  const usePublishedBase = expectedSha === legacyGilArchive.sha256;
+  requireGate(usePublishedBase || process.env.GIL_BASE_URL, 'Missing protected GIL_BASE_URL for the approved base GIL.');
   const partial = basePath() + '.part';
   try {
-    const url = new URL(process.env.GIL_BASE_URL);
-    requireGate(url.protocol === 'https:' && !url.username && !url.password, 'Base GIL URL must use HTTPS without userinfo.');
-    const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(300000) });
-    requireGate(response.ok && response.body, `Base GIL download failed (HTTP ${response.status}).`);
-    await pipeline(response.body, createWriteStream(partial, { flags: 'wx' }));
-    requireGate(hash(readFileSync(partial)) === process.env.BASE_SHA256, 'Base GIL SHA-256 differs from the approved SHA-256.');
+    if (usePublishedBase) {
+      const published = await resolveLegacyPublishedBaseline();
+      await downloadPublishedBaselineGil(published, partial, undefined, { remote: `https://github.com/${repository}.git` });
+    } else {
+      const url = new URL(process.env.GIL_BASE_URL);
+      requireGate(url.protocol === 'https:' && !url.username && !url.password, 'Base GIL URL must use HTTPS without userinfo.');
+      const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(300000) });
+      requireGate(response.ok && response.body, `Base GIL download failed (HTTP ${response.status}).`);
+      await pipeline(response.body, createWriteStream(partial, { flags: 'wx' }));
+    }
+    const bytes = readFileSync(partial);
+    requireGate(hash(bytes) === expectedSha, 'Base GIL SHA-256 differs from the expected SHA-256.');
+    requireGate(!usePublishedBase || bytes.length === legacyGilArchive.bytes, 'Published base GIL size differs from the archive.');
     renameSync(partial, basePath());
   } finally {
     rmSync(partial, { force: true });
   }
+}
+
+export function verifyPublishedRebase(baseBytes, finalBytes, { container, fields }) {
+  const base = fields(container(baseBytes));
+  const final = fields(container(finalBytes));
+  requireGate(baseBytes.subarray(4, 16).equals(finalBytes.subarray(4, 16)) && base.length === final.length,
+    'Published GIL container structure changed during the rebuild.');
+  const changed = [];
+  for (const [index, section] of base.entries()) {
+    const rebuilt = final[index];
+    requireGate(section.id === rebuilt.id && section.wire === rebuilt.wire,
+      'Published GIL section layout changed during the rebuild.');
+    if (section.raw.equals(rebuilt.raw)) continue;
+    // Production rebuild owns the native UI/signal records, graphs, and Lua scripts.
+    requireGate([9, 10, 50].includes(section.id), `Published GIL scene data changed in section ${section.id}.`);
+    changed.push(section.id);
+  }
+  return changed;
 }
 
 function git(root, args, env = process.env) {
@@ -146,7 +181,8 @@ async function deliver() {
     RELEASE_VERSION: version } = process.env;
   cleanHead('.', sourceSha, 'Source');
   toolchain(toolRoot);
-  requireGate(hash(readFileSync(basePath())) === baseSha256, 'Approved base GIL changed during the build.');
+  const baseBytes = readFileSync(basePath());
+  requireGate(hash(baseBytes) === baseSha256, 'Base GIL changed during the build.');
   const out = 'build/hosted-gil';
   const audio = json(join(out, 'audio/candidate.json'));
   requireGate(uuid.test(audio.buildId), 'Invalid audio build ID.');
@@ -158,6 +194,10 @@ async function deliver() {
   const finalGil = fileRecord(mapPath, out);
   const fullGil = fileRecord(join(fullRoot, basename(full.mapPath)), fullRoot);
   verifyReceipts({ full, audio, fullReceipt, fullGil, finalGil, sourceSha, baseSha256, workKey, version });
+  const publishedBase = baseSha256 === legacyGilArchive.sha256;
+  const baseProvenance = publishedBase ? { ...legacyGilArchive,
+    rebuiltSections: verifyPublishedRebase(baseBytes, readFileSync(mapPath), await moduleAt(toolRoot, 'src/scene/wire.mjs')) }
+    : { kind: 'protected-gil-url' };
   const { inspectFile } = await moduleAt(toolRoot, 'src/adapter.mjs');
   const { nativeBgmSignals } = await moduleAt('.', 'scripts/native-bgm-graph.mjs');
   const inspection = inspectFile(mapPath);
@@ -180,7 +220,8 @@ async function deliver() {
   requireGate(audit.ok && audit.candidate.sha256Before === candidate.sha256 && audit.candidate.sha256After === candidate.sha256,
     'Final GIL failed the independent native scripts, UI, templates or graph audit.');
   const qualityRun = Number(process.env.QUALITY_RUN);
-  const sourceChecks = { qualityRun, licensesRun: Number(process.env.LICENSES_RUN) };
+  const archiveApproved = process.env.PUBLISH_ARTIFACT !== 'false';
+  const sourceChecks = archiveApproved ? { qualityRun, licensesRun: Number(process.env.LICENSES_RUN) } : null;
   if (version) {
     const expected = { quality: qualityRun, qualityAttempt: Number(process.env.QUALITY_ATTEMPT),
       qualityCheckoutArtifact: Number(process.env.QUALITY_CHECKOUT_ARTIFACT) };
@@ -191,11 +232,12 @@ async function deliver() {
   }
   writeFileSync(join(artifact, 'manifest.json'), JSON.stringify({
     sourceCommit: sourceSha, sourceBranch: branch, version: receipt.release.version, buildId: receipt.buildId,
-    payloadDigest: receipt.payloadDigest, candidate, requestId, baseSha256, toolCommit, encoderSha256,
+    payloadDigest: receipt.payloadDigest, candidate, requestId, baseSha256, baseProvenance, toolCommit, encoderSha256,
     controllerSha: process.env.GITHUB_SHA,
     sourceChecks,
     receipts: { nativeSha256: hash(fullReceipt), audioSha256: fileRecord(join(out, 'audio/candidate.json')).sha256 },
     nativeAudit: 'pass',
+    archiveApproved,
     platformVersion: null,
     parameters: { workKey, profile, nativePageLifecycle: true, releaseCandidate: Boolean(version), liveWrite: false },
     buildSeconds: Number(GIL_BUILD_SECONDS), runnerReceivedBytesBeforeUpload: Number(GIL_RECEIVED_BYTES) }, null, 2) + '\n');

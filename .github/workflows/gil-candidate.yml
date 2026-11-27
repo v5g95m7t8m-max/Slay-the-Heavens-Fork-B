@@ -54,10 +54,12 @@ jobs:
         run: node control/scripts/gil-candidate.mjs preflight
       - name: Download and verify approved base GIL
         if: steps.candidate.outputs.build == 'true'
+        working-directory: control
         env:
+          GH_TOKEN: ${{ github.token }}
           GIL_BASE_URL: ${{ secrets.GIL_BASE_URL }}
           BASE_SHA256: ${{ steps.candidate.outputs.base_sha256 }}
-        run: node control/scripts/gil-candidate.mjs base
+        run: node scripts/gil-candidate.mjs base
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         if: steps.candidate.outputs.build == 'true'
         with:

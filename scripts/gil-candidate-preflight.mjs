@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { githubRequest, verifyReleaseFull } from './release-ci.mjs';
+import { legacyGilArchive } from './runtime-baseline/published-baseline.mjs';
 
 export const repository = 'FurinyaWorks/Slay-the-Heavens';
 export const repositoryId = 1429751262;
@@ -8,6 +9,7 @@ export const encoderSha256 = 'eed054eea9285d1945ec826299e1e9546e36475d708007b2df
 export const profile = 'official-assets-battle-v3';
 export const sha = /^[a-f0-9]{40}$/;
 export const digest = /^[a-f0-9]{64}$/;
+const offlineWorkKey = 'offline-candidate';
 const hash = data => createHash('sha256').update(data).digest('hex');
 
 export class GateError extends Error {}
@@ -21,6 +23,14 @@ export function candidateTarget(branch, source) {
   const version = /^(?:release|hotfix)\/(v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/.exec(branch)?.[1];
   requireGate(version, 'Select develop, release/vX.Y.Z or hotfix/vX.Y.Z.');
   return { branch, version };
+}
+
+export function validationTarget(repository, ref, source) {
+  requireGate(sha.test(source), 'Validation requires an exact source SHA.');
+  const primary = repository === String(repositoryId) && ref === 'refs/heads/develop';
+  const fork = repository === '1460133275' && /^refs\/heads\/ci\/full\/gil-build\/[a-z0-9][a-z0-9._-]*$/.test(ref);
+  requireGate(primary || fork, 'Validation requires primary develop or the assigned Fork B validation branch.');
+  return { branch: ref.slice('refs/heads/'.length) };
 }
 
 export async function verifyFrozenHead(api, branch, source) {
@@ -85,10 +95,18 @@ export function approvedRequest(raw, sourceSha, policy, { branch = 'develop', ve
   requireGate(approval?.sourceSha === sourceSha && approval.sourceBranch === branch && approval.baseProcessingApproved === true &&
     approval.publicArtifactApproved === true && /^[A-Za-z0-9._/-]{1,120}$/.test(approval.reference ?? '') &&
     (version ? approval.version === version : approval.version == null) &&
-    digest.test(baseSha256) && workKey !== 'alpha-test' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(workKey ?? ''),
+    digest.test(baseSha256) && workKey !== 'alpha-test' && workKey !== offlineWorkKey && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(workKey ?? ''),
   'Approval must cover this source SHA, release branch and version if applicable, base SHA-256, processing, public distribution and the confirmed production work-key.');
   const configuration = { profile, nativePageLifecycle: true, releaseCandidate: Boolean(version), workKey, node: '24.18.0', python: '3.12.10' };
   const identity = { sourceSha, baseSha256, toolCommit, encoderSha256, branch, version, configuration, policy };
+  return { ...identity, id: hash(JSON.stringify(identity)) };
+}
+
+export function buildOnlyRequest(sourceSha, policy, { branch, version }) {
+  const configuration = { profile, nativePageLifecycle: true, releaseCandidate: Boolean(version),
+    workKey: offlineWorkKey, node: '24.18.0', python: '3.12.10' };
+  const identity = { sourceSha, baseSha256: legacyGilArchive.sha256, toolCommit, encoderSha256, branch, version,
+    configuration, policy, archive: false };
   return { ...identity, id: hash(JSON.stringify(identity)) };
 }
 
