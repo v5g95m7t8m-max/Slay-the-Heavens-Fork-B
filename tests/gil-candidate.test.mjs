@@ -58,6 +58,10 @@ test('automatic build pushes are scoped to primary develop and the diagnostic br
   assert.match(workflow, /PUBLISH_ARTIFACT: 'false'/);
   assert.match(workflow, /path: source\/build\/gil-artifact\/manifest\.json\n/);
   assert.doesNotMatch(workflow, /secrets\.|environment:/);
+  const archive = readFileSync(new URL('../.github/workflows/gil-candidate.yml', import.meta.url), 'utf8');
+  const usedActions = [...workflow.matchAll(/^\s*- uses: (actions\/[a-z-]+@[0-9a-f]+)\b/gm)];
+  assert.equal(usedActions.length, 6);
+  for (const [, action] of usedActions) assert(archive.includes(`uses: ${action} `), `Build action must use the archive pin: ${action}`);
 });
 
 test('unattended build selects the pinned public source and a local metadata key', () => {
