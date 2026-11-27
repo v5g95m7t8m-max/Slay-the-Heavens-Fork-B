@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -9,7 +9,7 @@ import { verifyDownloadedArtifact, verifyPublishedRebase, verifyReceipts } from 
 import { api, approvedRequest, buildOnlyRequest, candidateTarget, encoderSha256, findArtifact, validationTarget, verifySource } from '../scripts/gil-candidate-preflight.mjs';
 import { fileRecord } from '../scripts/evidence-files.mjs';
 import { hostedCandidatePath, verifiedPayloadInputs } from '../scripts/hosted-gil-receipt.mjs';
-import { legacyGilArchive } from '../scripts/runtime-baseline/published-baseline.mjs';
+import { downloadLegacyGilArchive, legacyGilArchive } from '../scripts/runtime-baseline/published-baseline.mjs';
 
 const sourceSha = '1'.repeat(40);
 const baseSha256 = '2'.repeat(64);
@@ -73,6 +73,31 @@ test('unattended build selects the pinned public source and a local metadata key
   assert.equal(build.configuration.workKey, 'offline-candidate');
   assert.throws(() => request({ workKey: build.configuration.workKey }), /Approval must cover/);
   assert.notEqual(build.id, request({ baseSha256: legacyGilArchive.sha256 }).id);
+});
+
+test('the published archive download validates the exact pointer and bounds transfer retries', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'gil-published-download-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const output = join(dir, 'base.gil');
+  const { path, archiveCommit, bytes, sha256 } = legacyGilArchive;
+  const pointer = `version https://git-lfs.github.com/spec/v1\noid sha256:${sha256}\nsize ${bytes}\n`;
+  const request = (content = pointer) => async uri => {
+    assert.equal(uri, `/repos/FurinyaWorks/Slay-the-Heavens/contents/${path}?ref=${archiveCommit}`);
+    return { type: 'file', path, size: bytes, encoding: 'base64', content: Buffer.from(content).toString('base64') };
+  };
+  await assert.rejects(downloadLegacyGilArchive(output, request(pointer.replace(sha256, '0'.repeat(64))),
+    () => assert.fail('downloaded from an unverified pointer')), /pointer differs/);
+  let calls = 0;
+  await assert.rejects(downloadLegacyGilArchive(output, request(), async (url, options) => {
+    assert.equal(url, `https://media.githubusercontent.com/media/FurinyaWorks/Slay-the-Heavens/${archiveCommit}/${path}`);
+    assert.equal(options.redirect, 'error');
+    calls++;
+    throw Error('fixture network failure');
+  }), /after two attempts/);
+  assert.equal(calls, 2);
+  await assert.rejects(downloadLegacyGilArchive(output, request(), async () => new Response('truncated')),
+    /differs from the pinned size/);
+  assert.equal(existsSync(output), false);
 });
 
 test('a published seed rebuild can only change UI and signals, graph, and Lua sections', () => {

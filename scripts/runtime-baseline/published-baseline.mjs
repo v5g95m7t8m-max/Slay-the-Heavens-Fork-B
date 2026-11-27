@@ -100,6 +100,39 @@ export async function resolveLegacyPublishedBaseline(request = githubRequest) {
   return baseline;
 }
 
+export async function downloadLegacyGilArchive(output, request = githubRequest, fetchArchive = fetch) {
+  const { archiveCommit, path, bytes, sha256 } = legacyGilArchive;
+  const file = await request(`${repo}/contents/${path}?ref=${archiveCommit}`);
+  assert(file?.type === 'file' && file.path === path && file.size === bytes && file.encoding === 'base64'
+    && typeof file.content === 'string' && file.content.length < 256, 'Published GIL archive pointer is unavailable');
+  const pointer = Buffer.from(file.content, 'base64').toString('utf8');
+  assert(pointer === `version https://git-lfs.github.com/spec/v1\noid sha256:${sha256}\nsize ${bytes}\n`,
+    'Published GIL archive pointer differs from the pinned object');
+
+  const url = `https://media.githubusercontent.com/media/${repo.slice('/repos/'.length)}/${archiveCommit}/${path}`;
+  let download;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetchArchive(url, { redirect: 'error', signal: AbortSignal.timeout(90_000) });
+      assert(response.ok && response.body, 'Published GIL media is unavailable');
+      const chunks = [];
+      let length = 0;
+      for await (const chunk of response.body) {
+        length += chunk.length;
+        assert(length <= bytes, 'Published GIL media exceeds the pinned size');
+        chunks.push(chunk);
+      }
+      download = Buffer.concat(chunks, length);
+      break;
+    } catch {
+      if (attempt === 1) throw Error('Published GIL media download failed after two attempts');
+    }
+  }
+  assert.equal(download.length, bytes, 'Published GIL media differs from the pinned size');
+  assert.equal(createHash('sha256').update(download).digest('hex'), sha256, 'Published GIL media differs from the pinned SHA-256');
+  writeFileSync(output, download, {flag:'wx'});
+}
+
 export async function resolvePublishedBaseline(candidateVersion, request = githubRequest) {
   versionParts(candidateVersion);
   const releases = await listReleases(request);
@@ -119,7 +152,7 @@ export async function resolvePublishedBaseline(candidateVersion, request = githu
     gilSha256: metadata.artifact.sha256, source: release.html_url, releaseId: release.id};
 }
 
-export async function downloadPublishedBaselineGil(published, output, request = githubRequest, { remote = 'origin' } = {}) {
+export async function downloadPublishedBaselineGil(published, output, request = githubRequest) {
   const {version, gilSha256, releaseId} = published;
   versionParts(version);
   assert(digest.test(gilSha256) && Number.isSafeInteger(releaseId) && releaseId > 0, 'Resolved published GIL identity required');
@@ -127,14 +160,14 @@ export async function downloadPublishedBaselineGil(published, output, request = 
     assert.equal(releaseId, legacy.releaseId, 'Unknown historical publication');
     const file = legacyGilArchive.path;
     const git = (...args) => execFileSync('git', args, {encoding:'utf8', timeout:120_000}).trim();
-    git('-c', 'credential.helper=', 'fetch', '--depth=1', '--no-tags', '--no-write-fetch-head', remote, legacy.archive);
+    git('-c', 'credential.helper=', 'fetch', '--depth=1', '--no-tags', '--no-write-fetch-head', 'origin', legacy.archive);
     const pointer = git('show', `${legacy.archive}:${file}`);
     assert.match(pointer, new RegExp('^version https://git-lfs[.]github[.]com/spec/v1\\noid sha256:' + gilSha256 + '\\nsize [1-9][0-9]*$'),
       'Archived GIL LFS pointer differs from the published digest');
     const size = Number(pointer.split('size ').at(-1));
     assert(size <= 64 * 1024 ** 2, 'Archived GIL exceeds the supported evidence size');
     git('-c', 'credential.helper=', '-c', 'lfs.transfer.maxretries=0', '-c', 'lfs.activitytimeout=30', 'lfs', 'fetch',
-      '--include=' + file, '--exclude=', remote, legacy.archive);
+      '--include=' + file, '--exclude=', 'origin', legacy.archive);
     const object = resolve(git('rev-parse', '--path-format=absolute', '--git-common-dir'), 'lfs/objects',
       gilSha256.slice(0, 2), gilSha256.slice(2, 4), gilSha256);
     const bytes = readFileSync(object);

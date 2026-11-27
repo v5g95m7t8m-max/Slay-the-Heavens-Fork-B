@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { api, approvedRequest, artifactName, buildOnlyRequest, candidateTarget, digest, encoderSha256, findArtifact,
   GateError, profile, repository, repositoryId, requireGate, sha, toolCommit, validationTarget, verifyFrozenQuality, verifySource } from './gil-candidate-preflight.mjs';
 import { hostedGilReceipt } from './hosted-gil-receipt.mjs';
-import { downloadPublishedBaselineGil, legacyGilArchive, resolveLegacyPublishedBaseline } from './runtime-baseline/published-baseline.mjs';
+import { downloadLegacyGilArchive, legacyGilArchive, resolveLegacyPublishedBaseline } from './runtime-baseline/published-baseline.mjs';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const artifactFiles = ['candidate.gil', 'candidate.json', 'manifest.json'];
@@ -61,8 +61,12 @@ async function downloadBase() {
   const partial = basePath() + '.part';
   try {
     if (usePublishedBase) {
-      const published = await resolveLegacyPublishedBaseline();
-      await downloadPublishedBaselineGil(published, partial, undefined, { remote: `https://github.com/${repository}.git` });
+      console.log('Published base: verifying the Release, annotated tag, build source and archived receipt.');
+      try { await resolveLegacyPublishedBaseline(); }
+      catch { throw new GateError('Could not verify the pinned published GIL Release and source metadata.'); }
+      console.log('Published base: checking the pinned LFS pointer and downloading its media object.');
+      try { await downloadLegacyGilArchive(partial); }
+      catch (error) { throw new GateError(`Could not obtain the pinned published GIL media. ${error.message}`); }
     } else {
       const url = new URL(process.env.GIL_BASE_URL);
       requireGate(url.protocol === 'https:' && !url.username && !url.password, 'Base GIL URL must use HTTPS without userinfo.');
