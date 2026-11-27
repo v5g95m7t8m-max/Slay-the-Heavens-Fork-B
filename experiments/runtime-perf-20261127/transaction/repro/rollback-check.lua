@@ -1,0 +1,6 @@
+local arm=assert(PERF_ARM)
+package.loaded.abyss_snapshot=dofile('build/perf-tx/'..arm..'.lua')
+dofile('tests/lua/snapshot_graph_equivalence.lua')
+dofile('tests/lua/snapshot_key_types.lua')
+dofile('tests/lua/run_play_snapshot_owner.lua')
+dofile('tests/lua/run_play_transactions.lua')

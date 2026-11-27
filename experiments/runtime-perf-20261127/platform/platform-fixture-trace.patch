@@ -1,0 +1,69 @@
+diff --git a/tests/lua/support/production_performance.lua b/tests/lua/support/production_performance.lua
+index b403c88..7650adb 100644
+--- a/tests/lua/support/production_performance.lua
++++ b/tests/lua/support/production_performance.lua
+@@ -15,6 +15,32 @@ local function bindActive(control)
+     end
+ end
+ local host,deckRoots,serial
++local function bump(name)
++    counts.nativeCalls=counts.nativeCalls+1
++    counts.methods[name]=(counts.methods[name] or 0)+1
++end
++local function resident(root)
++    local seen={}
++    local total,alive,visible=0,0,0
++    local function walk(control,show)
++        if seen[control] then return end
++        seen[control]=true
++        total=total+1
++        local live=control.alive~=false
++        if live then alive=alive+1 end
++        show=show and live and control.activeInHierarchy and control.visible~=false
++        if show then visible=visible+1 end
++        for _,node in pairs(control.children or {}) do walk(node,show) end
++        for _,node in pairs(control.items or {}) do walk(node,show) end
++    end
++    walk(root,true)
++    return total,alive,visible
++end
++local oldMark=mark
++local function mark(phase)
++    oldMark(phase)
++    print('PLATFORM_RESIDENT '..phase..' '..table.concat({resident(script.object)},' '))
++end
+ local function start()
+     deckRoots,serial=0,0
+     local canvas=F.control({children=F.Layout})
+@@ -34,16 +60,17 @@ local function start()
+         return host
+     end
+     script={object=canvas,GetParam=function(_,name)return name=='nativeBgmEnabled' end,
+-        EnableUpdate=function(self,active)self.updating=active end}
++        EnableUpdate=function(self,active)bump('script.EnableUpdate');self.updating=active end}
+     Enum={ImageSource={StaticReference='static'}, ImageType={Basic='basic',Stretch='stretch'},
+         ImageFillHorizontalType={Right='right'}, CursorEventType={CursorClick='click',CursorDown='down',CursorUp='up',CursorDrag='drag',CursorEndDrag='endDrag'},
+         Device={Mobile='mobile',MobileController='mobileController'}}
+     local function color(r,g,b,a) return {r=r,g=g,b=b,a=a} end
+     Color=setmetatable({FromRGBA=color},{__call=function(_,...)return color(...)end})
+     game={
+-        IsTestPlay=function()return false end, GetUICanvasSize=function()return 1560,720 end,
+-        GetDevice=function()return 'mobile' end, GetCursorUIPos=function()return 0,0 end,
++        IsTestPlay=function()return false end, GetUICanvasSize=function()bump('game.GetUICanvasSize');return 1560,720 end,
++        GetDevice=function()bump('game.GetDevice');return 'mobile' end, GetCursorUIPos=function()bump('game.GetCursorUIPos');return 0,0 end,
+         InstantiateClientUIControl=function(index,parent)
++            bump('game.InstantiateClientUIControl')
+             local name=assert(templateNames[index],'unbound native template')
+             local box=F.control(assert(templates[name]),parent)
+             serial=serial+1
+@@ -58,8 +85,8 @@ local function start()
+             end
+             return box
+         end,
+-        DestroyClientUIControl=destroy,
+-        ServerSignal=function()return {SendSignal=function()end} end,
++        DestroyClientUIControl=function(box)bump('game.DestroyClientUIControl');return destroy(box)end,
++        ServerSignal=function()bump('game.ServerSignal');return {SendSignal=function()bump('game.SendSignal')end} end,
+     }
+     dofile(BASELINE_GIL and (BASELINE_GENERATED..'/abyss_ui.lua') or 'src/lua/abyss_ui.lua')
+     OnStart()
