@@ -44,7 +44,7 @@ jobs:
             art/lowpoly-select
             art/performance
             experiments/lumine-native-fit/fit-hybrid-final
-      - uses: actions/setup-node@49933ae5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.18.0'
       - name: Bind the build to the workflow checkout
@@ -68,7 +68,7 @@ jobs:
             /src/
             /docs/PLATFORM_RULES.zh-CN.md
             /*.json
-      - uses: actions/setup-node@49933ae5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.18.0'
           cache: npm
