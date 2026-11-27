@@ -1,5 +1,4 @@
 package.path='src/lua/?.lua;'..package.path
-package.preload.abyss_theme=function()return {} end
 local Display=require('abyss_card_display')
 assert(type(Display.bindNativeAssets)=='function','native artwork binding missing')
 local art={cardId='strike',runtime=true,rectangles='00009040010203',rectangleCount=1,rectangleEncoding='xywh-rgb24-hex14'}

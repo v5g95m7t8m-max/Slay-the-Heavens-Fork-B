@@ -380,9 +380,60 @@ function readOfficialCalibrationReceipt(path,digest,readCurrent){
  assert(matches(predecessor,prior),'exact official receipt predecessor: '+path);
  return predecessor;
 }
-// Current UI fixtures follow #925's generated compact reader. The archived
-// inventory still reads the authenticated exact older fixture, never runs it.
-const monsterReaderFixtures=Object.freeze({
+// Current fixtures use the visible UI and real dependencies. Historical
+// inventory reads authenticate the exact current fixture before replay.
+const liveLuaCalibrationFixtures=Object.freeze({
+ "tests/lua/potion_event_ui.lua": {
+  "before": {
+   "sha256": "d6247d8b44c6e94e3c0c44d02c0369a138cfdf9410a213edac20bbbb0a0222bb",
+   "gitBlob": "5e40faa4900080dc2a12d12fdb626ea9683dee51"
+  },
+  "after": {
+   "sha256": "bf2453e82e539c8c68248d39860bd441d012be30b99e9b3f310081dbbe7287df",
+   "gitBlob": "008a25ca920519d1bcd17339922dc1884819f56e"
+  },
+  "hunks": [
+   {
+    "at": 44,
+    "before": " eq(get('eventView/option4').visible,false);eq(get('confirm').visible,true)",
+    "after": " eq(get('eventView/option4').visible,false)\n assert(ui.mapUI.visible and ui.mapUI.navigationEnabled and not ui.nodeUI.root.visible,'claim restores a navigable map and hides the old event panel')\n assert(not get('confirm').visible,'hidden event does not expose stale confirm')"
+   }
+  ]
+ },
+ "tests/lua/ready_art_binding.lua": {
+  "before": {
+   "sha256": "197ffdae88d9f0e39d42de02539eca8363e1d04acdf65f21065f13adebcb2487",
+   "gitBlob": "b712fe9d6e776236932731c66484fbb7d884bf09"
+  },
+  "after": {
+   "sha256": "e6573d6638e60a307b76ee5e5ee04f13c79e5a86f7990e3bf9c86445bf28b37c",
+   "gitBlob": "d26c3c13b211425f5c0a12aadab2340750f8db3b"
+  },
+  "hunks": [
+   {
+    "at": 0,
+    "before": "package.path='src/lua/?.lua;'..package.path\npackage.preload.abyss_theme=function()return {} end",
+    "after": "package.path='src/lua/?.lua;'..package.path"
+   }
+  ]
+ },
+ "tests/lua/spore_cloud_ui.lua": {
+  "before": {
+   "sha256": "4e1c75cf707b557e55245cfc02485efe67355a1f9284e240ff50da4efcc5a994",
+   "gitBlob": "9743b213ef8a70365347d544e23e8464612688e1"
+  },
+  "after": {
+   "sha256": "18c200489ee54d97d4d90f438331560e3dc647bc54c7b45fbdbb8aa6d598ddb9",
+   "gitBlob": "ced636e566c1297ae389061b33b4bbd5c3c5f9ec"
+  },
+  "hunks": [
+   {
+    "at": 13,
+    "before": "    assert(info.visible,'status details open')\n    if index then assert(ui.info.index==index and ui.info.id==s.enemies[index].id,'status details retain true actor ID') end",
+    "after": "    assert(info.visible,'status details open')\n    if index then\n        assert(ui.info.index==index and ui.info.id==s.enemies[index].id,'status details retain true actor ID')\n        return dofile('tests/lua/support/status_detail_fixture.lua')(ui,panel)\n    end"
+   }
+  ]
+ },
  "tests/lua/sentries_ui.lua": {
   "before": {
    "sha256": "ecb0ebeade9baea10b2a137c160fc115aec37b456e4ccfe06eccbadb77e94f28",
@@ -465,9 +516,9 @@ const monsterReaderFixtures=Object.freeze({
   ]
  }
 });
-function readMonsterReaderFixture(path,digest,readCurrent){
- if(!Object.hasOwn(monsterReaderFixtures,path))return;
- const {before,after,hunks}=monsterReaderFixtures[path];
+function readLiveLuaCalibrationFixture(path,digest,readCurrent){
+ if(!Object.hasOwn(liveLuaCalibrationFixtures,path))return;
+ const {before,after,hunks}=liveLuaCalibrationFixtures[path];
  if(digest!==before.sha256)return;
  const source=readCurrent(path,'utf8');
  assert(matches(source,after),'current monster reader fixture changed: '+path);
@@ -497,25 +548,45 @@ const phaseFourPresentationFixture={
   }
  ]
 };
-function readPhaseFourVocabularyReceipt(path,digest,readCurrent){
- const {path:fixture,current,previous,hunks}=phaseFourPresentationFixture;
- if(path!==fixture)return;
+const cultistVocabularyFixture={
+ "path": "tests/lua/cultist_ui.lua",
+ "current": {
+  "sha256": "aea1b6d3b2111ed048f7e8b8131876c523b33587e5531a1b1682c19f5f59163a",
+  "gitBlob": "2bca889e0efd44a393cc80d7add5a600fc756829"
+ },
+ "previous": {
+  "sha256": "34d83845902ed26515304ba2c1f410f9eda44ca1954aac0e3de0b6674e5f33f4",
+  "gitBlob": "77f7730cf2446dfd204a0c8353c4e756fdebd4fe"
+ },
+ "hunks": [
+  {
+   "at": 55,
+   "before": "-- Read a unit's statuses the way a player does: open its detail panel, then close it.\nlocal function details(stage, box)\n    box:GetChild('hit').click()\n    local info, lines = stage.children.statusInfo, {}\n    assert(info.visible)\n    for i = 1, Theme.layout.statusInfo.rows do\n        if info.children[\"name\" .. i].visible then lines[#lines + 1] = info.children[\"name\" .. i].text end\n    end\n    info.children.hit.click()\n    assert(not info.visible)\n    return table.concat(lines, \" | \")\nend\nlocal count = 0\nlocal function test(name,fn) fn(); count=count+1; print(\"ok Raven Adept UI \"..count..\" - \"..name) end\n\ntest(\"Raven Adept displays Ritual opener, persistent status and next modified attack\", function()\n    local ui, stage, click = setup()\n    local box = F.actorControl(stage,'enemy1')\n    assert(box.children.intent.text == \"\")\n    assert(box.children.intentIcon.imageId == Theme.icon.intent.buff)\n    click(\"enemy1\")\n    assert(stage.children.statusInfo.visible and stage.children.statusInfo.children.text1.text:find(\"自身获得 3 层仪式\",1,true))\n    stage.children.statusInfo.children.hit.click()\n    assert(not stage.children.statusInfo.visible)\n    click(\"endTurn\")\n    local text = details(stage, box)\n    assert(text:find(\"仪式 3\",1,true))\n    assert(not text:find(\"力量\",1,true))\n    assert(box.children.intent.text == \"6\")\n    click(\"endTurn\")\n    text = details(stage, box)",
+   "after": "-- Read a unit's statuses the way a player does: open its detail panel, then close it.\nlocal readPowers=dofile('tests/lua/support/power_tip_fixture.lua')\nlocal inspect=dofile('tests/lua/support/status_detail_fixture.lua')\nlocal function details(ui,stage, box)\n    box:GetChild('hit').click()\n    local _, rows=readPowers(stage)\n    local titles={}\n    for _,row in ipairs(rows)do\n        local title=assert(row:match('^<color=#[%x]+>(.-)</color>'),'compact section title')\n        titles[#titles+1]=title\n    end\n    inspect(ui,stage)\n    return table.concat(titles,' | ')\nend\nlocal count = 0\nlocal function test(name,fn) fn(); count=count+1; print(\"ok Raven Adept UI \"..count..\" - \"..name) end\n\ntest(\"Raven Adept displays Ritual opener, persistent status and next modified attack\", function()\n    local ui, stage, click = setup()\n    local box = F.actorControl(stage,'enemy1')\n    assert(box.children.intent.text == \"\")\n    assert(box.children.intentIcon.imageId == Theme.icon.intent.buff)\n    click(\"enemy1\")\n    assert(inspect(ui,stage):find(\"这名敌人将要进行强化。\",1,true))\n    assert(not ui.run.combat.enemies[1].statuses.ritual,'forecast does not apply Ritual')\n    click(\"endTurn\")\n    assert(ui.run.combat.enemies[1].statuses.ritual==3,'turn actually grants three Ritual')\n    local text = details(ui,stage, box)\n    assert(text:find(\"仪式 3\",1,true))\n    assert(not text:find(\"力量\",1,true))\n    assert(box.children.intent.text == \"6\")\n    click(\"endTurn\")\n    text = details(ui,stage, box)"
+  }
+ ]
+};
+function readContinuingVocabularyReceipt(path,digest,readCurrent){
+ const item=path===phaseFourPresentationFixture.path?phaseFourPresentationFixture:
+  path===cultistVocabularyFixture.path?cultistVocabularyFixture:null;
+ if(!item)return;
+ const {path:fixture,current,previous,hunks}=item;
  return readCloseoutLuaVocabularyReceipt(path,digest,(name,encoding)=>{
   const source=readCurrent(name,encoding);
   if(name!==fixture)return source;
-  assert(matches(source,current),'current phase-four receipt input changed: '+fixture);
+  assert(matches(source,current),'current Lua vocabulary continuation changed: '+fixture);
   const normalized=lf(source);
-  assert(source===normalized||source===normalized.replaceAll('\n','\r\n'),'mixed phase-four receipt line endings');
+  assert(source===normalized||source===normalized.replaceAll('\n','\r\n'),'mixed Lua vocabulary continuation line endings');
   const prior=restoreExactFixtureHunks({path,beforeSha256:previous.sha256,afterSha256:current.sha256,hunks},path,normalized);
-  assert(matches(prior,previous),'exact pre-projection phase-four fixture');
+  assert(matches(prior,previous),'exact pre-projection vocabulary fixture');
   return prior;
  });
 }
 export function readCalibrationReceiptInput(path,digest,read,readCurrent=readFileSync){
- const phaseFour=readPhaseFourVocabularyReceipt(path,digest,readCurrent);
+ const phaseFour=readContinuingVocabularyReceipt(path,digest,readCurrent);
  if(phaseFour!==undefined)return phaseFour;
- const monster=readMonsterReaderFixture(path,digest,readCurrent);
- if(monster!==undefined)return monster;
+ const liveLua=readLiveLuaCalibrationFixture(path,digest,readCurrent);
+ if(liveLua!==undefined)return liveLua;
  // #391's Slimed UI fixture is an intermediate receipt, not the oldest Lua
  // inverse. Check the live fixture before restoring only the one #1060 hunk.
  if(path==='tests/lua/slimed_ui.lua'&&digest==='74c651bbeadec8224e4d7bbab98f947d5e9a9494f3d681b96e8648a07703f20b'){

@@ -54,16 +54,18 @@ local function setup()
     return ui,stage,click
 end
 -- Read a unit's statuses the way a player does: open its detail panel, then close it.
-local function details(stage, box)
+local readPowers=dofile('tests/lua/support/power_tip_fixture.lua')
+local inspect=dofile('tests/lua/support/status_detail_fixture.lua')
+local function details(ui,stage, box)
     box:GetChild('hit').click()
-    local info, lines = stage.children.statusInfo, {}
-    assert(info.visible)
-    for i = 1, Theme.layout.statusInfo.rows do
-        if info.children["name" .. i].visible then lines[#lines + 1] = info.children["name" .. i].text end
+    local _, rows=readPowers(stage)
+    local titles={}
+    for _,row in ipairs(rows)do
+        local title=assert(row:match('^<color=#[%x]+>(.-)</color>'),'compact section title')
+        titles[#titles+1]=title
     end
-    info.children.hit.click()
-    assert(not info.visible)
-    return table.concat(lines, " | ")
+    inspect(ui,stage)
+    return table.concat(titles,' | ')
 end
 local count = 0
 local function test(name,fn) fn(); count=count+1; print("ok Raven Adept UI "..count.." - "..name) end
@@ -74,16 +76,16 @@ test("Raven Adept displays Ritual opener, persistent status and next modified at
     assert(box.children.intent.text == "")
     assert(box.children.intentIcon.imageId == Theme.icon.intent.buff)
     click("enemy1")
-    assert(stage.children.statusInfo.visible and stage.children.statusInfo.children.text1.text:find("自身获得 3 层仪式",1,true))
-    stage.children.statusInfo.children.hit.click()
-    assert(not stage.children.statusInfo.visible)
+    assert(inspect(ui,stage):find("这名敌人将要进行强化。",1,true))
+    assert(not ui.run.combat.enemies[1].statuses.ritual,'forecast does not apply Ritual')
     click("endTurn")
-    local text = details(stage, box)
+    assert(ui.run.combat.enemies[1].statuses.ritual==3,'turn actually grants three Ritual')
+    local text = details(ui,stage, box)
     assert(text:find("仪式 3",1,true))
     assert(not text:find("力量",1,true))
     assert(box.children.intent.text == "6")
     click("endTurn")
-    text = details(stage, box)
+    text = details(ui,stage, box)
     assert(text:find("仪式 3",1,true))
     assert(text:find("力量",1,true))
     assert(box.children.intent.text == "9")

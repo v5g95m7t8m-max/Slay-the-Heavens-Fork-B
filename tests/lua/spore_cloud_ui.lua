@@ -12,7 +12,10 @@ local function details(box,index)
     for _,kind in ipairs({'down','up','click'})do if hit.listeners and hit.listeners[kind]then hit.listeners[kind]({touchId=61})end end
     local info,lines=panel:GetChild('statusInfo'),{}
     assert(info.visible,'status details open')
-    if index then assert(ui.info.index==index and ui.info.id==s.enemies[index].id,'status details retain true actor ID') end
+    if index then
+        assert(ui.info.index==index and ui.info.id==s.enemies[index].id,'status details retain true actor ID')
+        return dofile('tests/lua/support/status_detail_fixture.lua')(ui,panel)
+    end
     for i=1,H.F.Theme.layout.statusInfo.rows do
         local name=info:GetChild('name'..i)
         if name.visible then lines[#lines+1]=name.text end
