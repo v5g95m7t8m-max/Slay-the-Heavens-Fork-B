@@ -191,9 +191,67 @@ test('877c4af frozen inputs replay the unchanged 165-card and eleven-auxiliary d
  local all={};for _,id in ipairs({'ironclad','silent','defect','watcher'})do
   local data=prepared(id,historical);local p=P.prepare(Frozen.existing,data);for _,c in ipairs(data.cards.cards)do all[c.id]=p[c.id]end
  end
+ -- These exact legacy rows were read from the unmodified #634 generator.
+ -- Keep modern spelling and keyword contracts independently checked; project
+ -- only the reviewed fields into the original immutable aggregate witness.
+ local phase634Copy={
+  after_image={
+   upgradeText={"每打出一张牌，获得 1 点固定格挡。先天：开局优先抽到。","每打出一张牌，获得 1 点固定格挡。先天。"},
+  },
+  backstab={
+   text={"对目标造成 11 点伤害。先天：开局优先抽到。消耗。","对目标造成 11 点伤害。先天。消耗。"},
+   upgradeText={"对目标造成 15 点伤害。先天：开局优先抽到。消耗。","对目标造成 15 点伤害。先天。消耗。"},
+   combatText={"对目标造成 {effects.0.value} 点伤害。先天：开局优先抽到。消耗。","对目标造成 {effects.0.value} 点伤害。先天。消耗。"},
+   upgradeCombatText={"对目标造成 {effects.0.value} 点伤害。先天：开局优先抽到。消耗。","对目标造成 {effects.0.value} 点伤害。先天。消耗。"},
+  },
+  boot_sequence={
+   text={"获得 10 点格挡。先天：开局优先抽到。消耗。","获得 10 点格挡。先天。消耗。"},
+   upgradeText={"获得 13 点格挡。先天：开局优先抽到。消耗。","获得 13 点格挡。先天。消耗。"},
+   combatText={"获得 {effects.0.value} 点格挡。先天：开局优先抽到。消耗。","获得 {effects.0.value} 点格挡。先天。消耗。"},
+   upgradeCombatText={"获得 {effects.0.value} 点格挡。先天：开局优先抽到。消耗。","获得 {effects.0.value} 点格挡。先天。消耗。"},
+  },
+  brutality={
+   upgradeText={"从下回合起，每回合正常抽牌后额外抽 1 张牌，再失去等量生命。先天：开局优先抽到。","从下回合起，每回合正常抽牌后额外抽 1 张牌，再失去等量生命。先天。"},
+  },
+  devotion={
+   text={"获得 2 层供奉：从下回合起，每回合抽牌后获得等量真言；没有真言且供奉达到 10 层时，直接进入神格。","获得 2 层供奉。下回合起抽牌后获等量真言，无真言且供奉达10层时直接进入神格。"},
+   upgradeText={"获得 3 层供奉：从下回合起，每回合抽牌后获得等量真言；没有真言且供奉达到 10 层时，直接进入神格。","获得 3 层供奉。下回合起抽牌后获等量真言，无真言且供奉达10层时直接进入神格。"},
+  },
+  eviscerate={
+   text={"对目标造成 7 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。","对目标造成 7 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。"},
+   upgradeText={"对目标造成 9 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。","对目标造成 9 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。"},
+   combatText={"对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。","对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。"},
+   upgradeCombatText={"对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。","对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。"},
+  },
+  infinite_blades={
+   upgradeText={"从下回合起，每回合开始生成 1 张飞刃；满手时放入弃牌堆。先天：开局优先抽到。","从下回合起，每回合开始生成 1 张飞刃；满手时放入弃牌堆。先天。"},
+  },
+  perfected_strike={
+   text={"对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 2。","对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加2点。"},
+   upgradeText={"对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 3。","对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加3点。"},
+   combatText={"对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 2。","对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加2点。"},
+   upgradeCombatText={"对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 3。","对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加3点。"},
+  },
+  storm={
+   upgradeText={"每打出一张能力牌，生成 1 个闪电球。先天：开局优先抽到。","每打出一张能力牌，生成 1 个闪电球。先天。"},
+  },
+  void={
+   text={"不能打出。抽到时失去 1 点能量。虚无：回合结束时仍在手中则消耗。","不能打出。抽到时失去 1 点能量。虚无。"},
+   upgradeText={"不能打出。抽到时失去 1 点能量。虚无：回合结束时仍在手中则消耗。","不能打出。抽到时失去 1 点能量。虚无。"},
+  },
+ }
+ assert(all.calculated_exchange and not all.calculated_gamble,'exact contemporary Calculated Exchange identity')
  local hash,n=0.0,0
  for id in manifest:gmatch('%S+')do
   local c=assert(all[id]);n=n+1
+  if phase634Copy[id] then
+   c=C.copy(c)
+   for key,values in pairs(phase634Copy[id])do
+    assert(c[key]==values[2],id..'.'..key..' drifted before historical projection')
+    c[key]=values[1]
+   end
+  end
+  if id=='calculated_exchange' then id='calculated_gamble' end
   local text=table.concat({id,c.name,c.text,c.upgradeText,c.combatText or '',c.upgradeCombatText or '',c.cost,c.upgradeCost,c.type},'\0')..'\1'
   for i=1,#text do hash=(hash*131.0+text:byte(i))%2147483647 end
  end

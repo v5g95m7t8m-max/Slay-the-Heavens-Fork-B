@@ -477,7 +477,43 @@ function readMonsterReaderFixture(path,digest,readCurrent){
  assert(matches(prior,before),'exact historical monster reader fixture: '+path);
  return prior;
 }
+// Preserve the exact historical vocabulary chain while the raw fixture
+// runs its modern-plus-frozen card text checks on the candidate.
+const phaseFourPresentationFixture={
+ "path": "tests/lua/phase_four_presentation.lua",
+ "current": {
+  "sha256": "097c6dcaeb5b17fc6f7298f3dcf3fc0c75bbb03a6c4d71ff05d8129ce8400db4",
+  "gitBlob": "9984e4dd9dbc37ce4c8bb1fbc973d475feede20f"
+ },
+ "previous": {
+  "sha256": "89ebab4cab91df82e3c962bb74758f9eb68b1855da0bd7fe30cba73fec15be24",
+  "gitBlob": "42820e77eeb5146c11ef2c12674b3af4c5dc9c87"
+ },
+ "hunks": [
+  {
+   "at": 193,
+   "before": " local hash,n=0.0,0\n for id in manifest:gmatch('%S+')do\n  local c=assert(all[id]);n=n+1",
+   "after": " -- These exact legacy rows were read from the unmodified #634 generator.\n -- Keep modern spelling and keyword contracts independently checked; project\n -- only the reviewed fields into the original immutable aggregate witness.\n local phase634Copy={\n  after_image={\n   upgradeText={\"每打出一张牌，获得 1 点固定格挡。先天：开局优先抽到。\",\"每打出一张牌，获得 1 点固定格挡。先天。\"},\n  },\n  backstab={\n   text={\"对目标造成 11 点伤害。先天：开局优先抽到。消耗。\",\"对目标造成 11 点伤害。先天。消耗。\"},\n   upgradeText={\"对目标造成 15 点伤害。先天：开局优先抽到。消耗。\",\"对目标造成 15 点伤害。先天。消耗。\"},\n   combatText={\"对目标造成 {effects.0.value} 点伤害。先天：开局优先抽到。消耗。\",\"对目标造成 {effects.0.value} 点伤害。先天。消耗。\"},\n   upgradeCombatText={\"对目标造成 {effects.0.value} 点伤害。先天：开局优先抽到。消耗。\",\"对目标造成 {effects.0.value} 点伤害。先天。消耗。\"},\n  },\n  boot_sequence={\n   text={\"获得 10 点格挡。先天：开局优先抽到。消耗。\",\"获得 10 点格挡。先天。消耗。\"},\n   upgradeText={\"获得 13 点格挡。先天：开局优先抽到。消耗。\",\"获得 13 点格挡。先天。消耗。\"},\n   combatText={\"获得 {effects.0.value} 点格挡。先天：开局优先抽到。消耗。\",\"获得 {effects.0.value} 点格挡。先天。消耗。\"},\n   upgradeCombatText={\"获得 {effects.0.value} 点格挡。先天：开局优先抽到。消耗。\",\"获得 {effects.0.value} 点格挡。先天。消耗。\"},\n  },\n  brutality={\n   upgradeText={\"从下回合起，每回合正常抽牌后额外抽 1 张牌，再失去等量生命。先天：开局优先抽到。\",\"从下回合起，每回合正常抽牌后额外抽 1 张牌，再失去等量生命。先天。\"},\n  },\n  devotion={\n   text={\"获得 2 层供奉：从下回合起，每回合抽牌后获得等量真言；没有真言且供奉达到 10 层时，直接进入神格。\",\"获得 2 层供奉。下回合起抽牌后获等量真言，无真言且供奉达10层时直接进入神格。\"},\n   upgradeText={\"获得 3 层供奉：从下回合起，每回合抽牌后获得等量真言；没有真言且供奉达到 10 层时，直接进入神格。\",\"获得 3 层供奉。下回合起抽牌后获等量真言，无真言且供奉达10层时直接进入神格。\"},\n  },\n  eviscerate={\n   text={\"对目标造成 7 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。\",\"对目标造成 7 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。\"},\n   upgradeText={\"对目标造成 9 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。\",\"对目标造成 9 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。\"},\n   combatText={\"对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。\",\"对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。\"},\n   upgradeCombatText={\"对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每次主动弃牌，本牌费用降低 1，最低 0；新回合恢复基础费用。\",\"对目标造成 {effects.0.value} 点伤害，重复 3 次。本回合每主动弃 1 张牌，本牌少费 1（最低 0）。\"},\n  },\n  infinite_blades={\n   upgradeText={\"从下回合起，每回合开始生成 1 张飞刃；满手时放入弃牌堆。先天：开局优先抽到。\",\"从下回合起，每回合开始生成 1 张飞刃；满手时放入弃牌堆。先天。\"},\n  },\n  perfected_strike={\n   text={\"对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 2。\",\"对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加2点。\"},\n   upgradeText={\"对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 3。\",\"对目标造成 6 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加3点。\"},\n   combatText={\"对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 2。\",\"对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加2点。\"},\n   upgradeCombatText={\"对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张带打击标签的牌，基础伤害增加 3。\",\"对目标造成 {effects.0.value} 点伤害。手牌、抽牌堆和弃牌堆中每有一张『剑势』系列牌，基础伤害增加3点。\"},\n  },\n  storm={\n   upgradeText={\"每打出一张能力牌，生成 1 个闪电球。先天：开局优先抽到。\",\"每打出一张能力牌，生成 1 个闪电球。先天。\"},\n  },\n  void={\n   text={\"不能打出。抽到时失去 1 点能量。虚无：回合结束时仍在手中则消耗。\",\"不能打出。抽到时失去 1 点能量。虚无。\"},\n   upgradeText={\"不能打出。抽到时失去 1 点能量。虚无：回合结束时仍在手中则消耗。\",\"不能打出。抽到时失去 1 点能量。虚无。\"},\n  },\n }\n assert(all.calculated_exchange and not all.calculated_gamble,'exact contemporary Calculated Exchange identity')\n local hash,n=0.0,0\n for id in manifest:gmatch('%S+')do\n  local c=assert(all[id]);n=n+1\n  if phase634Copy[id] then\n   c=C.copy(c)\n   for key,values in pairs(phase634Copy[id])do\n    assert(c[key]==values[2],id..'.'..key..' drifted before historical projection')\n    c[key]=values[1]\n   end\n  end\n  if id=='calculated_exchange' then id='calculated_gamble' end"
+  }
+ ]
+};
+function readPhaseFourVocabularyReceipt(path,digest,readCurrent){
+ const {path:fixture,current,previous,hunks}=phaseFourPresentationFixture;
+ if(path!==fixture)return;
+ return readCloseoutLuaVocabularyReceipt(path,digest,(name,encoding)=>{
+  const source=readCurrent(name,encoding);
+  if(name!==fixture)return source;
+  assert(matches(source,current),'current phase-four receipt input changed: '+fixture);
+  const normalized=lf(source);
+  assert(source===normalized||source===normalized.replaceAll('\n','\r\n'),'mixed phase-four receipt line endings');
+  const prior=restoreExactFixtureHunks({path,beforeSha256:previous.sha256,afterSha256:current.sha256,hunks},path,normalized);
+  assert(matches(prior,previous),'exact pre-projection phase-four fixture');
+  return prior;
+ });
+}
 export function readCalibrationReceiptInput(path,digest,read,readCurrent=readFileSync){
+ const phaseFour=readPhaseFourVocabularyReceipt(path,digest,readCurrent);
+ if(phaseFour!==undefined)return phaseFour;
  const monster=readMonsterReaderFixture(path,digest,readCurrent);
  if(monster!==undefined)return monster;
  // #391's Slimed UI fixture is an intermediate receipt, not the oldest Lua
