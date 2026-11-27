@@ -381,6 +381,37 @@ function readOfficialCalibrationReceipt(path,digest,readCurrent){
  return predecessor;
 }
 export function readCalibrationReceiptInput(path,digest,read,readCurrent=readFileSync){
+ // #391's Slimed UI fixture is an intermediate receipt, not the oldest Lua
+ // inverse. Check the live fixture before restoring only the one #1060 hunk.
+ if(path==='tests/lua/slimed_ui.lua'&&digest==='74c651bbeadec8224e4d7bbab98f947d5e9a9494f3d681b96e8648a07703f20b'){
+  const source=readCurrent(path,'utf8');
+  assert(matches(source,{
+   sha256:'62c3e6a414d6d31e4316630326fc76a5dd779145133cf2a5875fb4e203a3f2ec',gitBlob:'00dde572f5db8b7335087379e2caf4323e333db0',
+  }),'current Slimed receipt input changed: '+path);
+  const normalized=lf(source);
+  assert(source===normalized||source===normalized.replaceAll('\n','\r\n'),'mixed Slimed receipt line endings');
+  const prior=normalized.replace("assert(detail:find('这名敌人将要对你施加负面效果并攻击造成 8 点伤害。',1,true))",
+   "assert(detail:find('8',1,true) and detail:find('将 1 张「黏滞」放入你的弃牌堆',1,true))");
+  assert(matches(prior,{sha256:digest,gitBlob:'e201717bc5401441b9c71e31830b5b14ae9630bd'}),'exact #391 Slimed receipt');
+  return prior;
+ }
+ // Restore the #391 large Spike Slime fixture for this receipt only.
+ if(path==='tests/lua/spike_slime_l_ui.lua'&&digest==='a6201ab0fe3b26d01c160d5d43fbf195daf2e71b23486a8cd43fbeb374ac9e6c'){
+  const source=readCurrent(path,'utf8');
+  assert(matches(source,{
+   sha256:'98972176b8ae21b28ee48bfe7f7a15fb2b720f152ceb9bf4847b1a59083f5c05',gitBlob:'a6de1469b516a29fd444c1e5a200565d0626d42e',
+  }),'current Spike Slimed receipt input changed: '+path);
+  const normalized=lf(source);
+  assert(source===normalized||source===normalized.replaceAll('\n','\r\n'),'mixed Spike Slimed receipt line endings');
+  const prior=normalized.replace("assert(detail:find('这名敌人将要对你施加负面效果并攻击造成 16 点伤害。',1,true))",
+   "assert(detail:find('16',1,true) and detail:find('将 2 张「黏滞」放入你的弃牌堆',1,true))")
+   .replace("assert(frail:find('这名敌人将要对你施加一种负面效果。',1,true)",
+    "assert(frail:find('使你获得 2 回合脆弱',1,true)")
+   .replace('intent16/strategy/read-only/two-generated-cards/real-exhaust/debuff-preview',
+    'intent16/detail2/read-only/two-generated-cards/real-exhaust/frail2');
+  assert(matches(prior,{sha256:digest,gitBlob:'72cb15dea11aee357476e26219028202bb11fc90'}),'exact #391 Spike Slimed receipt');
+  return prior;
+ }
  const official=readOfficialCalibrationReceipt(path,digest,readCurrent);
  if(official!==undefined)return official;
  if(path===relicEquipReceipt.path&&digest===relicEquipReceipt.prior.sha256)return readRelicEquipReceipt(readCurrent);

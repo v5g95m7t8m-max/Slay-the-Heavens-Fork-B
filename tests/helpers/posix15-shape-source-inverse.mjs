@@ -301,7 +301,7 @@ export function prePosix16ReceiptSource(path,source){
  if(!Object.hasOwn(posix16Sources,path)||typeof source!=='string')return source;
  const {after,before,hunks}=posix16Sources[path];
  const lf=source.replaceAll('\r\n','\n');
- if(source!==lf&&source!==lf.replaceAll('\n','\r\n'))return source;
+ if(lf.includes('\r')||source!==lf&&source!==lf.replaceAll('\n','\r\n'))return source;
  const current=restoreExactFixtureHunks(cursesFormationFixture,path,lf);
  if(!exactSourceMatches(current,after))return source;
  const prior=restoreExactFixtureHunks({path,hunks,beforeSha256:before.sha256,afterSha256:after.sha256},path,current);
