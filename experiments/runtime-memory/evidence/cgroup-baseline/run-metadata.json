@@ -1,0 +1,54 @@
+{
+  "kind": "offline-production-host-resource-pressure",
+  "schemaVersion": 1,
+  "timeUtc": "2026-11-28T06:46:24.800Z",
+  "status": "PASS",
+  "mode": "full",
+  "repetitions": 3,
+  "diagnosticAct2": true,
+  "seed": 42,
+  "officialClient": "UNVERIFIED",
+  "engine": {
+    "image": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
+    "imageId": "sha256:622f209f6c16ba5af4d9a337cae6577d096f17174b904cfc6a5b0c81a2679c24",
+    "docker": "28.0.4 2 linux x86_64",
+    "kernel": "7.0.0-1018-aws",
+    "arch": "x64",
+    "cpuModel": "Intel(R) Xeon(R) 6975P-C",
+    "availableCpus": 4,
+    "hostMemoryBytes": 16464273408,
+    "productionHeapMiB": 768
+  },
+  "alertPercent": 20,
+  "candidate": {
+    "commit": "e4b074e8f2abfd29b9e2863b4753130bd2b6a839",
+    "tree": "aa380fc1df435813292d57639b240a849de0b138",
+    "workloadSha256": "91f5614e4adfed0e669445cb0cbfb61087afbf43391f29ce3dc69d403d7acd30",
+    "lockfile": {
+      "raw": "b5a3c0c22a4ddfe66bfb3e79a33cd35074ca73781f620cd88af335fe30b2f6ec",
+      "dependencies": "7d2293e4c320cbc36faf2bc060fe5b91ef8a475fb2d6d708edf95643285caab6"
+    },
+    "generatedLuaSha256": "b3cf41f14f64c7740f2f15108788967960adce7904109f8855cfaef6feb7af96",
+    "configuration": {
+      "releaseCandidate": false,
+      "workKey": "offline-performance",
+      "officialAssets": true,
+      "refinedReleaseMonsterArt": true,
+      "nativePageLifecycle": true,
+      "artFeatures": {
+        "cards": false,
+        "menuBackground": false,
+        "selectionAvatar": true,
+        "battlePortrait": true,
+        "monsters": true
+      }
+    }
+  },
+  "baseline": null,
+  "comparisonStatus": "UNPAIRED",
+  "runId": 46117833202,
+  "jobId": 140895510767,
+  "artifactId": 15252408618,
+  "zipSha256": "350a431f04250fad14ba95c192f4aef233a97f6b30b688e456f67fe6c7fc417a",
+  "sourceReportSha256": "961a9e5776abe668b3d4f8f0b4ddba8049b189659bb5a2e1bf7efdbb757a7e1e"
+}
