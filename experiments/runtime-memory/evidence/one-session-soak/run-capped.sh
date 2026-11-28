@@ -47,7 +47,7 @@ test "${#spec[@]}" = 4
 test "$(docker info --format '{{.CgroupVersion}}')" = 2
 image=${spec[0]}
 docker pull "$image"
-docker image inspect --format '{{.Id}} {{join .RepoDigests " "}}' "$image" > "$out/docker-image.txt"
+docker image inspect --format '{{.Id}} {{json .RepoDigests}}' "$image" > "$out/docker-image.txt"
 {
   printf 'workflow_head=%s\nbase=%s\ntree=%s\nmode=host-settled\nseed=2\nscope=runtime-only; fixtures prepared outside cgroup\n' "${GITHUB_SHA:-}" "$base" "$tree"
   printf 'heap_cap_mib=%s\n' "${spec[3]}"
