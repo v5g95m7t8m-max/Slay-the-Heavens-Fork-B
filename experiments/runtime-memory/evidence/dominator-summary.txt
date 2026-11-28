@@ -1,0 +1,16 @@
+cold-host-graph.txt:Total graph nodes=3622804 reachable=3622796 strongEdges=13845723 sum_all_self=225958231 sum_reachable_self=225958231
+cold-host-graph.txt:SHALLOW 54275248 850096 3 Object
+cold-host-graph.txt:SHALLOW 52163840 1304096 3 TValue
+cold-host-graph.txt:SHALLOW 10481152 119104 3 Table
+cold-host-graph.txt:SHALLOW 7624400 238263 3 Map
+cold-host-graph.txt:DOM @6899141 retained=48575696 shallow=88 type=3 Table PATH <- @6899141:Table <- @41:(Stack roots) <- @3:(GC roots) <- @1:
+cold-host-graph.txt:DOM @6899141 retained=48575696 shallow=88 type=3 Table PATH <- @6899141:Table <- @41:(Stack roots) <- @3:(GC roots) <- @1:
+cold-host-graph.txt:STRONG_PATH @6899141 Table <- 2 value @6899055:TValue <- 2 value @6899003:Object <- 3 38 @6898217: <- 3 table @6898207:Map <- 2 strong @6898205:Table <- 2 value @1865395:TValue <- 1 [10] @163481:Array <- 2 stack @7267:lua_State <- 3 53 @41:(Stack roots) <- 1 [19] @3:(GC roots) <- 1 [1] @1:
+map-combat-graph.txt:Total graph nodes=5646424 reachable=5646416 strongEdges=22245362 sum_all_self=350126555 sum_reachable_self=350126555
+map-combat-graph.txt:SHALLOW 90736520 2268413 3 TValue
+map-combat-graph.txt:SHALLOW 83541816 1356578 3 Object
+map-combat-graph.txt:SHALLOW 17241488 195926 3 Table
+map-combat-graph.txt:SHALLOW 12541008 391907 3 Map
+map-combat-graph.txt:DOM @6899141 retained=48575696 shallow=88 type=3 Table PATH <- @6899141:Table <- @41:(Stack roots) <- @3:(GC roots) <- @1:
+map-combat-graph.txt:DOM @6899141 retained=48575696 shallow=88 type=3 Table PATH <- @6899141:Table <- @41:(Stack roots) <- @3:(GC roots) <- @1:
+map-combat-graph.txt:STRONG_PATH @6899141 Table <- 2 value @6899055:TValue <- 2 value @6899003:Object <- 3 38 @6898217: <- 3 table @6898207:Map <- 2 strong @6898205:Table <- 2 value @1865395:TValue <- 1 [10] @163481:Array <- 2 stack @7267:lua_State <- 3 53 @41:(Stack roots) <- 1 [19] @3:(GC roots) <- 1 [1] @1:

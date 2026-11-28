@@ -1,0 +1,923 @@
+{
+  "sourceCommit": "84be10a (checkout; pre-existing output output-prod)",
+  "layoutSHA256": "50ebb891a16c78ccbd12b4d457daecd4a38c7b11a4ab21e3583723610f70e66b",
+  "templatesSHA256": "c439bcb1547a320a60e7da2145d2edc7bef512a46f93a524d00b281ca5e01938",
+  "scope": "declared static imported tree, excludes layout metadata root; not native instance inventory or effective simultaneous visibility or memory",
+  "staticCount": 25693,
+  "stage": {
+    "officialBattleBackdrop": {
+      "n": 10,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "act1_1",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "act1_2",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "act1_3",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "act2_1",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "act2_2",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "act2_3",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "boss1",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "boss2",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "readabilityVeil",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    },
+    "battlePanel": {
+      "n": 6260,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "potionHelp",
+          "n": 735,
+          "initialVisible": null
+        },
+        {
+          "name": "card1",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card2",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card3",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card4",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card5",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card6",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card7",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card8",
+          "n": 354,
+          "initialVisible": null
+        },
+        {
+          "name": "card9",
+          "n": 354,
+          "initialVisible": null
+        }
+      ]
+    },
+    "mapPanel": {
+      "n": 2000,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "mapGroup2",
+          "n": 451,
+          "initialVisible": null
+        },
+        {
+          "name": "mapGroup3",
+          "n": 431,
+          "initialVisible": null
+        },
+        {
+          "name": "mapGroup1",
+          "n": 378,
+          "initialVisible": null
+        },
+        {
+          "name": "mapGroup4",
+          "n": 351,
+          "initialVisible": null
+        },
+        {
+          "name": "mapGroup5",
+          "n": 225,
+          "initialVisible": null
+        },
+        {
+          "name": "v25MapPaper",
+          "n": 53,
+          "initialVisible": null
+        },
+        {
+          "name": "resources",
+          "n": 35,
+          "initialVisible": null
+        },
+        {
+          "name": "previewBack",
+          "n": 25,
+          "initialVisible": false
+        },
+        {
+          "name": "bossInkHost",
+          "n": 21,
+          "initialVisible": false
+        },
+        {
+          "name": "officialRunBar",
+          "n": 20,
+          "initialVisible": null
+        }
+      ]
+    },
+    "combatRewards": {
+      "n": 73,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "v25Face",
+          "n": 65,
+          "initialVisible": null
+        },
+        {
+          "name": "officialButtonBacking",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "panelHairline",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "panelShade",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "plate",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "backIcon",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "label",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "hit",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    },
+    "nodePanel": {
+      "n": 9677,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "pickerView",
+          "n": 5775,
+          "initialVisible": false
+        },
+        {
+          "name": "shopView",
+          "n": 2461,
+          "initialVisible": false
+        },
+        {
+          "name": "eventView",
+          "n": 643,
+          "initialVisible": false
+        },
+        {
+          "name": "treasureView",
+          "n": 478,
+          "initialVisible": false
+        },
+        {
+          "name": "shopRoom",
+          "n": 150,
+          "initialVisible": false
+        },
+        {
+          "name": "goldIcon",
+          "n": 31,
+          "initialVisible": null
+        },
+        {
+          "name": "campView",
+          "n": 29,
+          "initialVisible": false
+        },
+        {
+          "name": "back",
+          "n": 24,
+          "initialVisible": null
+        },
+        {
+          "name": "confirm",
+          "n": 24,
+          "initialVisible": null
+        },
+        {
+          "name": "officialRunBar",
+          "n": 20,
+          "initialVisible": null
+        }
+      ]
+    },
+    "menuPanel": {
+      "n": 2308,
+      "initialVisible": null,
+      "topChildren": [
+        {
+          "name": "menuRuinsScene",
+          "n": 1106,
+          "initialVisible": null
+        },
+        {
+          "name": "v25MainMenu",
+          "n": 727,
+          "initialVisible": null
+        },
+        {
+          "name": "start",
+          "n": 148,
+          "initialVisible": null
+        },
+        {
+          "name": "continueRun",
+          "n": 82,
+          "initialVisible": false
+        },
+        {
+          "name": "titleQuit",
+          "n": 82,
+          "initialVisible": null
+        },
+        {
+          "name": "settle",
+          "n": 72,
+          "initialVisible": false
+        },
+        {
+          "name": "result",
+          "n": 44,
+          "initialVisible": false
+        },
+        {
+          "name": "vista",
+          "n": 28,
+          "initialVisible": false
+        },
+        {
+          "name": "emblem",
+          "n": 7,
+          "initialVisible": false
+        },
+        {
+          "name": "backdrop",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    },
+    "relicEntry": {
+      "n": 51,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "open",
+          "n": 50,
+          "initialVisible": null
+        }
+      ]
+    },
+    "deckEntry": {
+      "n": 115,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "open",
+          "n": 114,
+          "initialVisible": null
+        }
+      ]
+    },
+    "deckPanel": {
+      "n": 914,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "cardFocus",
+          "n": 309,
+          "initialVisible": false
+        },
+        {
+          "name": "sortoriginal",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "sorttype",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "sortcost",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "upgradePreview",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "close",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "previous",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "next",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "pileReturn",
+          "n": 21,
+          "initialVisible": false
+        },
+        {
+          "name": "deckSort",
+          "n": 17,
+          "initialVisible": false
+        }
+      ]
+    },
+    "relicBar": {
+      "n": 651,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "slot1",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot2",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot3",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot4",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot5",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot6",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot7",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot8",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot9",
+          "n": 24,
+          "initialVisible": false
+        },
+        {
+          "name": "slot10",
+          "n": 24,
+          "initialVisible": false
+        }
+      ]
+    },
+    "relicPanel": {
+      "n": 390,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "close",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "previous",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "next",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "row1",
+          "n": 31,
+          "initialVisible": false
+        },
+        {
+          "name": "row2",
+          "n": 31,
+          "initialVisible": false
+        },
+        {
+          "name": "row3",
+          "n": 31,
+          "initialVisible": false
+        },
+        {
+          "name": "row4",
+          "n": 31,
+          "initialVisible": false
+        },
+        {
+          "name": "single",
+          "n": 23,
+          "initialVisible": false
+        },
+        {
+          "name": "veil",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "blocker",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    },
+    "potionEntry": {
+      "n": 473,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "open",
+          "n": 462,
+          "initialVisible": null
+        },
+        {
+          "name": "slot1",
+          "n": 2,
+          "initialVisible": false
+        },
+        {
+          "name": "slot2",
+          "n": 2,
+          "initialVisible": false
+        },
+        {
+          "name": "slot3",
+          "n": 2,
+          "initialVisible": false
+        },
+        {
+          "name": "slot4",
+          "n": 2,
+          "initialVisible": false
+        },
+        {
+          "name": "slot5",
+          "n": 2,
+          "initialVisible": false
+        }
+      ]
+    },
+    "potionPanel": {
+      "n": 162,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "use",
+          "n": 77,
+          "initialVisible": null
+        },
+        {
+          "name": "discard",
+          "n": 77,
+          "initialVisible": null
+        },
+        {
+          "name": "dismiss",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "border",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "plate",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "hit",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "title",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "target",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "effect",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    },
+    "characterPanel": {
+      "n": 1553,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "details",
+          "n": 912,
+          "initialVisible": false
+        },
+        {
+          "name": "v25Roster",
+          "n": 228,
+          "initialVisible": null
+        },
+        {
+          "name": "cancel",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "confirm",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "elements",
+          "n": 77,
+          "initialVisible": false
+        },
+        {
+          "name": "traveler",
+          "n": 28,
+          "initialVisible": null
+        },
+        {
+          "name": "character1",
+          "n": 27,
+          "initialVisible": null
+        },
+        {
+          "name": "character2",
+          "n": 27,
+          "initialVisible": null
+        },
+        {
+          "name": "character3",
+          "n": 27,
+          "initialVisible": null
+        },
+        {
+          "name": "character4",
+          "n": 27,
+          "initialVisible": null
+        }
+      ]
+    },
+    "choicePanel": {
+      "n": 400,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "before",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "after",
+          "n": 79,
+          "initialVisible": false
+        },
+        {
+          "name": "confirm",
+          "n": 79,
+          "initialVisible": null
+        },
+        {
+          "name": "option1",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "option2",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "veil",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "blocker",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "title",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "hint",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "cards",
+          "n": 1,
+          "initialVisible": false
+        }
+      ]
+    },
+    "exitEntry": {
+      "n": 39,
+      "initialVisible": null,
+      "topChildren": [
+        {
+          "name": "open",
+          "n": 38,
+          "initialVisible": null
+        }
+      ]
+    },
+    "exitPanel": {
+      "n": 166,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "cancel",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "confirm",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "veil",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "blocker",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "border",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "face",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "title",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "rule",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "message",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "whyText",
+          "n": 1,
+          "initialVisible": false
+        }
+      ]
+    },
+    "runMenu": {
+      "n": 399,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "resume",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "map",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "mainMenu",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "abandon",
+          "n": 78,
+          "initialVisible": null
+        },
+        {
+          "name": "quit",
+          "n": 78,
+          "initialVisible": false
+        },
+        {
+          "name": "veil",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "blocker",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "border",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "face",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "catch",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    },
+    "pageReveal": {
+      "n": 25,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "cancel",
+          "n": 20,
+          "initialVisible": null
+        },
+        {
+          "name": "veil",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "blocker",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "subtitle",
+          "n": 1,
+          "initialVisible": false
+        },
+        {
+          "name": "message",
+          "n": 1,
+          "initialVisible": false
+        }
+      ]
+    },
+    "victoryEasterEgg": {
+      "n": 25,
+      "initialVisible": false,
+      "topChildren": [
+        {
+          "name": "close",
+          "n": 20,
+          "initialVisible": null
+        },
+        {
+          "name": "blocker",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "thanksVeil",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "thanks",
+          "n": 1,
+          "initialVisible": null
+        },
+        {
+          "name": "status",
+          "n": 1,
+          "initialVisible": null
+        }
+      ]
+    }
+  },
+  "templateDefinitionNodes": {
+    "AbyssDeckCard": 311,
+    "AbyssSelectionHalfTriangle": 1,
+    "AbyssReadyCardImage": 1,
+    "AbyssReadyCardGroup": 1,
+    "AbyssMonsterActor": 69,
+    "AbyssMonsterActor41": 80,
+    "AbyssMonsterActor96": 136,
+    "AbyssMonsterActor115": 155,
+    "AbyssMonsterPower": 7,
+    "AbyssBattlePileCard": 58,
+    "AbyssForgeCard": 315,
+    "AbyssDeckBrowserBack": 42,
+    "AbyssDeckBrowserBanner": 71,
+    "AbyssDeckBrowserFrame0": 51,
+    "AbyssDeckBrowserFrame1": 51,
+    "AbyssDeckBrowserFrame2": 43
+  },
+  "templateDefinitionNodeCount": 1392
+}

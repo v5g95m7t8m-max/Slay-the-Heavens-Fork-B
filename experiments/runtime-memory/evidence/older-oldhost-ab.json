@@ -1,0 +1,158 @@
+{
+  "samples": [
+    {
+      "file": "1-A.log",
+      "exitMs": 733.52,
+      "reenterMs": 4604.85,
+      "pause-resumeHeapMiB": 584.23,
+      "exitHeapMiB": 558.32,
+      "reenterHeapMiB": 750.22,
+      "peakRSSMiB": 928.06,
+      "reenterRSSMiB": 928.06
+    },
+    {
+      "file": "2-B.log",
+      "exitMs": 532.62,
+      "reenterMs": 4513.3,
+      "pause-resumeHeapMiB": 577.27,
+      "exitHeapMiB": 551.4,
+      "reenterHeapMiB": 742.12,
+      "peakRSSMiB": 924.27,
+      "reenterRSSMiB": 924.27
+    },
+    {
+      "file": "3-B.log",
+      "exitMs": 523.28,
+      "reenterMs": 4432.28,
+      "pause-resumeHeapMiB": 575.44,
+      "exitHeapMiB": 549.65,
+      "reenterHeapMiB": 739.63,
+      "peakRSSMiB": 924.29,
+      "reenterRSSMiB": 924.29
+    },
+    {
+      "file": "4-A.log",
+      "exitMs": 538.64,
+      "reenterMs": 5017.95,
+      "pause-resumeHeapMiB": 577.57,
+      "exitHeapMiB": 551.56,
+      "reenterHeapMiB": 743.18,
+      "peakRSSMiB": 919.66,
+      "reenterRSSMiB": 919.66
+    },
+    {
+      "file": "5-A.log",
+      "exitMs": 566.63,
+      "reenterMs": 4893.06,
+      "pause-resumeHeapMiB": 587.42,
+      "exitHeapMiB": 561.4,
+      "reenterHeapMiB": 753.16,
+      "peakRSSMiB": 929.63,
+      "reenterRSSMiB": 929.63
+    },
+    {
+      "file": "6-B.log",
+      "exitMs": 578.74,
+      "reenterMs": 4717.46,
+      "pause-resumeHeapMiB": 567.47,
+      "exitHeapMiB": 541.79,
+      "reenterHeapMiB": 732.35,
+      "peakRSSMiB": 923.93,
+      "reenterRSSMiB": 923.93
+    }
+  ],
+  "arms": {
+    "A": {
+      "exitMs": {
+        "median": 566.63,
+        "min": 538.64,
+        "max": 733.52
+      },
+      "reenterMs": {
+        "median": 4893.06,
+        "min": 4604.85,
+        "max": 5017.95
+      },
+      "pause-resumeHeapMiB": {
+        "median": 584.23,
+        "min": 577.57,
+        "max": 587.42
+      },
+      "exitHeapMiB": {
+        "median": 558.32,
+        "min": 551.56,
+        "max": 561.4
+      },
+      "reenterHeapMiB": {
+        "median": 750.22,
+        "min": 743.18,
+        "max": 753.16
+      },
+      "peakRSSMiB": {
+        "median": 928.06,
+        "min": 919.66,
+        "max": 929.63
+      },
+      "reenterRSSMiB": {
+        "median": 928.06,
+        "min": 919.66,
+        "max": 929.63
+      }
+    },
+    "B": {
+      "exitMs": {
+        "median": 532.62,
+        "min": 523.28,
+        "max": 578.74
+      },
+      "reenterMs": {
+        "median": 4513.3,
+        "min": 4432.28,
+        "max": 4717.46
+      },
+      "pause-resumeHeapMiB": {
+        "median": 575.44,
+        "min": 567.47,
+        "max": 577.27
+      },
+      "exitHeapMiB": {
+        "median": 549.65,
+        "min": 541.79,
+        "max": 551.4
+      },
+      "reenterHeapMiB": {
+        "median": 739.63,
+        "min": 732.35,
+        "max": 742.12
+      },
+      "peakRSSMiB": {
+        "median": 924.27,
+        "min": 923.93,
+        "max": 924.29
+      },
+      "reenterRSSMiB": {
+        "median": 924.27,
+        "min": 923.93,
+        "max": 924.29
+      }
+    }
+  },
+  "identicalCountersByPhase": {
+    "begin": true,
+    "cold-start": true,
+    "selection-open": true,
+    "neow-open": true,
+    "start-map": true,
+    "first-fight": false,
+    "ten-card-hand": true,
+    "consecutive-play": true,
+    "deck-cold-open": false,
+    "deck-close": true,
+    "deck-warm-open": true,
+    "pause-resume": true,
+    "exit": true,
+    "reenter": true
+  },
+  "reentryCalls": 32799,
+  "reentryWrites": 27393
+}

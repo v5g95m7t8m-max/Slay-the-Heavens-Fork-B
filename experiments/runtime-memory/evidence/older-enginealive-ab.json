@@ -1,0 +1,71 @@
+{
+  "samples": {
+    "C": {
+      "peakRssMiB": 928.6,
+      "pause-resume": {
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "requireCalls": 3591,
+        "snapshots": 0,
+        "heapUsedMiB": 578.78,
+        "elapsedMs": 869.29,
+        "rssMiB": 743.35
+      },
+      "exit": {
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "requireCalls": 1,
+        "snapshots": 0,
+        "heapUsedMiB": 552.89,
+        "elapsedMs": 541.75,
+        "rssMiB": 752.73
+      },
+      "reenter": {
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "requireCalls": 815,
+        "snapshots": 0,
+        "heapUsedMiB": 743.81,
+        "elapsedMs": 4716.59,
+        "rssMiB": 928.6
+      }
+    },
+    "D": {
+      "peakRssMiB": 925.48,
+      "pause-resume": {
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "requireCalls": 3591,
+        "snapshots": 0,
+        "heapUsedMiB": 546.69,
+        "elapsedMs": 1078.72,
+        "rssMiB": 743.11
+      },
+      "exit": {
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "requireCalls": 1,
+        "snapshots": 0,
+        "heapUsedMiB": 545.26,
+        "elapsedMs": 623.52,
+        "rssMiB": 750.86
+      },
+      "reenter": {
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "requireCalls": 815,
+        "snapshots": 0,
+        "heapUsedMiB": 773.68,
+        "elapsedMs": 4502.32,
+        "rssMiB": 925.48
+      }
+    }
+  },
+  "phasesWithWorkCounterDifferences": [
+    "first-fight",
+    "deck-cold-open"
+  ],
+  "seed": 42,
+  "cap": "single CPU affinity, no hard RAM cap",
+  "officialClient": "UNVERIFIED"
+}

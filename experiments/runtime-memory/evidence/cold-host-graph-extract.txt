@@ -1,0 +1,12 @@
+Total graph nodes=3622804 reachable=3622796 strongEdges=13845723 sum_all_self=225958231 sum_reachable_self=225958231
+SHALLOW 54275248 850096 3 Object
+SHALLOW 52163840 1304096 3 TValue
+SHALLOW 51346640 238867 1
+SHALLOW 10481152 119104 3 Table
+SHALLOW 9416480 78211 1 (object elements)
+SHALLOW 7624400 238263 3 Map
+SHALLOW 4994368 48024 3 Uint8Array
+SHALLOW 4614200 48065 3 ArrayBuffer
+DOM @6899141 retained=48575696 shallow=88 type=3 Table PATH <- @6899141:Table <- @41:(Stack roots) <- @3:(GC roots) <- @1:
+DOM @6899141 retained=48575696 shallow=88 type=3 Table PATH <- @6899141:Table <- @41:(Stack roots) <- @3:(GC roots) <- @1:
+STRONG_PATH @6899141 Table <- 2 value @6899055:TValue <- 2 value @6899003:Object <- 3 38 @6898217: <- 3 table @6898207:Map <- 2 strong @6898205:Table <- 2 value @1865395:TValue <- 1 [10] @163481:Array <- 2 stack @7267:lua_State <- 3 53 @41:(Stack roots) <- 1 [19] @3:(GC roots) <- 1 [1] @1:
