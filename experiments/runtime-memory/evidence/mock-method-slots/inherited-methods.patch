@@ -1,0 +1,28 @@
+--- a/tests/lua/support/game_ui_fixture.lua
++++ b/tests/lua/support/game_ui_fixture.lua
+@@ -28,8 +28,7 @@
+ local function preview(name, text)
+     print("LORE_PREVIEW\t" .. name .. "\t" .. text:gsub("\n", "\\n"))
+ end
+--- These methods capture no node state. Keep them as own fields so overrides
+--- and pairs/rawget see the same control shape without per-node closures.
++-- Diagnostic: resolve nine stable methods via the existing shared lookup.
+ local Control = {}
+ -- The engine owns activation. Expose only the documented read-only hierarchy
+ -- result on controls; tests change private engine state, not native properties.
+@@ -126,15 +125,6 @@
+         anchorMinX = spec.anchor and spec.anchor.min[1] or .5,
+         anchorMaxX = spec.anchor and spec.anchor.max[1] or .5 }
+     if spec.kind~='cursorArea' then self.interactable=true end
+-    self.GetChild = Control.GetChild
+-    self.AddKeyEventListener = Control.AddKeyEventListener
+-    self.SetVisible = Control.SetVisible
+-    self.SetSizeDelta = Control.SetSizeDelta
+-    self.SetLocalScale = Control.SetLocalScale
+-    self.SetAnchoredPosition = Control.SetAnchoredPosition
+-    self.SetImage = Control.SetImage
+-    self.SetAsLastSibling = Control.SetAsLastSibling
+-    self.AddCursorEventListener = Control.AddCursorEventListener
+     if spec.kind == "grid" then
+         self.items, self.indexBase = {}, 0
+         -- ClientUIGridScrollerControl geometry getters return the imported

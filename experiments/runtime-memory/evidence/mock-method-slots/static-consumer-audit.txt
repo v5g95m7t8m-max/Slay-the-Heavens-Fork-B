@@ -1,0 +1,69 @@
+Exact observed production and campaign source (32a15219aecd145c59cb1b2fcf477e5556766e5d)
+
+Direct rawget/rawset / iteration of selected control variable names:
+src/lua/abyss_run_potions.lua:153:        for key in pairs(root) do root[key] = nil end
+src/lua/abyss_relic_family_combat.lua:401: local order={};for _,old in ipairs(target.powerOrder or {})do if old~=id then order[#order+1]=old end end
+src/lua/abyss_relic_family_combat.lua:416:  for i,id in ipairs(target.powerOrder or {})do order[id]=i end
+src/lua/abyss_relic_family_combat.lua:417:  for id,n in pairs(target.statuses)do local d=target.statusDefinitions[id]
+src/lua/abyss_plated_armor.lua:54:        for _,id in ipairs(target.powerOrder or {})do if id~='plated_armor'then order[#order+1]=id end end
+src/lua/abyss_flow_actions.lua:12:    for key in pairs(target) do if source[key]==nil then target[key]=nil end end
+src/lua/abyss_giant_head.lua:75: for _,id in ipairs(target.powerOrder or {})do
+src/lua/abyss_giant_head.lua:76:  if id=='slow'and rawget(target.statuses,id)~=nil then
+
+Production rawget/rawset access list, review every direct occurrence for owned control methods:
+src/lua/abyss_turn_powers.lua:58:            for i=1,size do assert(rawget(state.orbPowerOrder,i)~=nil,'sparse legacy orb Power order')end
+src/lua/abyss_turn_powers.lua:62:                if rawget(state.player.statuses,id)~=nil then
+src/lua/abyss_turn_powers.lua:69:                assert(rawget(state.player.statuses,id)==nil or seen[id],'unknown legacy Loop/Bias acquisition order')
+src/lua/abyss_uncommon_relics.lua:13: else rawset(self,key,value) end
+src/lua/abyss_warrior_status_cards.lua:11: if key=='onUpgrade'then Cost.onUpgrade=value else rawset(owner,key,value)end
+src/lua/abyss_snapshot.lua:29:            for k in next,original do rawset(original,k,nil) end
+src/lua/abyss_snapshot.lua:30:            for k,v in next,values do rawset(original,k,v) end
+src/lua/abyss_scry.lua:12:    for i=1,n do if rawget(t,i)==nil then return nil end end
+src/lua/abyss_rare_relics.lua:14: else rawset(self,key,value) end
+src/lua/abyss_shop_relics.lua:17: else rawset(self,key,value) end
+src/lua/abyss_relic_combat_hooks.lua:10: if key=='localId' or key=='owns' then Queries[key]=value else rawset(self,key,value)end
+src/lua/abyss_relic_family_combat.lua:16: else rawset(self,key,value) end
+src/lua/abyss_relic_family_combat.lua:66: else rawset(self,key,value) end
+src/lua/abyss_relic_family_combat.lua:162: else rawset(self,key,value) end
+src/lua/abyss_relic_family_combat.lua:334: else rawset(self,key,value) end
+src/lua/abyss_relic_family_combat.lua:466: else rawset(self,key,value) end
+src/lua/abyss_relic_hooks.lua:21: else rawset(self,key,value)end
+src/lua/abyss_nemesis.lua:46: e.nemesisApplyIntangible=rawget(e.statuses,'nemesis_intangible')==nil
+src/lua/abyss_nemesis.lua:60: local n=rawget(e.statuses,'nemesis_intangible')
+src/lua/abyss_opening_hand.lua:13:    for i=1,n do assert(rawget(t,i)~=nil,"sparse opening draw") end
+src/lua/abyss_opening_hand.lua:22:        local value=rawget(t,field)
+src/lua/abyss_opening_hand.lua:43:        local definition=rawget(catalogCards,instance.cardId)
+src/lua/abyss_orb_powers.lua:80:    if (slot=='bias' or slot=='loop') and rawget(state.player.statuses,slot)==nil then return actions end
+src/lua/abyss_power_schedule.lua:54:        local entry=rawget(entries,i)
+src/lua/abyss_power_schedule.lua:67:        assert(rawget(actor.statuses,entry.id)~=nil,'Power removed without schedule removal')
+src/lua/abyss_power_schedule.lua:75:-- After successful application; before is rawget(actor.statuses,id) BEFORE
+src/lua/abyss_power_schedule.lua:81:    assert(rawget(actor.statuses,id)~=nil,'record requires an applied Power')
+src/lua/abyss_power_schedule.lua:84:    assert(integer(rawget(actor.statuses,id),-MAX,MAX),'invalid applied Power membership')
+src/lua/abyss_power_schedule.lua:88:        assert(rawget(actor.statuses,entry.id)~=nil,'Power removed without schedule removal')
+src/lua/abyss_power_schedule.lua:146:    for _,entry in ipairs(entries) do entry.amount=rawget(actor.statuses,entry.id) end
+src/lua/abyss_power_schedule.lua:164:        local n=virtual and virtual.amount or rawget(actor.statuses,id)
+src/lua/abyss_power_schedule.lua:175:        local id=rawget(history,i);assert(type(id)=='string'and not seen[id],'invalid owner-end acquisition entry');seen[id]=true
+src/lua/abyss_pile_choice.lua:17:    for i=1,n do if rawget(t,i)==nil then return nil end end
+src/lua/abyss_nodes.lua:51:            if type(node)=='table' and rawget(node,'hasEmeraldKey')~=nil then canonical=true;break end
+src/lua/abyss_living_wall.lua:12:    else rawset(self,key,value) end
+src/lua/abyss_exhaust.lua:14:    for i=1,n do assert(rawget(t,i)~=nil,'sparse exhaust list') end
+src/lua/abyss_giant_head.lua:57:  if rawget(enemy.statuses,'slow')~=nil then
+src/lua/abyss_giant_head.lua:76:  if id=='slow'and rawget(target.statuses,id)~=nil then
+src/lua/abyss_giant_head.lua:93: local n=rawget(actor.statuses,'slow')
+src/lua/abyss_colorless_cards.lua:11:    else rawset(self,key,value) end
+src/lua/abyss_guardian_ai.lua:14:    local beforeRaw=rawget(enemy.statuses,id)
+src/lua/abyss_hand_choice.lua:14:    for i=1,n do if rawget(t,i)==nil then return nil end end
+src/lua/abyss_discard.lua:15:    for i = 1, count do if rawget(t, i) == nil then return nil end end
+src/lua/abyss_discard.lua:45:            for k in next, original do rawset(original, k, nil) end
+src/lua/abyss_discard.lua:46:            for k, v in next, values do rawset(original, k, v) end
+src/lua/abyss_combat.lua:31:    if upgradeFields[key]then Upgrade[key]=value else rawset(owner,key,value)end
+src/lua/abyss_corruption.lua:16:    for i=1,n do assert(rawget(t,i)~=nil,"sparse Corruption pile") end
+src/lua/abyss_card_actions.lua:16:    else rawset(self,key,value) end
+src/lua/abyss_card_triggers.lua:22:    for i=1,n do assert(rawget(t,i)~=nil,"sparse card-trigger list") end
+src/lua/abyss_boss_relics.lua:16: else rawset(self,key,value) end
+src/lua/abyss_action_queue.lua:10:    for i=1,count do assert(rawget(list,i)~=nil,"sparse action list") end
+src/lua/abyss_action_queue.lua:31:        and (rawget(a,"kind")=="effect" or rawget(a,"kind")=="useCard"),"unknown action kind")
+src/lua/abyss_actor.lua:10:    if key=='isActive' or key=='isPresent' then Presence[key]=value else rawset(self,key,value) end
+src/lua/abyss_actor.lua:22:    return (actor.statuses.intangible or 0)>0 or rawget(actor.statuses,'nemesis_intangible')~=nil
+src/lua/abyss_actor.lua:113:    local beforeRaw=rawget(actor.statuses,id)
+src/lua/abyss_actor.lua:835:            if rawget(actor.statuses,id)~=nil then
