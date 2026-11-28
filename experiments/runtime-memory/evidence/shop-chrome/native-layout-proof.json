@@ -1,0 +1,52 @@
+{
+  "scope": "read-only offline layout feasibility, no native template instantiation or rendering",
+  "layoutSha256": "49835c7b1d13be9455649b9bce14c0404217ee337e14560313157c83decdd342",
+  "templatesSha256": "c439bcb1547a320a60e7da2145d2edc7bef512a46f93a524d00b281ca5e01938",
+  "before": {
+    "staticControls": 25688,
+    "shop": 2461
+  },
+  "coldPrototype": {
+    "staticControls": 24204,
+    "shop": 977,
+    "removed": 1484
+  },
+  "warmPrototype": {
+    "wrapperOverhead": 28,
+    "shop": 2489,
+    "newDefinitions": 0
+  },
+  "slots": [
+    "card1",
+    "card2",
+    "card3",
+    "card4",
+    "card5",
+    "card6",
+    "card7"
+  ],
+  "nativePaths": [
+    {
+      "anchor": "stsReferenceChrome/banner",
+      "reuseTemplate": "AbyssDeckBrowserBanner",
+      "instanceNodes": 71
+    },
+    {
+      "anchor": "stsReferenceChrome/frame/batch0",
+      "reuseTemplate": "AbyssDeckBrowserFrame0",
+      "instanceNodes": 51
+    },
+    {
+      "anchor": "stsReferenceChrome/frame/batch1",
+      "reuseTemplate": "AbyssDeckBrowserFrame1",
+      "instanceNodes": 51
+    },
+    {
+      "anchor": "stsReferenceChrome/frame/batch2",
+      "reuseTemplate": "AbyssDeckBrowserFrame2",
+      "instanceNodes": 43
+    }
+  ],
+  "literalOldTreeRestoredByFlatten": true,
+  "identicalTopLevelSlotOrder": true
+}
