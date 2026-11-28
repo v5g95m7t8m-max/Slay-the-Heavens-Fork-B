@@ -3,7 +3,10 @@ run-name: ${{ inputs.mode == 'formal' && format('Formal resource release / {0} /
 on:
   push:
     branches: [experiment/sth-runtime-memory-attribution]
-    paths: ['.github/workflows/performance-regression.yml']
+    paths:
+      - '.github/workflows/performance-regression.yml'
+      - 'experiments/runtime-memory/evidence/one-session-soak/run-capped.sh'
+      - 'experiments/runtime-memory/evidence/one-session-soak/soak.mjs'
   pull_request:
     branches: [develop]
     types: [opened, synchronize, reopened, ready_for_review]
