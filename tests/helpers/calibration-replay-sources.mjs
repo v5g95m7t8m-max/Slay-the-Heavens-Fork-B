@@ -383,6 +383,23 @@ function readOfficialCalibrationReceipt(path,digest,readCurrent){
 // Current fixtures use the visible UI and real dependencies. Historical
 // inventory reads authenticate the exact current fixture before replay.
 const liveLuaCalibrationFixtures=Object.freeze({
+ "tests/lua/shield_gremlin_ui.lua": {
+  "before": {
+   "sha256": "b70df889a1535f0184c1a016297c6033b4e6490af092f9a089dad5b869cf4abf",
+   "gitBlob": "81aa604399d540b2107ea2f24963b75333b232b7"
+  },
+  "after": {
+   "sha256": "4cd16b58b71fab5624ad3dba1e60f2dc2c63462470fdb82dddb525867abb45f8",
+   "gitBlob": "da6478e6f71141ffc234663675f540cd00a0c0f0"
+  },
+  "hunks": [
+   {
+    "at": 11,
+    "before": "assert(detail:find('随机队友',1,true),'Protect detail must name random teammate')\nassert(detail:find('没有队友时给自己',1,true),'Protect detail must name solo fallback')\nassert(detail:find('获得 7 点格挡',1,true),'Protect detail stays fixed7')",
+    "after": "assert(detail:find('守势',1,true) and detail:find('这名敌人将要在这个回合进行格挡。',1,true),'Protect shows the native DEFEND hint')\nfor _,hidden in ipairs({'随机队友','没有队友时给自己','获得 7 点格挡'}) do\n    assert(not detail:find(hidden,1,true),'the intent tip must not disclose Protect internals: '..hidden)\nend"
+   }
+  ]
+ },
  "tests/lua/potion_event_ui.lua": {
   "before": {
    "sha256": "d6247d8b44c6e94e3c0c44d02c0369a138cfdf9410a213edac20bbbb0a0222bb",

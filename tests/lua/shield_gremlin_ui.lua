@@ -9,9 +9,10 @@ local box=monsterControl(panel,'enemy1');assert(box:GetChild('intent').text=='')
 C.addStatus(host.run.combat.enemies[1],'dexterity',20);C.addStatus(host.run.combat.enemies[1],'frail',2);host:refresh()
 assert(box:GetChild('intent').text=='','defend intent uses an icon without a block number')
 local before=C.copy(host.run.combat);tap('enemy1',1);local detail=inspectDetails(ui,panel)
-assert(detail:find('随机队友',1,true),'Protect detail must name random teammate')
-assert(detail:find('没有队友时给自己',1,true),'Protect detail must name solo fallback')
-assert(detail:find('获得 7 点格挡',1,true),'Protect detail stays fixed7')
+assert(detail:find('守势',1,true) and detail:find('这名敌人将要在这个回合进行格挡。',1,true),'Protect shows the native DEFEND hint')
+for _,hidden in ipairs({'随机队友','没有队友时给自己','获得 7 点格挡'}) do
+    assert(not detail:find(hidden,1,true),'the intent tip must not disclose Protect internals: '..hidden)
+end
 same(host.run.combat,before)
 tap('endTurn',2);drain();assert(host.run.combat.enemies[2].block==7);assert(host.run.combat.enemies[1].block==0);assert(box:GetChild('intent').text=='')
 host.run.combat.enemies[2].hp=0;host:refresh();tap('endTurn',3);drain();assert(box:GetChild('intent').text=='6');assert(host.run.combat.enemies[1].block==7)
