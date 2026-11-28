@@ -101,10 +101,7 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = push ]; then
             test "$GITHUB_REPOSITORY_ID" = 1460133275
             test "$GITHUB_REF" = refs/heads/experiment/sth-runtime-memory-attribution
-            npm ci --ignore-scripts --prefer-offline --no-audit --no-fund --fetch-retries=0 --fetch-timeout=30000
-            git lfs install --local --skip-smudge
-            git lfs pull --include='art/characters/traveler-geo/portraits/*/preview-native-1x.png' --exclude=''
-            node scripts/runtime-baseline/resource-suite.mjs --mode full --profile stress --production --include-act2 --samples 3
+            bash experiments/runtime-memory/evidence/one-session-soak/run-capped.sh
             exit 0
           fi
           mode=${RESOURCE_MODE:-full}
@@ -183,4 +180,16 @@ jobs:
           name: performance-regression-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/performance-regression/report.json
           if-no-files-found: warn
+          retention-days: 30
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always() && github.event_name == 'push' && github.repository_id == '1460133275' && github.ref == 'refs/heads/experiment/sth-runtime-memory-attribution'
+        with:
+          name: runtime-memory-capped-soak-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/runtime-memory-capped-soak/*.txt
+            build/runtime-memory-capped-soak/*.log
+            build/runtime-memory-capped-soak/*.json
+            build/runtime-memory-capped-soak/soak/identity.json
+          if-no-files-found: error
           retention-days: 30

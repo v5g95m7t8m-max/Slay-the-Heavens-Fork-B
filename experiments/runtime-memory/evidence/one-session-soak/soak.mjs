@@ -6,19 +6,28 @@ import {createHash} from 'node:crypto';
 import {readFileSync,readdirSync,writeFileSync,mkdirSync} from 'node:fs';
 const [root0,out0,mode='host',seed0='2']=process.argv.slice(2),root=resolve(root0),out=resolve(out0),seed=Number(seed0);
 if(!['host','host-count-chest','host-settled','pure','pure-ledger'].includes(mode)||!Number.isInteger(seed)||seed<0||seed>=2**31)throw Error('usage soak.mjs <repo> <unique output dir> <host|host-count-chest|host-settled|pure|pure-ledger> <seed>');
-const head=spawnSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim();
+// The pinned (slim) cgroup container has no git executable. The runner
+// checks real HEAD, tree and clean tracked files before its read-only bind.
+const head=process.env.SOAK_RUNNER_VERIFIED_HEAD
+  ?? spawnSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim();
 if(head!=='32a15219aecd145c59cb1b2fcf477e5556766e5d')throw Error('unexpected develop baseline '+head);
 mkdirSync(out);
 process.chdir(root);
 const req=createRequire(join(root,'package.json'));
-const {lua,lauxlib,lualib,to_luastring,to_jsstring}=req('fengari');const vm=lauxlib.luaL_newstate();lualib.luaL_openlibs(vm); // One VM, no explicit GC.
 const sha=b=>createHash('sha256').update(b).digest('hex');
-const gen=join(out,'generated');mkdirSync(gen);
+const prepared=process.env.SOAK_PREPARED_DIR;
+const gen=prepared?resolve(prepared):join(out,'generated');
 const mod=p=>import(pathToFileURL(join(root,'scripts',p)));
 const {buildLuaData,luaString,toLua}=await mod('build-lua-data.mjs');
-buildLuaData('data',join(gen,'abyss_data.lua'));
-if(mode.startsWith('host')){const {buildUI}=await mod('build-ui.mjs');buildUI(gen,undefined,{officialAssets:true,nativePageLifecycle:true});}
+if(!prepared){
+ mkdirSync(gen);
+ buildLuaData('data',join(gen,'abyss_data.lua'));
+ if(mode.startsWith('host')){const {buildUI}=await mod('build-ui.mjs');buildUI(gen,undefined,{officialAssets:true,nativePageLifecycle:true});}
+}
 const files=readdirSync(gen).filter(n=>n.endsWith('.lua')).sort();
+if(!files.includes('abyss_data.lua')||(mode.startsWith('host')&&!files.includes('abyss_ui_templates.lua')))throw Error('incomplete generated Lua inputs');
+if(process.env.SOAK_PREPARE_ONLY==='1')process.exit(0);
+const {lua,lauxlib,lualib,to_luastring,to_jsstring}=req('fengari');const vm=lauxlib.luaL_newstate();lualib.luaL_openlibs(vm); // One VM, no explicit GC.
 const driverPath=mode.startsWith('host')?'scripts/official-assets-campaign.lua':'scripts/m3-normal-campaign.lua';
 let driver=readFileSync(driverPath,'utf8');
 const originalSHA=sha(driver);
