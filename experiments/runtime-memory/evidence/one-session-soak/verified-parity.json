@@ -1,0 +1,15 @@
+{
+  "pureSameActionAndStateLedger": true,
+  "pureActionCountCompared": [
+    669,
+    669
+  ],
+  "hostCommonCheckpointsSemanticEqual": true,
+  "finalHostBothPassed": true,
+  "finalHostActionEqual": true,
+  "finalHostActionCount": [
+    1090,
+    1090
+  ],
+  "finalHostCheckpointsEqual": true
+}

@@ -1,0 +1,656 @@
+{
+  "marks": [
+    {
+      "mark": 1,
+      "label": "start",
+      "act": 1,
+      "floor": 1,
+      "actions": 0,
+      "phase": "map",
+      "wallMs": 1475.96479,
+      "memory": {
+        "rss": 274415616,
+        "heapTotal": 209874944,
+        "heapUsed": 96470984,
+        "external": 4363553,
+        "arrayBuffers": 346753
+      },
+      "peakRssKiB": 269900
+    },
+    {
+      "mark": 2,
+      "label": "enter",
+      "act": 1,
+      "floor": 1,
+      "actions": 5,
+      "phase": "combat",
+      "wallMs": 1663.902928,
+      "memory": {
+        "rss": 282345472,
+        "heapTotal": 212496384,
+        "heapUsed": 85929272,
+        "external": 4431586,
+        "arrayBuffers": 344078
+      },
+      "peakRssKiB": 279120
+    },
+    {
+      "mark": 3,
+      "label": "enter",
+      "act": 1,
+      "floor": 2,
+      "actions": 22,
+      "phase": "node",
+      "wallMs": 3455.905676,
+      "memory": {
+        "rss": 428085248,
+        "heapTotal": 357371904,
+        "heapUsed": 259574688,
+        "external": 4425440,
+        "arrayBuffers": 408600
+      },
+      "peakRssKiB": 418132
+    },
+    {
+      "mark": 4,
+      "label": "enter",
+      "act": 1,
+      "floor": 3,
+      "actions": 25,
+      "phase": "combat",
+      "wallMs": 3597.395019,
+      "memory": {
+        "rss": 428208128,
+        "heapTotal": 357138432,
+        "heapUsed": 276164648,
+        "external": 4503905,
+        "arrayBuffers": 487065
+      },
+      "peakRssKiB": 418308
+    },
+    {
+      "mark": 5,
+      "label": "enter",
+      "act": 1,
+      "floor": 4,
+      "actions": 46,
+      "phase": "combat",
+      "wallMs": 6065.104028,
+      "memory": {
+        "rss": 631267328,
+        "heapTotal": 559316992,
+        "heapUsed": 447132592,
+        "external": 4493333,
+        "arrayBuffers": 476493
+      },
+      "peakRssKiB": 616656
+    },
+    {
+      "mark": 6,
+      "label": "enter",
+      "act": 1,
+      "floor": 5,
+      "actions": 60,
+      "phase": "combat",
+      "wallMs": 7600.387309,
+      "memory": {
+        "rss": 706646016,
+        "heapTotal": 343818240,
+        "heapUsed": 166772120,
+        "external": 4360934,
+        "arrayBuffers": 341481
+      },
+      "peakRssKiB": 712156
+    },
+    {
+      "mark": 7,
+      "label": "enter",
+      "act": 1,
+      "floor": 6,
+      "actions": 80,
+      "phase": "combat",
+      "wallMs": 9720.862339,
+      "memory": {
+        "rss": 716795904,
+        "heapTotal": 493834240,
+        "heapUsed": 370901712,
+        "external": 4426192,
+        "arrayBuffers": 409352
+      },
+      "peakRssKiB": 712156
+    },
+    {
+      "mark": 8,
+      "label": "enter",
+      "act": 1,
+      "floor": 7,
+      "actions": 132,
+      "phase": "combat",
+      "wallMs": 17162.257826,
+      "memory": {
+        "rss": 817483776,
+        "heapTotal": 717619200,
+        "heapUsed": 613892264,
+        "external": 4592708,
+        "arrayBuffers": 575868
+      },
+      "peakRssKiB": 804300
+    },
+    {
+      "mark": 9,
+      "label": "enter",
+      "act": 1,
+      "floor": 8,
+      "actions": 180,
+      "phase": "combat",
+      "wallMs": 24813.213437,
+      "memory": {
+        "rss": 863158272,
+        "heapTotal": 527339520,
+        "heapUsed": 384182400,
+        "external": 4361728,
+        "arrayBuffers": 344888
+      },
+      "peakRssKiB": 852364
+    },
+    {
+      "mark": 10,
+      "label": "enter",
+      "act": 1,
+      "floor": 9,
+      "actions": 197,
+      "phase": "node",
+      "wallMs": 26660.464963,
+      "memory": {
+        "rss": 871161856,
+        "heapTotal": 635686912,
+        "heapUsed": 540791448,
+        "external": 4427648,
+        "arrayBuffers": 410808
+      },
+      "peakRssKiB": 852364
+    },
+    {
+      "mark": 11,
+      "label": "enter",
+      "act": 1,
+      "floor": 10,
+      "actions": 199,
+      "phase": "node",
+      "wallMs": 26728.025194,
+      "memory": {
+        "rss": 871161856,
+        "heapTotal": 636239872,
+        "heapUsed": 521942096,
+        "external": 4521554,
+        "arrayBuffers": 504714
+      },
+      "peakRssKiB": 852364
+    },
+    {
+      "mark": 12,
+      "label": "enter",
+      "act": 1,
+      "floor": 11,
+      "actions": 202,
+      "phase": "combat",
+      "wallMs": 26859.47544,
+      "memory": {
+        "rss": 871161856,
+        "heapTotal": 636239872,
+        "heapUsed": 551625008,
+        "external": 4496686,
+        "arrayBuffers": 479846
+      },
+      "peakRssKiB": 852364
+    },
+    {
+      "mark": 13,
+      "label": "enter",
+      "act": 1,
+      "floor": 12,
+      "actions": 222,
+      "phase": "node",
+      "wallMs": 29537.777868,
+      "memory": {
+        "rss": 930697216,
+        "heapTotal": 854470656,
+        "heapUsed": 772672944,
+        "external": 4561477,
+        "arrayBuffers": 544637
+      },
+      "peakRssKiB": 908884
+    },
+    {
+      "mark": 14,
+      "label": "enter",
+      "act": 1,
+      "floor": 13,
+      "actions": 224,
+      "phase": "node",
+      "wallMs": 29660.063108,
+      "memory": {
+        "rss": 935677952,
+        "heapTotal": 859975680,
+        "heapUsed": 769112984,
+        "external": 4660338,
+        "arrayBuffers": 643498
+      },
+      "peakRssKiB": 913748
+    },
+    {
+      "mark": 15,
+      "label": "enter",
+      "act": 1,
+      "floor": 14,
+      "actions": 226,
+      "phase": "node",
+      "wallMs": 29781.962948,
+      "memory": {
+        "rss": 942231552,
+        "heapTotal": 866004992,
+        "heapUsed": 759391272,
+        "external": 4660436,
+        "arrayBuffers": 643596
+      },
+      "peakRssKiB": 920148
+    },
+    {
+      "mark": 16,
+      "label": "enter",
+      "act": 1,
+      "floor": 15,
+      "actions": 255,
+      "phase": "node",
+      "wallMs": 33738.967039,
+      "memory": {
+        "rss": 984334336,
+        "heapTotal": 587096064,
+        "heapUsed": 500961624,
+        "external": 4424142,
+        "arrayBuffers": 412517
+      },
+      "peakRssKiB": 979664
+    },
+    {
+      "mark": 17,
+      "label": "enter",
+      "act": 1,
+      "floor": 16,
+      "actions": 257,
+      "phase": "combat",
+      "wallMs": 33852.640978,
+      "memory": {
+        "rss": 984334336,
+        "heapTotal": 600465408,
+        "heapUsed": 469348832,
+        "external": 4526544,
+        "arrayBuffers": 412407
+      },
+      "peakRssKiB": 979664
+    },
+    {
+      "mark": 18,
+      "label": "enter",
+      "act": 1,
+      "floor": 17,
+      "actions": 319,
+      "phase": "node",
+      "wallMs": 46008.146803,
+      "memory": {
+        "rss": 1003601920,
+        "heapTotal": 632221696,
+        "heapUsed": 468394512,
+        "external": 4537675,
+        "arrayBuffers": 524682
+      },
+      "peakRssKiB": 996256
+    },
+    {
+      "mark": 19,
+      "label": "advance_act",
+      "act": 2,
+      "floor": 17,
+      "actions": 321,
+      "phase": "map",
+      "wallMs": 46204.329032,
+      "memory": {
+        "rss": 1003601920,
+        "heapTotal": 632221696,
+        "heapUsed": 489388296,
+        "external": 4541817,
+        "arrayBuffers": 530192
+      },
+      "peakRssKiB": 996256
+    },
+    {
+      "mark": 20,
+      "label": "enter",
+      "act": 2,
+      "floor": 18,
+      "actions": 322,
+      "phase": "combat",
+      "wallMs": 46293.153922,
+      "memory": {
+        "rss": 1003601920,
+        "heapTotal": 632221696,
+        "heapUsed": 490917688,
+        "external": 4539103,
+        "arrayBuffers": 527478
+      },
+      "peakRssKiB": 996256
+    },
+    {
+      "mark": 21,
+      "label": "enter",
+      "act": 2,
+      "floor": 19,
+      "actions": 341,
+      "phase": "node",
+      "wallMs": 48338.928059,
+      "memory": {
+        "rss": 1012527104,
+        "heapTotal": 783962112,
+        "heapUsed": 689757568,
+        "external": 4605869,
+        "arrayBuffers": 594244
+      },
+      "peakRssKiB": 996256
+    },
+    {
+      "mark": 22,
+      "label": "enter",
+      "act": 2,
+      "floor": 20,
+      "actions": 344,
+      "phase": "node",
+      "wallMs": 48414.146091,
+      "memory": {
+        "rss": 1012322304,
+        "heapTotal": 784252928,
+        "heapUsed": 679636000,
+        "external": 4724773,
+        "arrayBuffers": 713148
+      },
+      "peakRssKiB": 996256
+    },
+    {
+      "mark": 23,
+      "label": "enter",
+      "act": 2,
+      "floor": 21,
+      "actions": 347,
+      "phase": "combat",
+      "wallMs": 48578.263316,
+      "memory": {
+        "rss": 1012453376,
+        "heapTotal": 784252928,
+        "heapUsed": 709103504,
+        "external": 4770252,
+        "arrayBuffers": 758627
+      },
+      "peakRssKiB": 996256
+    },
+    {
+      "mark": 24,
+      "label": "enter",
+      "act": 2,
+      "floor": 22,
+      "actions": 370,
+      "phase": "node",
+      "wallMs": 51698.652647,
+      "memory": {
+        "rss": 1070465024,
+        "heapTotal": 616648704,
+        "heapUsed": 226477784,
+        "external": 4396710,
+        "arrayBuffers": 385085
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 25,
+      "label": "enter",
+      "act": 2,
+      "floor": 23,
+      "actions": 373,
+      "phase": "node",
+      "wallMs": 51772.744126,
+      "memory": {
+        "rss": 1070465024,
+        "heapTotal": 616648704,
+        "heapUsed": 223534552,
+        "external": 4460066,
+        "arrayBuffers": 448441
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 26,
+      "label": "enter",
+      "act": 2,
+      "floor": 24,
+      "actions": 375,
+      "phase": "combat",
+      "wallMs": 51882.109874,
+      "memory": {
+        "rss": 1070465024,
+        "heapTotal": 616648704,
+        "heapUsed": 240730600,
+        "external": 4461103,
+        "arrayBuffers": 449478
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 27,
+      "label": "enter",
+      "act": 2,
+      "floor": 25,
+      "actions": 415,
+      "phase": "combat",
+      "wallMs": 57868.953911,
+      "memory": {
+        "rss": 1092984832,
+        "heapTotal": 910225408,
+        "heapUsed": 832988912,
+        "external": 4665985,
+        "arrayBuffers": 654360
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 28,
+      "label": "enter",
+      "act": 2,
+      "floor": 26,
+      "actions": 452,
+      "phase": "node",
+      "wallMs": 64402.784788,
+      "memory": {
+        "rss": 1091502080,
+        "heapTotal": 868970496,
+        "heapUsed": 753005808,
+        "external": 4628263,
+        "arrayBuffers": 616638
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 29,
+      "label": "enter",
+      "act": 2,
+      "floor": 27,
+      "actions": 454,
+      "phase": "combat",
+      "wallMs": 64531.351408,
+      "memory": {
+        "rss": 1091502080,
+        "heapTotal": 877883392,
+        "heapUsed": 791373752,
+        "external": 4630981,
+        "arrayBuffers": 619356
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 30,
+      "label": "enter",
+      "act": 2,
+      "floor": 28,
+      "actions": 489,
+      "phase": "node",
+      "wallMs": 69919.596074,
+      "memory": {
+        "rss": 1081122816,
+        "heapTotal": 664825856,
+        "heapUsed": 583830288,
+        "external": 4580900,
+        "arrayBuffers": 569275
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 31,
+      "label": "enter",
+      "act": 2,
+      "floor": 29,
+      "actions": 492,
+      "phase": "combat",
+      "wallMs": 70073.730165,
+      "memory": {
+        "rss": 1081122816,
+        "heapTotal": 675835904,
+        "heapUsed": 566300176,
+        "external": 4642236,
+        "arrayBuffers": 630611
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 32,
+      "label": "enter",
+      "act": 2,
+      "floor": 30,
+      "actions": 530,
+      "phase": "node",
+      "wallMs": 77038.606859,
+      "memory": {
+        "rss": 1081745408,
+        "heapTotal": 706658304,
+        "heapUsed": 546676864,
+        "external": 4489501,
+        "arrayBuffers": 477876
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 33,
+      "label": "enter",
+      "act": 2,
+      "floor": 31,
+      "actions": 532,
+      "phase": "combat",
+      "wallMs": 77152.42771900001,
+      "memory": {
+        "rss": 1081745408,
+        "heapTotal": 706920448,
+        "heapUsed": 578151104,
+        "external": 4493505,
+        "arrayBuffers": 481880
+      },
+      "peakRssKiB": 1075640
+    },
+    {
+      "mark": 34,
+      "label": "enter",
+      "act": 2,
+      "floor": 32,
+      "actions": 561,
+      "phase": "node",
+      "wallMs": 81498.69123400001,
+      "memory": {
+        "rss": 1129275392,
+        "heapTotal": 1052377088,
+        "heapUsed": 971510784,
+        "external": 4624813,
+        "arrayBuffers": 613188
+      },
+      "peakRssKiB": 1102808
+    },
+    {
+      "mark": 35,
+      "label": "enter",
+      "act": 2,
+      "floor": 33,
+      "actions": 563,
+      "phase": "combat",
+      "wallMs": 81639.11995000001,
+      "memory": {
+        "rss": 1143169024,
+        "heapTotal": 1065746432,
+        "heapUsed": 945242792,
+        "external": 4626271,
+        "arrayBuffers": 614646
+      },
+      "peakRssKiB": 1116376
+    },
+    {
+      "mark": 36,
+      "label": "enter",
+      "act": 2,
+      "floor": 34,
+      "actions": 668,
+      "phase": "node",
+      "wallMs": 112458.310073,
+      "memory": {
+        "rss": 1417453568,
+        "heapTotal": 967245824,
+        "heapUsed": 842345144,
+        "external": 4422798,
+        "arrayBuffers": 411173
+      },
+      "peakRssKiB": 1385212
+    },
+    {
+      "mark": 37,
+      "label": "end",
+      "act": 2,
+      "floor": 34,
+      "actions": 669,
+      "phase": "victory",
+      "wallMs": 112499.040659,
+      "memory": {
+        "rss": 1417453568,
+        "heapTotal": 967245824,
+        "heapUsed": 871906384,
+        "external": 4659296,
+        "arrayBuffers": 647671
+      },
+      "peakRssKiB": 1385212
+    }
+  ],
+  "result": [
+    "M3_SUMMARY {\"actions\":669,\"ending\":\"two_act_complete\",\"floor\":34,\"hp\":30.0,\"seed\":2,\"status\":\"victory\"}"
+  ],
+  "milestones": [],
+  "stdoutHash": "7c9311933ede0f71cd308d2060213d3f95ecd5d1d85e7f2cf50e83ce8189a74e",
+  "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "identity": {
+    "seed": 2,
+    "mode": "pure",
+    "head": "32a15219aecd145c59cb1b2fcf477e5556766e5d",
+    "driverPath": "scripts/m3-normal-campaign.lua",
+    "originalSHA": "bed113604921fdaaab939b9958fb939918ca3d305ee22f83ad150794522fb9df",
+    "diagnosticSHA": "57e800b6eb6351b8ab40fd436b8168cd0876c4745892f9715ebfb52b7f5f07c1",
+    "node": "v24.22.3",
+    "fengari": "0.1.5",
+    "generatedHashes": {
+      "abyss_data.lua": "31b663248d49c24aaa4914b99042a8a683cc2667f869c699333ccc52723c3429",
+      "abyss_original_v4_data.lua": "63e4983d6d80241f287e153087efd81e7ab287efbb15e195ef80ad90230fb2cb"
+    },
+    "forceGC": false,
+    "physicalDevice": false,
+    "mockSDK": false
+  }
+}
