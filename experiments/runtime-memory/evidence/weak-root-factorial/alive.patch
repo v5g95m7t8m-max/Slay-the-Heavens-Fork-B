@@ -1,0 +1,17 @@
+--- a/tests/lua/support/game_ui_fixture.lua
++++ b/tests/lua/support/game_ui_fixture.lua
+@@ -34,7 +34,13 @@
+ -- The engine owns activation. Expose only the documented read-only hierarchy
+ -- result on controls; tests change private engine state, not native properties.
+ local engineActive = setmetatable({}, { __mode = 'k' })
+-local engineAlive = setmetatable({}, { __mode = 'k' })
++-- Fengari does not implement weak Lua tables. Store the simulator engine's
++-- flag under a private per-object token without owning the control.
++local engineAliveKey = {}
++local engineAlive = setmetatable({}, {
++    __index = function(_, control) return rawget(control, engineAliveKey) end,
++    __newindex = function(_, control, value) rawset(control, engineAliveKey, value) end,
++})
+ local function destroyControl(control)
+     engineAlive[control]=false
+     for _,child in pairs(control.children or {}) do destroyControl(child) end

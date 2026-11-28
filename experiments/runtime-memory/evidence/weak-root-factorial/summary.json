@@ -1,0 +1,333 @@
+{
+  "samples": [
+    {
+      "n": 1,
+      "arm": "active",
+      "peakRssMiB": 927.77,
+      "pause-resume": {
+        "rssMiB": 742.52,
+        "heapMiB": 537.16,
+        "ms": 896.17,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 751.64,
+        "heapMiB": 574.32,
+        "ms": 566.3,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 927.77,
+        "heapMiB": 764.67,
+        "ms": 5020.78,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 2,
+      "arm": "neither",
+      "peakRssMiB": 929.53,
+      "pause-resume": {
+        "rssMiB": 744.66,
+        "heapMiB": 573.95,
+        "ms": 1012.52,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 754.16,
+        "heapMiB": 548.15,
+        "ms": 560.04,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 929.53,
+        "heapMiB": 738.37,
+        "ms": 4645.24,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 3,
+      "arm": "alive",
+      "peakRssMiB": 925.7,
+      "pause-resume": {
+        "rssMiB": 744.45,
+        "heapMiB": 548.2,
+        "ms": 998.97,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 752.2,
+        "heapMiB": 546.77,
+        "ms": 625.51,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 925.7,
+        "heapMiB": 773.05,
+        "ms": 4472.89,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 4,
+      "arm": "both",
+      "peakRssMiB": 925.04,
+      "pause-resume": {
+        "rssMiB": 743.66,
+        "heapMiB": 598.8,
+        "ms": 901.55,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 750.79,
+        "heapMiB": 596.39,
+        "ms": 570.51,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 925.04,
+        "heapMiB": 759.54,
+        "ms": 4489.33,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 5,
+      "arm": "both",
+      "peakRssMiB": 920.49,
+      "pause-resume": {
+        "rssMiB": 738.36,
+        "heapMiB": 580.93,
+        "ms": 1025.47,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 745.74,
+        "heapMiB": 578.79,
+        "ms": 556.84,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 920.49,
+        "heapMiB": 742.89,
+        "ms": 4653.5,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 6,
+      "arm": "alive",
+      "peakRssMiB": 923.75,
+      "pause-resume": {
+        "rssMiB": 742.5,
+        "heapMiB": 539.32,
+        "ms": 1017.58,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 749.62,
+        "heapMiB": 600.33,
+        "ms": 662.98,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 923.75,
+        "heapMiB": 763.98,
+        "ms": 4717.85,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 7,
+      "arm": "neither",
+      "peakRssMiB": 928.75,
+      "pause-resume": {
+        "rssMiB": 743.5,
+        "heapMiB": 575.91,
+        "ms": 928.84,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 753.0,
+        "heapMiB": 550.11,
+        "ms": 612.45,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 928.75,
+        "heapMiB": 740.25,
+        "ms": 4621.49,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    },
+    {
+      "n": 8,
+      "arm": "active",
+      "peakRssMiB": 924.51,
+      "pause-resume": {
+        "rssMiB": 738.13,
+        "heapMiB": 579.94,
+        "ms": 842.15,
+        "requireCalls": 3591,
+        "nativeCalls": 36395,
+        "propertyWrites": 35608,
+        "snapshots": 0
+      },
+      "exit": {
+        "rssMiB": 747.51,
+        "heapMiB": 553.96,
+        "ms": 515.9,
+        "requireCalls": 1,
+        "nativeCalls": 0,
+        "propertyWrites": 0,
+        "snapshots": 0
+      },
+      "reenter": {
+        "rssMiB": 924.51,
+        "heapMiB": 746.14,
+        "ms": 4319.89,
+        "requireCalls": 815,
+        "nativeCalls": 32799,
+        "propertyWrites": 27393,
+        "snapshots": 0
+      }
+    }
+  ],
+  "deltaAfterMinusBefore": {
+    "engineActiveOnly": [
+      {
+        "before": 2,
+        "after": 1,
+        "peakRssMiB": -1.76,
+        "preExitHeapMiB": -36.79,
+        "exitHeapMiB": 26.17,
+        "reenterHeapMiB": 26.3,
+        "reenterMinusPreExitHeapMiB": 63.09,
+        "reenterMs": 375.54
+      },
+      {
+        "before": 7,
+        "after": 8,
+        "peakRssMiB": -4.24,
+        "preExitHeapMiB": 4.03,
+        "exitHeapMiB": 3.85,
+        "reenterHeapMiB": 5.89,
+        "reenterMinusPreExitHeapMiB": 1.86,
+        "reenterMs": -301.6
+      }
+    ],
+    "bothVsAliveOnly": [
+      {
+        "before": 3,
+        "after": 4,
+        "peakRssMiB": -0.66,
+        "preExitHeapMiB": 50.6,
+        "exitHeapMiB": 49.62,
+        "reenterHeapMiB": -13.51,
+        "reenterMinusPreExitHeapMiB": -64.11,
+        "reenterMs": 16.44
+      },
+      {
+        "before": 6,
+        "after": 5,
+        "peakRssMiB": -3.26,
+        "preExitHeapMiB": 41.61,
+        "exitHeapMiB": -21.54,
+        "reenterHeapMiB": -21.09,
+        "reenterMinusPreExitHeapMiB": -62.7,
+        "reenterMs": -64.35
+      }
+    ],
+    "bothVsNeither": [
+      {
+        "before": 2,
+        "after": 4,
+        "peakRssMiB": -4.49,
+        "preExitHeapMiB": 24.85,
+        "exitHeapMiB": 48.24,
+        "reenterHeapMiB": 21.17,
+        "reenterMinusPreExitHeapMiB": -3.68,
+        "reenterMs": -155.91
+      },
+      {
+        "before": 7,
+        "after": 5,
+        "peakRssMiB": -8.26,
+        "preExitHeapMiB": 5.02,
+        "exitHeapMiB": 28.68,
+        "reenterHeapMiB": 2.64,
+        "reenterMinusPreExitHeapMiB": -2.38,
+        "reenterMs": 32.01
+      }
+    ]
+  },
+  "phasesWithWorkCounterDifferences": [
+    "first-fight",
+    "deck-cold-open"
+  ],
+  "limits": "taskset CPU 5, no hard memory cap; no explicit GC; Fengari, not official client"
+}

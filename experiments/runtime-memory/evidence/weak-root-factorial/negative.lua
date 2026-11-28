@@ -1,0 +1,20 @@
+package.path='/tmp/sth-reentry-inputs/?.lua;src/lua/?.lua;'..package.path
+local F=dofile('tests/lua/support/game_ui_fixture.lua')
+local root=F.control({children={{name='kept',kind='container'}}})
+local child=assert(root:GetChild('kept'))
+assert(root.alive and child.alive and root.activeInHierarchy and child.activeInHierarchy)
+F.setEngineActive(root,false)
+assert(not child.activeInHierarchy)
+F.setEngineActive(root,true)
+assert(child.activeInHierarchy)
+F.monsterActors().destroy(root)
+assert(not root.alive and not child.alive)
+for _,arg in ipairs({{root,'GetChild','kept'},{root,'GetChildren'},{child,'GetChildren'}}) do
+ local ok,why=pcall(arg[1][arg[2]],arg[1],arg[3])
+ assert(not ok and tostring(why):find('on invalid object',1,true),tostring(why))
+end
+assert(not pcall(function()root.alive=true end))
+assert(not pcall(function()root.activeInHierarchy=false end))
+assert(rawget(root,'alive')==nil and rawget(root,'activeInHierarchy')==nil)
+assert(rawget(child,'alive')==nil and rawget(child,'activeInHierarchy')==nil)
+print('DESTROYED_NATIVE_NEGATIVE_PASS')

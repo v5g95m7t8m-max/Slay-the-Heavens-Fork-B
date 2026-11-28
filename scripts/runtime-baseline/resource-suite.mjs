@@ -162,9 +162,9 @@ function measure(root, profile, production, harnessRoot, act2 = false) {
   }
 }
 
-function measureArm(root, profile, production, harnessRoot) {
+function measureArm(root, profile, production, harnessRoot, includeAct2) {
   const sample = measure(root, profile, production, harnessRoot);
-  if (sample.error || !production?.runtime) return sample;
+  if (sample.error || !includeAct2) return sample;
   // Fresh VMs keep the fixed heap limit and each workload's resource receipt.
   const act2 = measure(root, profile, production, harnessRoot, true);
   const error = act2.error ? 'Act II: ' + act2.error
@@ -220,6 +220,9 @@ function summarizeSamples(samples, count, samplePhases) {
 
 function suite(values) {
   assert.equal(process.platform, 'linux', 'use a Linux Docker host');
+  assert(!values['include-act2'] || values.production && !values.release,
+    'Diagnostic Act II requires generated production inputs, not the formal GIL gate');
+  const includeAct2 = values.release || values['include-act2'];
   assert(Object.hasOwn(modes, values.mode), `unknown mode: ${values.mode}`);
   assert(!values.extreme || values.production, 'Extreme probe requires the formal configuration');
   const selected = values.profile ?? modes[values.mode];
@@ -275,7 +278,7 @@ function suite(values) {
       if (i % 2) pair.reverse();
       pairOrder.push(pair.map(([, , label]) => label));
       for (const [path, samples, label, production] of pair) {
-        const record = measureArm(path, profile, production, candidatePath);
+        const record = measureArm(path, profile, production, candidatePath, includeAct2);
         samples.push(record);
         console.log(`${key} ${label} ${i + 1}/${repetitions}: ${record.error ?? 'workload passed'}`);
       }
@@ -283,12 +286,12 @@ function suite(values) {
     const candidateResult = summarizeSamples(after, repetitions, samplePhases);
     const baselineResult = baseline ? summarizeSamples(before, repetitions, samplePhases) : null;
     const bothPassed = baselineResult?.pass && candidateResult.pass;
-    const beforeAct2 = values.release ? before.map(sample => sample.act2) : null;
-    const afterAct2 = values.release ? after.map(sample => sample.act2) : null;
+    const beforeAct2 = includeAct2 ? before.map(sample => sample.act2) : null;
+    const afterAct2 = includeAct2 ? after.map(sample => sample.act2) : null;
     const paired = bothPassed && matchingResourceCaps(before, after) &&
-      (!values.release || matchingResourceCaps(beforeAct2, afterAct2));
+      (!includeAct2 || matchingResourceCaps(beforeAct2, afterAct2));
     const signals = paired ? compareSamples(before, after, alertPercent) : [];
-    if (paired && values.release) signals.push(...compareSamples(beforeAct2, afterAct2, alertPercent));
+    if (paired && includeAct2) signals.push(...compareSamples(beforeAct2, afterAct2, alertPercent));
     results[key] = {
       profile, pairOrder, candidate: candidateResult, baseline: baselineResult,
       comparisonStatus: paired ? 'PAIRED' : 'UNPAIRED',
@@ -307,6 +310,7 @@ function suite(values) {
     schemaVersion: 1, timeUtc: new Date().toISOString(),
     status: resourceResultStatus({release: values.release, pass, paired, signals}), mode: values.mode, repetitions,
     ...(values.release && { release: true }),
+    ...(values['include-act2'] && { diagnosticAct2: true }),
     ...(values.production ? { seed: 42, officialClient: 'UNVERIFIED' } : { seed: 1, idleFrames: 300 }),
     engine: { image, imageId, docker, kernel: release(), arch: arch(), cpuModel: cpus()[0]?.model, availableCpus: availableParallelism(), hostMemoryBytes: totalmem(),
       ...(values.production && { productionHeapMiB }) },
@@ -326,6 +330,7 @@ function main() {
     mode: { type: 'string', default: 'fast' }, profile: { type: 'string', multiple: true },
     samples: { type: 'string' }, baseline: { type: 'string' }, 'baseline-if-compatible': { type: 'boolean' },
     production: { type: 'boolean' }, extreme: { type: 'boolean' }, release: { type: 'boolean' },
+    'include-act2': { type: 'boolean' },
     'candidate-gil':{type:'string'}, 'baseline-gil':{type:'string'}, 'native-reader':{type:'string'},
     output: { type: 'string', default: 'build/performance-regression/report.json' },
     'alert-percent': { type: 'string', default: '20' },

@@ -1,0 +1,24 @@
+--- a/tests/lua/support/production_performance.lua
++++ b/tests/lua/support/production_performance.lua
+@@ -391,16 +391,20 @@
+ assert(host.mode=='battle' and not host.sessionPaused and host.run.combat==battle,'resume lost the in-progress battle')
+ mark('pause-resume')
+ 
++local exitWitness={}
+ local oldHost=host
++rawset(oldHost,'__pressureExitWitness',exitWitness)
+ destroy(script.object)
+ OnDestroy()
+ assert(not script.updating,'exit left the old scheduler active')
+ mark('exit')
++oldHost=nil
+ host=nil
+ stage=start()
+ settle()
+ expectMenu(stage)
+-assert(host~=oldHost,'reentry kept the exited Host')
++assert(host and rawget(host,'__pressureExitWitness')~=exitWitness and (not oldHost or host~=oldHost),
++    'reentry kept the exited Host')
+ enterMap()
+ assert(host.run and not host.run.combat,'reentry revived the old battle')
+ destroy(script.object)

@@ -1,6 +1,9 @@
 name: Performance regression
 run-name: ${{ inputs.mode == 'formal' && format('Formal resource release / {0} / {1}', github.ref_name, github.sha) || github.workflow }}
 on:
+  push:
+    branches: [experiment/sth-runtime-memory-attribution]
+    paths: ['.github/workflows/performance-regression.yml']
   pull_request:
     branches: [develop]
     types: [opened, synchronize, reopened, ready_for_review]
@@ -59,7 +62,9 @@ concurrency:
 jobs:
   performance:
     name: Offline Host resource diagnostics
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
+      (github.event_name != 'push' || github.repository_id == '1460133275')
     runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.mode == 'formal' && 60 || 30 }}
     steps:
@@ -93,6 +98,15 @@ jobs:
           GIT_TERMINAL_PROMPT: '0'
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            test "$GITHUB_REPOSITORY_ID" = 1460133275
+            test "$GITHUB_REF" = refs/heads/experiment/sth-runtime-memory-attribution
+            npm ci --ignore-scripts --prefer-offline --no-audit --no-fund --fetch-retries=0 --fetch-timeout=30000
+            git lfs install --local --skip-smudge
+            git lfs pull --include='art/characters/traveler-geo/portraits/*/preview-native-1x.png' --exclude=''
+            node scripts/runtime-baseline/resource-suite.mjs --mode full --profile stress --production --include-act2 --samples 3
+            exit 0
+          fi
           mode=${RESOURCE_MODE:-full}
           if [ "$mode" = formal ]; then
             test "$GITHUB_EVENT_NAME" = workflow_dispatch
