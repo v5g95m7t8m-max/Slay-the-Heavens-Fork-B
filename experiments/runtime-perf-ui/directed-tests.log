@@ -1,0 +1,13 @@
+✔ official successful card command reuses its presented feedback frame while preflight and recovery remain live (12378.14531ms)
+✔ official candidate preserves real ten-card dual-enemy combat through cancellation, dragging and turns (8976.352702ms)
+✔ official local aim refresh keeps live Weak/Vulnerable numbers and both actor targets without rebuilding the other cards (5437.305895ms)
+✔ release typography audits every card on official faces (10104.567401ms)
+✔ true overflow opens the existing full card on official faces (9351.620073ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46504.793214

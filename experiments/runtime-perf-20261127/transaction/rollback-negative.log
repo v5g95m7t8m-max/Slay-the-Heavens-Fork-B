@@ -1,0 +1,11 @@
+file:///workspace/scratch/c1a4970a76e0/perf-tx.LYeiB3/build/perf-tx/run-lua.mjs:12
+if(lauxlib.luaL_dostring(L,to_luastring(src))!==lua.LUA_OK)throw Error(to_jsstring(lua.lua_tostring(L,-1)));
+                                                                 ^
+
+Error: build/perf-tx/negative.lua:34: snapshot target is not captured
+    at file:///workspace/scratch/c1a4970a76e0/perf-tx.LYeiB3/build/perf-tx/run-lua.mjs:12:66
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.22.3

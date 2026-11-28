@@ -1,0 +1,445 @@
+{
+  "baselineCommit": "32a15219aecd145c59cb1b2fcf477e5556766e5d",
+  "scope": "LuaTeX offline source Host with official-assets-first generated layout. Not actual SDK+VI, GIL readback, native API, GPU, browser onset, official phone FPS or formal release pressure. Fixed traveler starter, seed 42, legal draw to 10, original small_slimes; direct target Down then Up+Click. Wall uses LuaTeX gettimeofday; no observer in timing, separate one-run metatable counters; staged elapsed excludes geometry lookup/dispatch construction.",
+  "identity": {
+    "src": "a754a1c70a92ee789fa8c8266ee0ede46f22427b271ab464b85b8ce17d59e158",
+    "probe": "8a816ff2426528b38a45aa44c639a1062d1d5aa2b10b75a330cc42a8f14fa327",
+    "candidate": "651a17a01d3f73bd88559b0e9d263b8b54c222ccb1710d2bf25fd6a600a52163",
+    "patch": "435f2cfe7acbb6afe65c64062d1359d546041be062b9e356c8a815b551d7718d",
+    "generatedUi": "fef7b017bf288bef62a3039cb40f37015978e27b3b8094408b3255dbe3f4017b",
+    "generatedData": "31b663248d49c24aaa4914b99042a8a683cc2667f869c699333ccc52723c3429"
+  },
+  "environment": {
+    "machine": "x86_64",
+    "kernel": "6.18.57",
+    "cpuAffinity": 7,
+    "cpuQuota": null,
+    "memoryLimitBytes": null,
+    "lua": "This is LuaTeX, Version 1.18.0 (TeX Live 2025/dev/Debian)"
+  },
+  "rssKiB": {
+    "A": {
+      "n": 8,
+      "p50": 111108.0,
+      "p95": 112156,
+      "max": 112156
+    },
+    "B": {
+      "n": 8,
+      "p50": 108056.0,
+      "p95": 108084,
+      "max": 108084
+    }
+  },
+  "negative": {
+    "A": "UI_NEGATIVE_PASS precommit render failed before command",
+    "B": "UI_NEGATIVE_PASS precommit render failed before command"
+  },
+  "summary": {
+    "steady": {
+      "A": {
+        "cpuMs": {
+          "n": 960,
+          "p50": 0.267,
+          "p95": 0.442,
+          "max": 9.289
+        },
+        "wallMs": {
+          "n": 960,
+          "p50": 0.272989,
+          "p95": 4.357815,
+          "max": 17.31801
+        },
+        "heapKiB": {
+          "n": 960,
+          "p50": 79979.495,
+          "p95": 81760.77,
+          "max": 82361.05
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 10353,
+          "shimWrites": 19655,
+          "fullFits": 0,
+          "renders": 0
+        }
+      },
+      "B": {
+        "cpuMs": {
+          "n": 960,
+          "p50": 0.254,
+          "p95": 0.407,
+          "max": 1.377
+        },
+        "wallMs": {
+          "n": 960,
+          "p50": 0.26083,
+          "p95": 3.876925,
+          "max": 16.429186
+        },
+        "heapKiB": {
+          "n": 960,
+          "p50": 79444.155,
+          "p95": 80918.21,
+          "max": 81111.3
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 10353,
+          "shimWrites": 19655,
+          "fullFits": 0,
+          "renders": 0
+        }
+      },
+      "pairedSessionMedianDelta_cpuMs": [
+        -0.006999999999999951,
+        0.09300000000000003,
+        0.13849999999999998,
+        0.02250000000000002,
+        -0.11200000000000002,
+        -0.057999999999999996,
+        -0.11700000000000002,
+        -0.059000000000000025
+      ],
+      "pairedSessionMedianDelta_wallMs": [
+        -0.0011920000000000264,
+        0.0929835,
+        0.134945,
+        0.017881499999999995,
+        -0.1120565,
+        -0.06413449999999998,
+        -0.121832,
+        -0.061989000000000016
+      ],
+      "medianDelta_cpuMs": -0.0325,
+      "pairedImproved_cpuMs": 5,
+      "medianDelta_wallMs": -0.031591,
+      "pairedImproved_wallMs": 5
+    },
+    "choose": {
+      "A": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 3.35,
+          "p95": 4.942,
+          "max": 5.479
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 7.457018,
+          "p95": 13.242006,
+          "max": 15.249014
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 86919.405,
+          "p95": 92839.66,
+          "max": 92867.36
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 6006,
+          "shimWrites": 6183,
+          "fullFits": 54,
+          "renders": 3
+        }
+      },
+      "B": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 2.649,
+          "p95": 3.869,
+          "max": 5.127
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 6.547451000000001,
+          "p95": 11.515141,
+          "max": 15.256166
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 85576.595,
+          "p95": 89620.17,
+          "max": 89625.02
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 6006,
+          "shimWrites": 6183,
+          "fullFits": 0,
+          "renders": 3
+        }
+      },
+      "pairedSessionMedianDelta_cpuMs": [
+        -1.3609999999999998,
+        -0.47699999999999987,
+        -0.5990000000000002,
+        1.6720000000000002,
+        -1.1820000000000002,
+        -1.202,
+        -0.9820000000000002,
+        -0.7639999999999998
+      ],
+      "pairedSessionMedianDelta_wallMs": [
+        -5.218029,
+        -6.896019000000001,
+        -4.891157,
+        0.8659359999999996,
+        -3.4561149999999996,
+        -0.8299349999999999,
+        -0.8718969999999997,
+        2.53582
+      ],
+      "medianDelta_cpuMs": -0.873,
+      "pairedImproved_cpuMs": 7,
+      "medianDelta_wallMs": -2.164006,
+      "pairedImproved_wallMs": 6
+    },
+    "target-down": {
+      "A": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 3.019,
+          "p95": 4.179,
+          "max": 4.413
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 7.0405005,
+          "p95": 13.637066,
+          "max": 15.088081
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 87250.16,
+          "p95": 93142.46,
+          "max": 93170.16
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 5715,
+          "shimWrites": 5727,
+          "fullFits": 54,
+          "renders": 3
+        }
+      },
+      "B": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 2.1710000000000003,
+          "p95": 3.96,
+          "max": 4.553
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 6.0194735,
+          "p95": 12.172937,
+          "max": 15.179873
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 85787.735,
+          "p95": 89817.24,
+          "max": 89822.08
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 5715,
+          "shimWrites": 5727,
+          "fullFits": 0,
+          "renders": 3
+        }
+      },
+      "pairedSessionMedianDelta_cpuMs": [
+        -1.1629999999999998,
+        -0.9200000000000002,
+        -1.6380000000000003,
+        0.6080000000000001,
+        -1.131,
+        -0.16699999999999982,
+        -0.8160000000000003,
+        -0.36099999999999977
+      ],
+      "pairedSessionMedianDelta_wallMs": [
+        -1.3301370000000006,
+        0.3020770000000006,
+        -1.885890999999999,
+        2.2900110000000007,
+        -4.73404,
+        0.8399479999999997,
+        -5.017996,
+        -1.7721660000000004
+      ],
+      "medianDelta_cpuMs": -0.868,
+      "pairedImproved_cpuMs": 7,
+      "medianDelta_wallMs": -1.551152,
+      "pairedImproved_wallMs": 5
+    },
+    "commit": {
+      "A": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 23.637,
+          "p95": 30.148,
+          "max": 48.753
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 48.431039,
+          "p95": 73.907852,
+          "max": 95.911026
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 90131.67499999999,
+          "p95": 95958.79,
+          "max": 95993.5
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 14527,
+          "shimWrites": 18355,
+          "fullFits": 102,
+          "renders": 6
+        }
+      },
+      "B": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 18.8385,
+          "p95": 28.131,
+          "max": 30.45
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 40.1895045,
+          "p95": 81.948996,
+          "max": 92.113018
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 88436.91,
+          "p95": 92442.97,
+          "max": 92447.82
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 14527,
+          "shimWrites": 18355,
+          "fullFits": 0,
+          "renders": 6
+        }
+      },
+      "pairedSessionMedianDelta_cpuMs": [
+        2.578999999999997,
+        -0.9270000000000032,
+        -10.567,
+        3.5180000000000007,
+        -4.652000000000001,
+        0.06299999999999883,
+        -1.9140000000000015,
+        -7.366
+      ],
+      "pairedSessionMedianDelta_wallMs": [
+        10.051012,
+        3.0598640000000046,
+        -31.616926000000007,
+        6.797075999999997,
+        -7.874727000000004,
+        -3.261090000000003,
+        -9.840966000000002,
+        -27.31514
+      ],
+      "medianDelta_cpuMs": -1.4205,
+      "pairedImproved_cpuMs": 5,
+      "medianDelta_wallMs": -5.567909,
+      "pairedImproved_wallMs": 5
+    },
+    "settle": {
+      "A": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 14.158000000000001,
+          "p95": 21.362,
+          "max": 32.771
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 30.7155845,
+          "p95": 64.594984,
+          "max": 67.523956
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 91506.85,
+          "p95": 97171.95,
+          "max": 97207.03
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 28753,
+          "shimWrites": 30157,
+          "fullFits": 192,
+          "renders": 12
+        }
+      },
+      "B": {
+        "cpuMs": {
+          "n": 24,
+          "p50": 12.578,
+          "p95": 17.246,
+          "max": 20.234
+        },
+        "wallMs": {
+          "n": 24,
+          "p50": 25.496602,
+          "p95": 43.915033,
+          "max": 44.137001
+        },
+        "heapKiB": {
+          "n": 24,
+          "p50": 89389.1,
+          "p95": 93288.64,
+          "max": 93293.49
+        },
+        "countsSeparateRun": {
+          "nativeShimCalls": 28753,
+          "shimWrites": 30157,
+          "fullFits": 0,
+          "renders": 12
+        }
+      },
+      "pairedSessionMedianDelta_cpuMs": [
+        0.3030000000000008,
+        -4.361000000000001,
+        -1.3900000000000006,
+        1.1129999999999995,
+        -5.630000000000001,
+        -4.975000000000001,
+        2.6099999999999994,
+        -5.880000000000001
+      ],
+      "pairedSessionMedianDelta_wallMs": [
+        10.142803,
+        -5.928039999999999,
+        -0.936985,
+        5.123137999999997,
+        -1.8861289999999968,
+        -9.590148999999997,
+        -7.041931999999999,
+        -9.902954000000001
+      ],
+      "medianDelta_cpuMs": -2.8755,
+      "pairedImproved_cpuMs": 5,
+      "medianDelta_wallMs": -3.907084,
+      "pairedImproved_wallMs": 6
+    }
+  },
+  "pairOrder": [
+    "AB",
+    "BA",
+    "AB",
+    "BA",
+    "AB",
+    "BA",
+    "AB",
+    "BA"
+  ],
+  "fixtureProjection": {
+    "rootControlCount": 25830,
+    "displayAndRuleSha256": "bdf06b66c6c227194c92007cb04b508ce0da1cde2dc3843ed3b1c69cab9aaa5e"
+  },
+  "decision": "NO-GO integration: source Host CPU improvement is diagnostic, Up+Click wall P95 worsens, no native SDK/GPU/device evidence."
+}

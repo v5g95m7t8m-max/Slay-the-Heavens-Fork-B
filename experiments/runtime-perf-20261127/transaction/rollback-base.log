@@ -1,0 +1,18 @@
+SNAPSHOT_EQUIVALENCE_PASS 96
+SNAPSHOT_KEY_TYPES_PASS 1
+PASS opaque owner is exact-target single-use, rejects forged equality and expires
+PASS ordinary native Run play captures once, bare Combat play still owns its snapshot
+PASS queued Run play reuses only its exact outer full graph
+PASS forged stale and wrong-battle tokens fall back to ordinary Combat snapshots
+PASS paused choice expires parent capability and continuation retains a fresh rollback
+PASS nested native failure restores Run data catalog old frames aliases and nonstring identity
+PASS late reward refusal restores every metadata and historical-frame edge and retries
+PASS preflight refusal releases an unconsumed owner and preserves all original graph edges
+PASS committed command replay creates no owner and cannot reuse the previous token
+RUN_PLAY_SNAPSHOT_OWNER 9 groups; 0 failed
+PASS normal public lethal play throw restores full original graph and retries once
+PASS normal public lethal play reject restores full original graph and retries once
+PASS elite public lethal play throw restores full original graph and retries once
+PASS elite public lethal play reject restores full original graph and retries once
+PASS rejected ordinary play returns the original reason without any publication
+RUN_PLAY_TRANSACTIONS 5 groups; 0 failed

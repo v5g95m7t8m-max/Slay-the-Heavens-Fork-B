@@ -1,0 +1,29 @@
+diff --git a/src/lua/abyss_battle_card_view.lua b/src/lua/abyss_battle_card_view.lua
+index 1affa00..589190b 100644
+--- a/src/lua/abyss_battle_card_view.lua
++++ b/src/lua/abyss_battle_card_view.lua
+@@ -291,6 +291,7 @@ local function releaseCoveredHand(child)
+     return cleared
+ end
+ function M.new(view, controls)
++    local fitHandText = Theme.presentationProfile=='official-assets-first' and CardDisplay.newTextFitter() or nil
+     local child, show = controls.child, controls.show
+     local ink, tint, picture = controls.ink, controls.tint, controls.picture
+     local placeCard, placeReward = controls.placeCard, controls.placeReward
+@@ -341,14 +342,14 @@ function M.new(view, controls)
+         local instance = card.instance
+         CardDisplay.writeTitle(box:GetChild("name"), card.display.name, card.upgraded,
+             repeatCount(card.definition, instance),box:GetChild("type"),
+-            typeNames[card.definition.type] or card.definition.type)
++            typeNames[card.definition.type] or card.definition.type,fitHandText)
+         ink(box:GetChild("name"), titleInk)
+     end
+ 
+     local function writeDetails(box, card, battle, aimUid, aimTarget)
+         local definition, enabled = card.definition, card.playable
+         local text = bodyText(view,card,battle,aimUid,aimTarget)
+-        CardDisplay.writeBody(box:GetChild("label"), text,box)
++        CardDisplay.writeBody(box:GetChild("label"), text,box,fitHandText)
+         ink(box:GetChild("label"), Theme.cardSkin.text.body or C.text)
+         box:GetChild("cost").text = card.missing and '—' or costText(definition)
+         ink(box:GetChild("cost"), enabled and C.energy or C.danger)
