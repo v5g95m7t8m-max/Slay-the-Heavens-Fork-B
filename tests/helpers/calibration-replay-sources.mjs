@@ -566,9 +566,66 @@ const cultistVocabularyFixture={
   }
  ]
 };
+const uiVocabularyContinuations=Object.freeze({
+ "tests/lua/explicit_target_preview.lua": {
+  "path": "tests/lua/explicit_target_preview.lua",
+  "current": {
+   "sha256": "bbb20677d587476199ae74d8a34e5515b5364ab3893b03c4ab7e345fb5d31937",
+   "gitBlob": "ad9713f888171df6018a28271d1115c03e6cebd8"
+  },
+  "previous": {
+   "sha256": "b8194448d5a37d3ca2c4b78c9877cbcf96f2ff188bd06451647fcf3a435bd9d1",
+   "gitBlob": "83799e0fffd86144e02f6d120079e95c5104c3ce"
+  },
+  "hunks": [
+   {
+    "at": 34,
+    "before": "    event('enemy2','down',9);assert(value(panel)==6)\n    event('enemy1','down',10);assert(value(panel)==9)",
+    "after": "    event('enemy2','down',9);assert(value(panel)==6)\n    event('enemy1','down',10);assert(value(panel)==6 and ui.cardAim.touch==9,'foreign Down must not steal a still-held surface')\n    event('enemy1','endDrag',8);assert(value(panel)==6 and ui.cardAim.touch==9,'releasing old surface must not clear the new preview')\n    event('enemy1','down',10);assert(value(panel)==9 and ui.cardAim.touch==10)"
+   }
+  ]
+ },
+ "tests/lua/character_presentation.lua": {
+  "path": "tests/lua/character_presentation.lua",
+  "current": {
+   "sha256": "9ef22713c82aa40d9ca3881412bae26514ab053f96e83ca55039df327c02ad3e",
+   "gitBlob": "4328a766afec949767b91df6a58a526168d9dae6"
+  },
+  "previous": {
+   "sha256": "c260d50705a84e13da0018fb4b31aff4fc860077d488cf0ffecb457ba531f745",
+   "gitBlob": "6f4ad0af1415124352e905a2d16556291d0a1f98"
+  },
+  "hunks": [
+   {
+    "at": 184,
+    "before": " assert(w.devotion.text:find('2 层供奉',1,true) and w.devotion.upgradeText:find('3 层供奉',1,true))\n assert(w.devotion.text:find('每回合抽牌后',1,true) and not w.prostrate.text:find('首次',1,true))",
+    "after": " assert(w.devotion.text:find('2 层供奉',1,true) and w.devotion.upgradeText:find('3 层供奉',1,true))\n for _,copy in ipairs({w.devotion.text,w.devotion.upgradeText}) do\n  assert(copy:find('下回合起抽牌后获等量真言',1,true),'Devotion starts next turn after the draw')\n end\n assert(not w.prostrate.text:find('首次',1,true))"
+   }
+  ]
+ },
+ "tests/lua/card_preview.lua": {
+  "path": "tests/lua/card_preview.lua",
+  "current": {
+   "sha256": "cd50949a5b106336a3f7592f2c3145795f8109ede27d938ff5fa66b037fbe17b",
+   "gitBlob": "f61f47463ade235b0e92f1f51b2510329ad92362"
+  },
+  "previous": {
+   "sha256": "2cd5642a609984748399bafe18b70d91e08d5b7b92075ba23dba63701152967b",
+   "gitBlob": "45362aeba079fd916710ed009d7c7ca23c2d4cd2"
+  },
+  "hunks": [
+   {
+    "at": 419,
+    "before": "        local compact, tips = readPowers(panel)\n        assert(#tips == 1 and compact:find(row.name, 1, true) and compact:find(row.text, 1, true), id)",
+    "after": "        local compact, tips = readPowers(panel)\n        assert(#tips == 1 and compact:find(row.name, 1, true), id)\n        local effect = id == \"strength\" and \"普通攻击每段伤害 +5\" or row.text\n        assert(compact:find(effect, 1, true), id..\": \"..compact)"
+   }
+  ]
+ }
+});
 function readContinuingVocabularyReceipt(path,digest,readCurrent){
  const item=path===phaseFourPresentationFixture.path?phaseFourPresentationFixture:
-  path===cultistVocabularyFixture.path?cultistVocabularyFixture:null;
+  path===cultistVocabularyFixture.path?cultistVocabularyFixture:
+  Object.hasOwn(uiVocabularyContinuations,path)?uiVocabularyContinuations[path]:null;
  if(!item)return;
  const {path:fixture,current,previous,hunks}=item;
  return readCloseoutLuaVocabularyReceipt(path,digest,(name,encoding)=>{

@@ -418,7 +418,9 @@ test("player and every enemy show status icons, stacks and full current effects"
         tap({"statusInfo", "hit"})
         tap({"enemy3", "statusRow", "hit"})
         local compact, tips = readPowers(panel)
-        assert(#tips == 1 and compact:find(row.name, 1, true) and compact:find(row.text, 1, true), id)
+        assert(#tips == 1 and compact:find(row.name, 1, true), id)
+        local effect = id == "strength" and "普通攻击每段伤害 +5" or row.text
+        assert(compact:find(effect, 1, true), id..": "..compact)
         panel:GetChild("statusDismiss").click()
     end
 end)

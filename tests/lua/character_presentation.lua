@@ -183,7 +183,10 @@ test('Accuracy Infinite Blades and Mantra helpers provide exact new base and upg
  assert(w.prostrate.text:find('4 点格挡',1,true) and w.prostrate.upgradeText:find('4 点格挡',1,true))
  assert(not w.worship.text:find('保留',1,true) and w.worship.upgradeText:find('保留',1,true));eq(w.worship.cost,'2')
  assert(w.devotion.text:find('2 层供奉',1,true) and w.devotion.upgradeText:find('3 层供奉',1,true))
- assert(w.devotion.text:find('每回合抽牌后',1,true) and not w.prostrate.text:find('首次',1,true))
+ for _,copy in ipairs({w.devotion.text,w.devotion.upgradeText}) do
+  assert(copy:find('下回合起抽牌后获等量真言',1,true),'Devotion starts next turn after the draw')
+ end
+ assert(not w.prostrate.text:find('首次',1,true))
 end)
 local function has(data,id)for _,c in ipairs(data.cards.cards)do if c.id==id then return true end end end
 local extended={}
